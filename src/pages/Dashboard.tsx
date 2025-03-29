@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Dashboard.css';
+import { LogOut } from 'lucide-react';
 
 interface UpcomingMatch {
   id: number;
@@ -65,7 +65,6 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
-  // Function to check if user has permission for a specific feature
   const hasPermission = (feature: string): boolean => {
     if (!userRole) return false;
     
@@ -84,9 +83,17 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
+    navigate('/login');
+  };
+
   return (
     <div className="dashboard">
-      <header className="dashboard-header">
+      <header className="dashboard-header sticky">
         <div className="container">
           <nav className="navbar">
             <a href="/" className="navbar-brand">축구회</a>
@@ -101,16 +108,11 @@ const Dashboard = () => {
               )}
               <li>
                 <button 
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    localStorage.removeItem('isAuthenticated');
-                    localStorage.removeItem('userRole');
-                    localStorage.removeItem('userName');
-                    localStorage.removeItem('userId');
-                    navigate('/login');
-                  }}
+                  className="btn-logout"
+                  onClick={handleLogout}
                 >
-                  로그아웃
+                  <LogOut size={16} className="logout-icon" />
+                  <span>로그아웃</span>
                 </button>
               </li>
             </ul>
