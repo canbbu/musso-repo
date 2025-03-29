@@ -15,6 +15,8 @@ interface Announcement {
   title: string;
   date: string;
   content: string;
+  author: string;
+  updatedAt?: string;
 }
 
 const Dashboard = () => {
@@ -32,19 +34,24 @@ const Dashboard = () => {
       id: 1, 
       title: '이번 주 경기 공지', 
       date: '2023-11-20', 
-      content: '이번 주 경기는 비로 인해 취소되었습니다. 다음 일정을 확인해주세요.' 
+      content: '이번 주 경기는 비로 인해 취소되었습니다. 다음 일정을 확인해주세요.',
+      author: '김운영',
+      updatedAt: '2023-11-20 14:30'
     },
     { 
       id: 2, 
       title: '연말 모임 안내', 
       date: '2023-11-18', 
-      content: '12월 23일 연말 모임이 있을 예정입니다. 참석 여부를 알려주세요.' 
+      content: '12월 23일 연말 모임이 있을 예정입니다. 참석 여부를 알려주세요.',
+      author: '박감독',
+      updatedAt: '2023-11-18 10:15'
     },
   ]);
   
   useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     const role = localStorage.getItem('userRole');
+    const name = localStorage.getItem('userName');
     
     if (!isAuthenticated || !role) {
       navigate('/login');
@@ -53,14 +60,29 @@ const Dashboard = () => {
     
     setUserRole(role);
     
-    // In a real app, you would fetch user profile, announcements, etc.
-    // For demo purposes, we're using static data
-    if (role === 'admin') {
-      setUserName('관리자');
-    } else {
-      setUserName('김선수');
+    if (name) {
+      setUserName(name);
     }
   }, [navigate]);
+
+  // Function to check if user has permission for a specific feature
+  const hasPermission = (feature: string): boolean => {
+    if (!userRole) return false;
+    
+    switch (feature) {
+      case 'finance':
+        return ['executive', 'accountant'].includes(userRole);
+      case 'matchManagement':
+        return ['executive', 'coach'].includes(userRole);
+      case 'stats':
+        return ['executive', 'coach'].includes(userRole);
+      case 'community':
+      case 'gallery':
+        return true; // All roles can access community and gallery
+      default:
+        return userRole === 'executive'; // Default to executive only
+    }
+  };
 
   return (
     <div className="dashboard">
@@ -74,7 +96,7 @@ const Dashboard = () => {
               <li><a href="/stats" className="nav-link">기록</a></li>
               <li><a href="/community" className="nav-link">커뮤니티</a></li>
               <li><a href="/gallery" className="nav-link">갤러리</a></li>
-              {userRole === 'admin' && (
+              {hasPermission('finance') && (
                 <li><a href="/finance" className="nav-link">회계</a></li>
               )}
               <li>
@@ -83,6 +105,8 @@ const Dashboard = () => {
                   onClick={() => {
                     localStorage.removeItem('isAuthenticated');
                     localStorage.removeItem('userRole');
+                    localStorage.removeItem('userName');
+                    localStorage.removeItem('userId');
                     navigate('/login');
                   }}
                 >
@@ -98,6 +122,12 @@ const Dashboard = () => {
         <div className="welcome-section">
           <h1>안녕하세요, {userName}님!</h1>
           <p className="welcome-subtitle">축구회 관리 시스템에 오신 것을 환영합니다.</p>
+          <div className="user-role-badge">
+            {userRole === 'executive' && <span className="role executive">운영진</span>}
+            {userRole === 'coach' && <span className="role coach">감독</span>}
+            {userRole === 'accountant' && <span className="role accountant">회계</span>}
+            {userRole === 'member' && <span className="role member">회원</span>}
+          </div>
         </div>
         
         <div className="dashboard-grid">
@@ -133,8 +163,14 @@ const Dashboard = () => {
                 {announcements.map(announcement => (
                   <li key={announcement.id} className="announcement-item">
                     <h3>{announcement.title}</h3>
-                    <p className="announcement-date">{announcement.date}</p>
+                    <div className="announcement-meta">
+                      <p className="announcement-date">{announcement.date}</p>
+                      <p className="announcement-author">작성자: {announcement.author}</p>
+                    </div>
                     <p className="announcement-content">{announcement.content}</p>
+                    {announcement.updatedAt && (
+                      <p className="announcement-updated">최종 수정: {announcement.updatedAt}</p>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -147,10 +183,12 @@ const Dashboard = () => {
           <div className="dashboard-card quick-actions">
             <h2>바로가기</h2>
             <div className="action-buttons">
-              <a href="/stats" className="action-button stats-button">
-                <span className="action-icon">📊</span>
-                <span className="action-text">통계 확인</span>
-              </a>
+              {hasPermission('stats') && (
+                <a href="/stats" className="action-button stats-button">
+                  <span className="action-icon">📊</span>
+                  <span className="action-text">통계 확인</span>
+                </a>
+              )}
               <a href="/community" className="action-button community-button">
                 <span className="action-icon">💬</span>
                 <span className="action-text">게시판</span>
@@ -159,10 +197,16 @@ const Dashboard = () => {
                 <span className="action-icon">🖼️</span>
                 <span className="action-text">갤러리</span>
               </a>
-              {userRole === 'admin' && (
+              {hasPermission('matchManagement') && (
                 <a href="/matches/new" className="action-button new-match-button">
                   <span className="action-icon">🏆</span>
                   <span className="action-text">경기 등록</span>
+                </a>
+              )}
+              {hasPermission('finance') && (
+                <a href="/finance" className="action-button finance-button">
+                  <span className="action-icon">💰</span>
+                  <span className="action-text">회계 관리</span>
                 </a>
               )}
             </div>

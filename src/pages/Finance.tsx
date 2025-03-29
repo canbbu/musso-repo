@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { DollarSign, CreditCard, BarChart2, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DollarSign, CreditCard, BarChart2, AlertCircle, PlusCircle } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 interface FinanceTransaction {
   id: number;
@@ -10,6 +11,10 @@ interface FinanceTransaction {
   amount: number;
   type: 'income' | 'expense';
   category: string;
+  createdBy: string;
+  createdAt: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 interface MemberDue {
@@ -18,9 +23,16 @@ interface MemberDue {
   status: 'paid' | 'pending' | 'overdue';
   amount: number;
   dueDate: string;
+  paidDate?: string;
+  confirmedBy?: string;
 }
 
 const Finance = () => {
+  const navigate = useNavigate();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  
   const [transactions, setTransactions] = useState<FinanceTransaction[]>([
     {
       id: 1,
@@ -28,7 +40,9 @@ const Finance = () => {
       description: '11월 회비 수입',
       amount: 500000,
       type: 'income',
-      category: '회비'
+      category: '회비',
+      createdBy: '이회계',
+      createdAt: '2023-11-20 14:30'
     },
     {
       id: 2,
@@ -36,7 +50,11 @@ const Finance = () => {
       description: '운동장 대여비',
       amount: 200000,
       type: 'expense',
-      category: '시설비'
+      category: '시설비',
+      createdBy: '김운영',
+      createdAt: '2023-11-15 09:45',
+      updatedBy: '이회계',
+      updatedAt: '2023-11-15 10:20'
     },
     {
       id: 3,
@@ -44,7 +62,9 @@ const Finance = () => {
       description: '유니폼 구매',
       amount: 300000,
       type: 'expense',
-      category: '장비'
+      category: '장비',
+      createdBy: '이회계',
+      createdAt: '2023-11-10 16:05'
     },
     {
       id: 4,
@@ -52,7 +72,9 @@ const Finance = () => {
       description: '후원금',
       amount: 200000,
       type: 'income',
-      category: '후원'
+      category: '후원',
+      createdBy: '김운영',
+      createdAt: '2023-11-05 11:30'
     }
   ]);
 
@@ -62,14 +84,18 @@ const Finance = () => {
       name: '김민수',
       status: 'paid',
       amount: 30000,
-      dueDate: '2023-11-10'
+      dueDate: '2023-11-10',
+      paidDate: '2023-11-08',
+      confirmedBy: '이회계'
     },
     {
       id: 2,
       name: '이지훈',
       status: 'paid',
       amount: 30000,
-      dueDate: '2023-11-10'
+      dueDate: '2023-11-10',
+      paidDate: '2023-11-05',
+      confirmedBy: '김운영'
     },
     {
       id: 3,
@@ -90,9 +116,33 @@ const Finance = () => {
       name: '오현우',
       status: 'paid',
       amount: 30000,
-      dueDate: '2023-11-10'
+      dueDate: '2023-11-10',
+      paidDate: '2023-11-09',
+      confirmedBy: '이회계'
     }
   ]);
+  
+  useEffect(() => {
+    // Check authentication and permissions
+    const isAuthenticated = localStorage.getItem('isAuthenticated');
+    const role = localStorage.getItem('userRole');
+    const name = localStorage.getItem('userName');
+    const id = localStorage.getItem('userId');
+    
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
+    if (role !== 'executive' && role !== 'accountant') {
+      navigate('/dashboard');
+      return;
+    }
+    
+    setUserRole(role);
+    setUserName(name);
+    setUserId(id);
+  }, [navigate]);
 
   // Calculate financial summary
   const totalIncome = transactions
@@ -112,6 +162,42 @@ const Finance = () => {
   const duesPending = memberDues
     .filter(m => m.status === 'pending' || m.status === 'overdue')
     .reduce((sum, m) => sum + m.amount, 0);
+    
+  const handleConfirmPayment = (id: number) => {
+    if (!userName) return;
+    
+    setMemberDues(memberDues.map(member => {
+      if (member.id === id) {
+        return {
+          ...member,
+          status: 'paid',
+          paidDate: new Date().toISOString().split('T')[0],
+          confirmedBy: userName
+        };
+      }
+      return member;
+    }));
+  };
+  
+  const handleAddTransaction = () => {
+    // In a real app, this would open a modal or navigate to a form
+    console.log("Add transaction clicked - would open form");
+    // For demo, we'll just add a dummy transaction
+    if (!userName) return;
+    
+    const newTransaction: FinanceTransaction = {
+      id: transactions.length + 1,
+      date: new Date().toISOString().split('T')[0],
+      description: '새로운 거래 내역',
+      amount: 50000,
+      type: 'income',
+      category: '기타',
+      createdBy: userName,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16)
+    };
+    
+    setTransactions([newTransaction, ...transactions]);
+  };
 
   return (
     <div className="finance-container p-6">
@@ -193,6 +279,7 @@ const Finance = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">금액</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">마감일</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">확인자</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
                     </tr>
                   </thead>
@@ -207,6 +294,9 @@ const Finance = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-500">{member.dueDate}</div>
+                          {member.paidDate && (
+                            <div className="text-xs text-green-600">납부일: {member.paidDate}</div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -218,9 +308,17 @@ const Finance = () => {
                              member.status === 'pending' ? '대기 중' : '기한 초과'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">
+                            {member.confirmedBy || '-'}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {member.status !== 'paid' && (
-                            <button className="text-blue-600 hover:text-blue-900">
+                            <button 
+                              className="text-blue-600 hover:text-blue-900"
+                              onClick={() => handleConfirmPayment(member.id)}
+                            >
                               납부 확인
                             </button>
                           )}
@@ -237,7 +335,11 @@ const Finance = () => {
         <div className="recent-transactions">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">최근 거래 내역</h2>
-            <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+            <button 
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition flex items-center"
+              onClick={handleAddTransaction}
+            >
+              <PlusCircle className="mr-1 h-4 w-4" />
               새 거래 등록
             </button>
           </div>
@@ -252,6 +354,7 @@ const Finance = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">설명</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">금액</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">등록자</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -259,6 +362,14 @@ const Finance = () => {
                       <tr key={transaction.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{transaction.date}</div>
+                          <div className="text-xs text-gray-500">
+                            등록: {transaction.createdAt}
+                          </div>
+                          {transaction.updatedAt && (
+                            <div className="text-xs text-gray-500">
+                              수정: {transaction.updatedAt}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{transaction.description}</div>
@@ -271,6 +382,16 @@ const Finance = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={`text-sm font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                             {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toLocaleString()}원
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500">
+                            {transaction.createdBy}
+                            {transaction.updatedBy && (
+                              <div className="text-xs text-gray-500">
+                                수정: {transaction.updatedBy}
+                              </div>
+                            )}
                           </div>
                         </td>
                       </tr>

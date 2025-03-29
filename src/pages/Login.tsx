@@ -13,16 +13,22 @@ const Login = () => {
     e.preventDefault();
     setError('');
     
-    // For demonstration purposes, using hardcoded login
-    // In a real application, you would call an API
-    if (username === 'admin' && password === 'password') {
-      // Set user role in localStorage (would use cookies or JWT in production)
-      localStorage.setItem('userRole', 'admin');
+    // User credentials with different roles
+    const users = [
+      { username: 'executive', password: 'password123', role: 'executive', name: '김운영' },
+      { username: 'coach', password: 'password123', role: 'coach', name: '박감독' },
+      { username: 'accountant', password: 'password123', role: 'accountant', name: '이회계' },
+      { username: 'member', password: 'password123', role: 'member', name: '최회원' }
+    ];
+    
+    const user = users.find(u => u.username === username && u.password === password);
+    
+    if (user) {
+      // Set user info in localStorage
+      localStorage.setItem('userRole', user.role);
+      localStorage.setItem('userName', user.name);
       localStorage.setItem('isAuthenticated', 'true');
-      navigate('/dashboard');
-    } else if (username === 'player' && password === 'password') {
-      localStorage.setItem('userRole', 'player');
-      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userId', username); // Store username for tracking changes
       navigate('/dashboard');
     } else {
       setError('유효하지 않은 아이디 또는 비밀번호입니다.');
@@ -76,6 +82,16 @@ const Login = () => {
         
         <div className="login-footer">
           <p>아직 계정이 없으신가요? 팀 관리자에게 문의하세요</p>
+          
+          <div className="temp-credentials mt-4 p-3 bg-gray-100 rounded text-sm">
+            <p className="font-bold">임시 계정 정보:</p>
+            <ul className="list-disc pl-5 mt-1">
+              <li>운영진: username=executive, password=password123</li>
+              <li>감독: username=coach, password=password123</li>
+              <li>회계: username=accountant, password=password123</li>
+              <li>회원: username=member, password=password123</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
