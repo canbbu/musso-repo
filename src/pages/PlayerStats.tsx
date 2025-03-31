@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Award, TrendingUp, UserCheck, Goal, Home, Menu, X } from "lucide-react";
@@ -36,13 +35,6 @@ const PlayerStats = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-
     // Simulate data loading
     setTimeout(() => {
       // Set mock player statistics
@@ -131,7 +123,7 @@ const PlayerStats = () => {
 
       setIsLoading(false);
     }, 1000);
-  }, [navigate]);
+  }, []);
 
   const toggleMobileNav = () => {
     setMobileNavOpen(!mobileNavOpen);

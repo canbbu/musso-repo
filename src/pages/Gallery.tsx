@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Image, Upload, Tag, Calendar, Home } from "lucide-react";
+import { Image, Upload, Tag, Calendar, Home, Menu, X } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 
 interface GalleryItem {

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Dashboard.css';
@@ -22,7 +21,7 @@ interface Announcement {
 
 const Dashboard = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [userName, setUserName] = useState('사용자');
+  const [userName, setUserName] = useState('방문자');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const navigate = useNavigate();
   
@@ -55,17 +54,14 @@ const Dashboard = () => {
     const role = localStorage.getItem('userRole');
     const name = localStorage.getItem('userName');
     
-    if (!isAuthenticated || !role) {
-      navigate('/login');
-      return;
+    if (isAuthenticated && role) {
+      setUserRole(role);
+      
+      if (name) {
+        setUserName(name);
+      }
     }
-    
-    setUserRole(role);
-    
-    if (name) {
-      setUserName(name);
-    }
-  }, [navigate]);
+  }, []);
 
   const hasPermission = (feature: string): boolean => {
     if (!userRole) return false;
@@ -95,6 +91,10 @@ const Dashboard = () => {
 
   const toggleMobileNav = () => {
     setMobileNavOpen(!mobileNavOpen);
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
   };
 
   return (
@@ -129,7 +129,6 @@ const Dashboard = () => {
         </div>
       </header>
       
-      {/* Mobile Sidebar Navigation */}
       <div className={`mobile-sidebar ${mobileNavOpen ? 'open' : ''}`}>
         <div className="mobile-sidebar-header">
           <h3>축구회</h3>

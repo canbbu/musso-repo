@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Award, ArrowRight, PlusCircle, Edit, Trash2 } from "lucide-react";
+import { Calendar, Users, Award, ArrowRight, PlusCircle, Edit, Trash2, Home } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 
 interface Match {
@@ -54,26 +53,21 @@ const MatchManagement = () => {
   ]);
   
   useEffect(() => {
-    // Check authentication and permissions
+    // Check authentication but don't redirect
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     const role = localStorage.getItem('userRole');
     const name = localStorage.getItem('userName');
     
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
+    if (isAuthenticated && role) {
+      setUserRole(role);
+      setUserName(name);
     }
-    
-    setUserRole(role);
-    setUserName(name);
-  }, [navigate]);
+  }, []);
   
-  // Check if user has edit permissions
   const canManageMatches = (): boolean => {
     return userRole === 'executive' || userRole === 'coach';
   };
   
-  // Add a new match (demo function)
   const handleAddMatch = () => {
     if (!canManageMatches() || !userName) return;
     
