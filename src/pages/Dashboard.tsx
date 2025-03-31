@@ -1,7 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Dashboard.css';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu, X, Home, Calendar, Trophy, Users, Image, DollarSign } from 'lucide-react';
 
 interface UpcomingMatch {
   id: number;
@@ -22,6 +23,7 @@ interface Announcement {
 const Dashboard = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState('사용자');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const navigate = useNavigate();
   
   const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([
@@ -91,12 +93,19 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  const toggleMobileNav = () => {
+    setMobileNavOpen(!mobileNavOpen);
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header sticky">
         <div className="container">
           <nav className="navbar">
             <a href="/" className="navbar-brand">축구회</a>
+            <button className="mobile-nav-toggle" onClick={toggleMobileNav}>
+              <Menu size={24} />
+            </button>
             <ul className="navbar-nav">
               <li><a href="/dashboard" className="nav-link active">홈</a></li>
               <li><a href="/matches" className="nav-link">경기</a></li>
@@ -120,6 +129,35 @@ const Dashboard = () => {
         </div>
       </header>
       
+      {/* Mobile Sidebar Navigation */}
+      <div className={`mobile-sidebar ${mobileNavOpen ? 'open' : ''}`}>
+        <div className="mobile-sidebar-header">
+          <h3>축구회</h3>
+          <button className="close-sidebar" onClick={toggleMobileNav}>
+            <X size={20} />
+          </button>
+        </div>
+        <ul className="mobile-nav-links">
+          <li><a href="/dashboard" className="active">홈</a></li>
+          <li><a href="/matches">경기</a></li>
+          <li><a href="/stats">기록</a></li>
+          <li><a href="/community">커뮤니티</a></li>
+          <li><a href="/gallery">갤러리</a></li>
+          {hasPermission('finance') && (
+            <li><a href="/finance">회계</a></li>
+          )}
+        </ul>
+        <div className="mobile-sidebar-footer">
+          <button 
+            className="btn-logout"
+            onClick={handleLogout}
+          >
+            <LogOut size={16} className="logout-icon" />
+            <span>로그아웃</span>
+          </button>
+        </div>
+      </div>
+      
       <main className="dashboard-main container">
         <div className="welcome-section">
           <h1>안녕하세요, {userName}님!</h1>
@@ -134,7 +172,7 @@ const Dashboard = () => {
         
         <div className="dashboard-grid">
           <div className="dashboard-card upcoming-matches">
-            <h2>다가오는 경기</h2>
+            <h2><Calendar size={20} /> 다가오는 경기</h2>
             {upcomingMatches.length > 0 ? (
               <ul className="match-list">
                 {upcomingMatches.map(match => (
@@ -159,7 +197,7 @@ const Dashboard = () => {
           </div>
           
           <div className="dashboard-card announcements">
-            <h2>공지사항</h2>
+            <h2><Users size={20} /> 공지사항</h2>
             {announcements.length > 0 ? (
               <ul className="announcement-list">
                 {announcements.map(announcement => (
@@ -183,7 +221,7 @@ const Dashboard = () => {
           </div>
           
           <div className="dashboard-card quick-actions">
-            <h2>바로가기</h2>
+            <h2><Trophy size={20} /> 바로가기</h2>
             <div className="action-buttons">
               {hasPermission('stats') && (
                 <a href="/stats" className="action-button stats-button">

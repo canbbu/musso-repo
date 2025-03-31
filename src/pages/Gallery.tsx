@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Image, Upload, Tag, Calendar } from "lucide-react";
+import { Image, Upload, Tag, Calendar, Home } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 interface GalleryItem {
   id: number;
@@ -14,6 +15,7 @@ interface GalleryItem {
 }
 
 const Gallery = () => {
+  const navigate = useNavigate();
   const [gallery, setGallery] = useState<GalleryItem[]>([
     {
       id: 1,
@@ -71,80 +73,141 @@ const Gallery = () => {
     }
   ]);
 
-  const [filter, setFilter] = useState('all');
-  const tags = [...new Set(gallery.flatMap(item => item.tags))];
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('all');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  
+  // Extract all unique tags for category filter
+  const categories = [...new Set(gallery.flatMap(item => item.tags))];
+  
+  // Extract all unique months for month filter
+  const getMonthYear = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}-${date.getMonth() + 1}`;
+  };
+  
+  const months = [...new Set(gallery.map(item => getMonthYear(item.date)))].sort().reverse();
+  
+  // Apply filters
+  const filteredGallery = gallery.filter(item => {
+    const categoryMatch = categoryFilter === 'all' || item.tags.includes(categoryFilter);
+    const monthMatch = monthFilter === 'all' || getMonthYear(item.date) === monthFilter;
+    return categoryMatch && monthMatch;
+  });
 
-  const filteredGallery = filter === 'all' 
-    ? gallery 
-    : gallery.filter(item => item.tags.includes(filter));
+  const toggleMobileNav = () => {
+    setMobileNavOpen(!mobileNavOpen);
+  };
 
   return (
     <div className="gallery-container p-6">
+      {/* Home Button */}
+      <a href="/dashboard" className="home-button">
+        <Home className="home-icon" size={16} />
+        홈으로 돌아가기
+      </a>
+      
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Gallery</h1>
         <p className="text-gray-600">Team photos, videos, and memorable moments</p>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="filters flex items-center space-x-2">
-          <button 
-            className={`px-3 py-1 rounded ${filter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-            onClick={() => setFilter('all')}
-          >
-            All
-          </button>
-          {tags.map(tag => (
+      <div className="filters mb-6">
+        <div className="filter-section mb-4">
+          <h3 className="text-lg font-semibold mb-2">카테고리별 필터</h3>
+          <div className="flex flex-wrap gap-2">
             <button 
-              key={tag}
-              className={`px-3 py-1 rounded ${filter === tag ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-              onClick={() => setFilter(tag)}
+              className={`px-3 py-1 rounded ${categoryFilter === 'all' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+              onClick={() => setCategoryFilter('all')}
             >
-              {tag}
+              전체
             </button>
-          ))}
+            {categories.map(category => (
+              <button 
+                key={category}
+                className={`px-3 py-1 rounded ${categoryFilter === category ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+                onClick={() => setCategoryFilter(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filter-section mb-4">
+          <h3 className="text-lg font-semibold mb-2">월별 필터</h3>
+          <div className="flex flex-wrap gap-2">
+            <button 
+              className={`px-3 py-1 rounded ${monthFilter === 'all' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+              onClick={() => setMonthFilter('all')}
+            >
+              전체 기간
+            </button>
+            {months.map(month => {
+              const [year, monthNum] = month.split('-');
+              return (
+                <button 
+                  key={month}
+                  className={`px-3 py-1 rounded ${monthFilter === month ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+                  onClick={() => setMonthFilter(month)}
+                >
+                  {year}년 {monthNum}월
+                </button>
+              );
+            })}
+          </div>
         </div>
         
-        <button className="flex items-center px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
-          <Upload className="mr-2 h-4 w-4" />
-          사진 업로드
-        </button>
+        <div className="flex justify-between items-center">
+          <p className="text-gray-600">총 {filteredGallery.length}개의 항목</p>
+          <button className="flex items-center px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+            <Upload className="mr-2 h-4 w-4" />
+            사진 업로드
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredGallery.map(item => (
-          <Card key={item.id} className="overflow-hidden hover:shadow-lg transition cursor-pointer">
-            <div className="aspect-w-1 aspect-h-1 bg-gray-200">
-              <div className="w-full h-48 bg-gray-300 flex items-center justify-center">
-                <Image className="h-8 w-8 text-gray-400" />
+        {filteredGallery.length > 0 ? (
+          filteredGallery.map(item => (
+            <Card key={item.id} className="overflow-hidden hover:shadow-lg transition cursor-pointer">
+              <div className="aspect-w-1 aspect-h-1 bg-gray-200">
+                <div className="w-full h-48 bg-gray-300 flex items-center justify-center">
+                  <Image className="h-8 w-8 text-gray-400" />
+                </div>
               </div>
-            </div>
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-1">{item.title}</h3>
-              <div className="flex items-center text-sm text-gray-600 mb-2">
-                <Calendar className="h-3 w-3 mr-1" />
-                {item.date}
-              </div>
-              <div className="flex flex-wrap gap-1 mb-3">
-                {item.tags.map(tag => (
-                  <span key={tag} className="px-2 py-1 bg-gray-100 text-xs rounded-full text-gray-800">
-                    {tag}
+              <CardContent className="p-4">
+                <h3 className="font-semibold mb-1">{item.title}</h3>
+                <div className="flex items-center text-sm text-gray-600 mb-2">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {item.date}
+                </div>
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {item.tags.map(tag => (
+                    <span key={tag} className="px-2 py-1 bg-gray-100 text-xs rounded-full text-gray-800">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">
+                    By {item.uploadedBy}
                   </span>
-                ))}
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">
-                  By {item.uploadedBy}
-                </span>
-                <span className="flex items-center text-gray-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  {item.likes}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <span className="flex items-center text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    {item.likes}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-10">
+            <p className="text-gray-500">해당 필터에 맞는 이미지가 없습니다.</p>
+          </div>
+        )}
       </div>
 
       <div className="mt-8">
@@ -171,6 +234,28 @@ const Gallery = () => {
             </Card>
           ))}
         </div>
+      </div>
+
+      {/* Mobile Navigation */}
+      <button onClick={toggleMobileNav} className="fixed bottom-4 right-4 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg md:hidden">
+        <Menu size={24} />
+      </button>
+      
+      <div className={`mobile-sidebar ${mobileNavOpen ? 'open' : ''}`}>
+        <div className="mobile-sidebar-header">
+          <h3>축구회</h3>
+          <button className="close-sidebar" onClick={toggleMobileNav}>
+            <X size={20} />
+          </button>
+        </div>
+        <ul className="mobile-nav-links">
+          <li><a href="/dashboard">홈</a></li>
+          <li><a href="/matches">경기</a></li>
+          <li><a href="/stats">기록</a></li>
+          <li><a href="/community">커뮤니티</a></li>
+          <li><a href="/gallery" className="active">갤러리</a></li>
+          <li><a href="/finance">회계</a></li>
+        </ul>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, CreditCard, BarChart2, AlertCircle, PlusCircle } from "lucide-react";
+import { DollarSign, CreditCard, BarChart2, AlertCircle, PlusCircle, Home, Menu, X, Wallet, Receipt, ChevronsUp, ChevronsDown } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 
 interface FinanceTransaction {
@@ -27,11 +27,19 @@ interface MemberDue {
   confirmedBy?: string;
 }
 
+interface CategorySummary {
+  category: string;
+  amount: number;
+  percentage: number;
+  icon: React.ReactNode;
+}
+
 const Finance = () => {
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   
   const [transactions, setTransactions] = useState<FinanceTransaction[]>([
     {
@@ -75,6 +83,16 @@ const Finance = () => {
       category: '후원',
       createdBy: '김운영',
       createdAt: '2023-11-05 11:30'
+    },
+    {
+      id: 5,
+      date: '2023-10-25',
+      description: '물품 구매',
+      amount: 50000,
+      type: 'expense',
+      category: '소모품',
+      createdBy: '이회계',
+      createdAt: '2023-10-25 13:15'
     }
   ]);
 
@@ -119,8 +137,36 @@ const Finance = () => {
       dueDate: '2023-11-10',
       paidDate: '2023-11-09',
       confirmedBy: '이회계'
+    },
+    {
+      id: 6,
+      name: '김철수',
+      status: 'paid',
+      amount: 30000,
+      dueDate: '2023-11-10',
+      paidDate: '2023-11-07',
+      confirmedBy: '이회계'
+    },
+    {
+      id: 7,
+      name: '이영희',
+      status: 'overdue',
+      amount: 30000,
+      dueDate: '2023-11-10'
+    },
+    {
+      id: 8,
+      name: '박지성',
+      status: 'pending',
+      amount: 30000,
+      dueDate: '2023-11-10'
     }
   ]);
+
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+  });
   
   useEffect(() => {
     // Check authentication and permissions
@@ -162,6 +208,47 @@ const Finance = () => {
   const duesPending = memberDues
     .filter(m => m.status === 'pending' || m.status === 'overdue')
     .reduce((sum, m) => sum + m.amount, 0);
+
+  // Calculate category summaries
+  const calculateCategorySummaries = (transactionType: 'income' | 'expense'): CategorySummary[] => {
+    const filteredTransactions = transactions.filter(t => t.type === transactionType);
+    const categoryTotals = filteredTransactions.reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + t.amount;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const total = Object.values(categoryTotals).reduce((sum, amount) => sum + amount, 0);
+    
+    return Object.entries(categoryTotals).map(([category, amount]) => {
+      let icon;
+      switch (category) {
+        case '회비':
+          icon = <CreditCard size={16} />;
+          break;
+        case '후원':
+          icon = <DollarSign size={16} />;
+          break;
+        case '시설비':
+          icon = <Receipt size={16} />;
+          break;
+        case '장비':
+          icon = <Wallet size={16} />;
+          break;
+        default:
+          icon = <AlertCircle size={16} />;
+      }
+      
+      return {
+        category,
+        amount,
+        percentage: Math.round((amount / total) * 100),
+        icon
+      };
+    }).sort((a, b) => b.amount - a.amount);
+  };
+  
+  const expenseCategories = calculateCategorySummaries('expense');
+  const incomeCategories = calculateCategorySummaries('income');
     
   const handleConfirmPayment = (id: number) => {
     if (!userName) return;
@@ -199,8 +286,36 @@ const Finance = () => {
     setTransactions([newTransaction, ...transactions]);
   };
 
+  const toggleMobileNav = () => {
+    setMobileNavOpen(!mobileNavOpen);
+  };
+
+  // Generate month options for the filter
+  const getMonthOptions = () => {
+    const options = [];
+    const currentDate = new Date();
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthValue = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+      const monthLabel = `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+      options.push({ value: monthValue, label: monthLabel });
+    }
+    return options;
+  };
+
+  const monthOptions = getMonthOptions();
+
+  // Filter member dues by selected month
+  const filteredMemberDues = memberDues;
+
   return (
     <div className="finance-container p-6">
+      {/* Home Button */}
+      <a href="/dashboard" className="home-button">
+        <Home className="home-icon" size={16} />
+        홈으로 돌아가기
+      </a>
+
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Finance Management</h1>
         <p className="text-gray-600">Track team finances, dues, and expenses</p>
@@ -211,7 +326,7 @@ const Finance = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
               <DollarSign className="mr-2 h-5 w-5 text-green-600" />
-              Current Balance
+              현재 잔액
             </CardTitle>
             <CardDescription>Available funds</CardDescription>
           </CardHeader>
@@ -224,7 +339,7 @@ const Finance = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
               <CreditCard className="mr-2 h-5 w-5 text-blue-600" />
-              Dues Collected
+              회비 납부액
             </CardTitle>
             <CardDescription>This month</CardDescription>
           </CardHeader>
@@ -237,7 +352,7 @@ const Finance = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
               <BarChart2 className="mr-2 h-5 w-5 text-amber-600" />
-              Total Expenses
+              총 지출
             </CardTitle>
             <CardDescription>This month</CardDescription>
           </CardHeader>
@@ -250,7 +365,7 @@ const Finance = () => {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
               <AlertCircle className="mr-2 h-5 w-5 text-red-600" />
-              Pending Dues
+              미납액
             </CardTitle>
             <CardDescription>Outstanding amounts</CardDescription>
           </CardHeader>
@@ -264,9 +379,22 @@ const Finance = () => {
         <div className="member-dues">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">회비 납부 현황</h2>
-            <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
-              납부 알림 보내기
-            </button>
+            <div className="flex items-center space-x-2">
+              <select 
+                className="px-3 py-2 border rounded"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              >
+                {monthOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+                납부 알림 보내기
+              </button>
+            </div>
           </div>
 
           <Card>
@@ -284,7 +412,7 @@ const Finance = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {memberDues.map((member) => (
+                    {filteredMemberDues.map((member) => (
                       <tr key={member.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{member.name}</div>
@@ -380,8 +508,9 @@ const Finance = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className={`text-sm font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                            {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toLocaleString()}원
+                          <div className={`text-sm font-medium flex items-center ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                            {transaction.type === 'income' ? <ChevronsUp size={16} className="mr-1" /> : <ChevronsDown size={16} className="mr-1" />}
+                            {transaction.amount.toLocaleString()}원
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -404,15 +533,92 @@ const Finance = () => {
         </div>
       </div>
 
-      <div className="mt-8">
-        <h2 className="text-2xl font-semibold mb-4">지출 분석</h2>
-        <Card className="h-80">
-          <CardContent className="p-6">
-            <div className="h-full flex items-center justify-center">
-              <p className="text-gray-500">차트 및 지출 분석 데이터가 여기에 표시됩니다.</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">지출 분석</h2>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">지출 카테고리</h3>
+              <div className="space-y-4">
+                {expenseCategories.map((category) => (
+                  <div key={category.category}>
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center">
+                        <span className="p-1 mr-2 bg-red-100 rounded-full text-red-600">
+                          {category.icon}
+                        </span>
+                        <span>{category.category}</span>
+                      </div>
+                      <div className="text-sm font-medium">
+                        {category.amount.toLocaleString()}원 ({category.percentage}%)
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-red-500 h-2 rounded-full"
+                        style={{ width: `${category.percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">수입 분석</h2>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">수입 카테고리</h3>
+              <div className="space-y-4">
+                {incomeCategories.map((category) => (
+                  <div key={category.category}>
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center">
+                        <span className="p-1 mr-2 bg-green-100 rounded-full text-green-600">
+                          {category.icon}
+                        </span>
+                        <span>{category.category}</span>
+                      </div>
+                      <div className="text-sm font-medium">
+                        {category.amount.toLocaleString()}원 ({category.percentage}%)
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ width: `${category.percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Mobile Navigation */}
+      <button onClick={toggleMobileNav} className="fixed bottom-4 right-4 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg md:hidden">
+        <Menu size={24} />
+      </button>
+      
+      <div className={`mobile-sidebar ${mobileNavOpen ? 'open' : ''}`}>
+        <div className="mobile-sidebar-header">
+          <h3>축구회</h3>
+          <button className="close-sidebar" onClick={toggleMobileNav}>
+            <X size={20} />
+          </button>
+        </div>
+        <ul className="mobile-nav-links">
+          <li><a href="/dashboard">홈</a></li>
+          <li><a href="/matches">경기</a></li>
+          <li><a href="/stats">기록</a></li>
+          <li><a href="/community">커뮤니티</a></li>
+          <li><a href="/gallery">갤러리</a></li>
+          <li><a href="/finance" className="active">회계</a></li>
+        </ul>
       </div>
     </div>
   );
