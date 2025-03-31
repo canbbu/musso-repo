@@ -7,11 +7,8 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
+    // Always navigate to dashboard
+    navigate('/dashboard');
   }, [navigate]);
 
   return (
@@ -19,13 +16,13 @@ const Index = () => {
       <header className="landing-header">
         <div className="container">
           <nav className="navbar">
-            <a href="/" className="navbar-brand">축구회</a>
+            <a href="/dashboard" className="navbar-brand">축구회</a>
             <div className="nav-buttons">
               <button 
                 className="btn btn-secondary"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/dashboard')}
               >
-                로그인
+                대시보드
               </button>
             </div>
           </nav>
@@ -40,9 +37,9 @@ const Index = () => {
               <p>함께 성장하고 즐기는 축구 커뮤니티</p>
               <button 
                 className="btn btn-primary hero-button"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/dashboard')}
               >
-                시작하기
+                대시보드 바로가기
               </button>
             </div>
           </div>

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Dashboard.css';
-import { LogOut, Menu, X, Home, Calendar, Trophy, Users, Image, DollarSign } from 'lucide-react';
+import { Menu, X, Home, Calendar, Trophy, Users, Image, DollarSign } from 'lucide-react';
 
 interface UpcomingMatch {
   id: number;
@@ -20,17 +21,18 @@ interface Announcement {
 }
 
 const Dashboard = () => {
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [userName, setUserName] = useState('방문자');
+  // Default to member role with visitor name
+  const [userRole] = useState<string>('member');
+  const [userName] = useState('방문자');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const navigate = useNavigate();
   
-  const [upcomingMatches, setUpcomingMatches] = useState<UpcomingMatch[]>([
+  const [upcomingMatches] = useState<UpcomingMatch[]>([
     { id: 1, date: '2023-11-25 19:00', location: '서울 마포구 풋살장', opponent: 'FC 서울' },
     { id: 2, date: '2023-12-02 18:00', location: '강남 체육공원', opponent: '강남 유나이티드' },
   ]);
   
-  const [announcements, setAnnouncements] = useState<Announcement[]>([
+  const [announcements] = useState<Announcement[]>([
     { 
       id: 1, 
       title: '이번 주 경기 공지', 
@@ -48,53 +50,14 @@ const Dashboard = () => {
       updatedAt: '2023-11-18 10:15'
     },
   ]);
-  
-  useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    const role = localStorage.getItem('userRole');
-    const name = localStorage.getItem('userName');
-    
-    if (isAuthenticated && role) {
-      setUserRole(role);
-      
-      if (name) {
-        setUserName(name);
-      }
-    }
-  }, []);
 
   const hasPermission = (feature: string): boolean => {
-    if (!userRole) return false;
-    
-    switch (feature) {
-      case 'finance':
-        return ['executive', 'accountant'].includes(userRole);
-      case 'matchManagement':
-        return ['executive', 'coach'].includes(userRole);
-      case 'stats':
-        return ['executive', 'coach'].includes(userRole);
-      case 'community':
-      case 'gallery':
-        return true; // All roles can access community and gallery
-      default:
-        return userRole === 'executive'; // Default to executive only
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userId');
-    navigate('/login');
+    // All features accessible to everyone
+    return true;
   };
 
   const toggleMobileNav = () => {
     setMobileNavOpen(!mobileNavOpen);
-  };
-
-  const handleLogin = () => {
-    navigate('/login');
   };
 
   return (
@@ -112,18 +75,7 @@ const Dashboard = () => {
               <li><a href="/stats" className="nav-link">기록</a></li>
               <li><a href="/community" className="nav-link">커뮤니티</a></li>
               <li><a href="/gallery" className="nav-link">갤러리</a></li>
-              {hasPermission('finance') && (
-                <li><a href="/finance" className="nav-link">회계</a></li>
-              )}
-              <li>
-                <button 
-                  className="btn-logout"
-                  onClick={handleLogout}
-                >
-                  <LogOut size={16} className="logout-icon" />
-                  <span>로그아웃</span>
-                </button>
-              </li>
+              <li><a href="/finance" className="nav-link">회계</a></li>
             </ul>
           </nav>
         </div>
@@ -142,19 +94,8 @@ const Dashboard = () => {
           <li><a href="/stats">기록</a></li>
           <li><a href="/community">커뮤니티</a></li>
           <li><a href="/gallery">갤러리</a></li>
-          {hasPermission('finance') && (
-            <li><a href="/finance">회계</a></li>
-          )}
+          <li><a href="/finance">회계</a></li>
         </ul>
-        <div className="mobile-sidebar-footer">
-          <button 
-            className="btn-logout"
-            onClick={handleLogout}
-          >
-            <LogOut size={16} className="logout-icon" />
-            <span>로그아웃</span>
-          </button>
-        </div>
       </div>
       
       <main className="dashboard-main container">
@@ -162,10 +103,7 @@ const Dashboard = () => {
           <h1>안녕하세요, {userName}님!</h1>
           <p className="welcome-subtitle">축구회 관리 시스템에 오신 것을 환영합니다.</p>
           <div className="user-role-badge">
-            {userRole === 'executive' && <span className="role executive">운영진</span>}
-            {userRole === 'coach' && <span className="role coach">감독</span>}
-            {userRole === 'accountant' && <span className="role accountant">회계</span>}
-            {userRole === 'member' && <span className="role member">회원</span>}
+            <span className="role member">방문자</span>
           </div>
         </div>
         
@@ -222,12 +160,10 @@ const Dashboard = () => {
           <div className="dashboard-card quick-actions">
             <h2><Trophy size={20} /> 바로가기</h2>
             <div className="action-buttons">
-              {hasPermission('stats') && (
-                <a href="/stats" className="action-button stats-button">
-                  <span className="action-icon">📊</span>
-                  <span className="action-text">통계 확인</span>
-                </a>
-              )}
+              <a href="/stats" className="action-button stats-button">
+                <span className="action-icon">📊</span>
+                <span className="action-text">통계 확인</span>
+              </a>
               <a href="/community" className="action-button community-button">
                 <span className="action-icon">💬</span>
                 <span className="action-text">게시판</span>
@@ -236,18 +172,14 @@ const Dashboard = () => {
                 <span className="action-icon">🖼️</span>
                 <span className="action-text">갤러리</span>
               </a>
-              {hasPermission('matchManagement') && (
-                <a href="/matches/new" className="action-button new-match-button">
-                  <span className="action-icon">🏆</span>
-                  <span className="action-text">경기 등록</span>
-                </a>
-              )}
-              {hasPermission('finance') && (
-                <a href="/finance" className="action-button finance-button">
-                  <span className="action-icon">💰</span>
-                  <span className="action-text">회계 관리</span>
-                </a>
-              )}
+              <a href="/matches" className="action-button new-match-button">
+                <span className="action-icon">🏆</span>
+                <span className="action-text">경기 관리</span>
+              </a>
+              <a href="/finance" className="action-button finance-button">
+                <span className="action-icon">💰</span>
+                <span className="action-text">회계 관리</span>
+              </a>
             </div>
           </div>
         </div>
