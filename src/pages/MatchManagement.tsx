@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Check, X, Home } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import { Calendar, Users, Check, X, AlertCircle } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface Attendance {
   attending: number;
@@ -19,15 +21,15 @@ interface Match {
   attendance: Attendance;
   userResponse?: 'attending' | 'notAttending' | null;
   score?: string;
+  result?: 'win' | 'loss' | 'draw';
   createdBy?: string;
   updatedBy?: string;
   updatedAt?: string;
 }
 
 const MatchManagement = () => {
-  const navigate = useNavigate();
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
+  const { canManageAnnouncements } = useAuth();
+  const { toast } = useToast();
   
   const [matches, setMatches] = useState<Match[]>([
     { 
@@ -58,23 +60,30 @@ const MatchManagement = () => {
       status: 'completed',
       attendance: { attending: 11, notAttending: 4, pending: 0 },
       score: '2-1',
+      result: 'win',
       createdBy: '박감독',
       updatedBy: '박감독',
       updatedAt: '2023-11-18 18:30'
+    },
+    {
+      id: 4,
+      date: '2023-11-11T14:00',
+      location: '강동 구민 체육관',
+      opponent: '강동 FC',
+      status: 'completed',
+      attendance: { attending: 10, notAttending: 5, pending: 0 },
+      score: '1-2',
+      result: 'loss',
+      createdBy: '박감독',
+      updatedBy: '박감독',
+      updatedAt: '2023-11-11 16:30'
     }
   ]);
   
-  useEffect(() => {
-    // Check authentication but don't redirect
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    const role = localStorage.getItem('userRole');
-    const name = localStorage.getItem('userName');
-    
-    if (isAuthenticated && role) {
-      setUserRole(role);
-      setUserName(name);
-    }
-  }, []);
+  // Get the current year's total matches
+  const currentYearMatches = matches.filter(
+    match => new Date(match.date).getFullYear() === new Date().getFullYear()
+  ).length;
 
   const handleAttendanceChange = (matchId: number, response: 'attending' | 'notAttending') => {
     setMatches(matches.map(match => {
@@ -90,6 +99,11 @@ const MatchManagement = () => {
         if (response === 'attending') newAttendance.attending++;
         if (response === 'notAttending') newAttendance.notAttending++;
         
+        toast({
+          title: response === 'attending' ? '참석 확인' : '불참 확인',
+          description: `${match.opponent}와의 경기에 ${response === 'attending' ? '참석' : '불참'}으로 표시되었습니다.`,
+        });
+        
         return {
           ...match,
           attendance: newAttendance,
@@ -99,11 +113,6 @@ const MatchManagement = () => {
       return match;
     }));
   };
-  
-  // Get the current year's total matches
-  const currentYearMatches = matches.filter(
-    match => new Date(match.date).getFullYear() === new Date().getFullYear()
-  ).length;
 
   return (
     <div className="match-management-container">
@@ -112,7 +121,7 @@ const MatchManagement = () => {
         <p className="text-gray-600">일정, 결과 및 모든 팀 경기 관리</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center">
@@ -125,29 +134,16 @@ const MatchManagement = () => {
             <p className="text-3xl font-bold">{currentYearMatches} 경기</p>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5 text-green-600" />
-              선수 출석
-            </CardTitle>
-            <CardDescription>평균 경기 참여율</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">85%</p>
-          </CardContent>
-        </Card>
       </div>
 
       <div className="upcoming-matches mb-10">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">다가오는 경기</h2>
-          {userRole === 'executive' || userRole === 'coach' ? (
-            <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition flex items-center">
+          {canManageAnnouncements() && (
+            <Button onClick={() => {window.location.href = "/announcement-management"}} variant="default" className="flex items-center">
               새 경기 등록
-            </button>
-          ) : null}
+            </Button>
+          )}
         </div>
         
         <div className="grid grid-cols-1 gap-4">
@@ -199,33 +195,31 @@ const MatchManagement = () => {
                   </div>
                   <div className="match-actions flex flex-col gap-2">
                     <div className="flex gap-2">
-                      <button 
-                        className={`px-4 py-2 flex-1 rounded transition flex items-center justify-center ${
+                      <Button 
+                        variant={match.userResponse === 'attending' ? 'default' : 'secondary'} 
+                        className={`flex-1 flex items-center justify-center ${
                           match.userResponse === 'attending' 
-                            ? 'bg-green-500 text-white' 
-                            : 'bg-gray-200 text-gray-800 hover:bg-green-100'
+                            ? 'bg-green-500 hover:bg-green-600' 
+                            : ''
                         }`}
                         onClick={() => handleAttendanceChange(match.id, 'attending')}
                       >
                         <Check size={18} className="mr-1" />
                         참석
-                      </button>
-                      <button 
-                        className={`px-4 py-2 flex-1 rounded transition flex items-center justify-center ${
-                          match.userResponse === 'notAttending' 
-                            ? 'bg-red-500 text-white' 
-                            : 'bg-gray-200 text-gray-800 hover:bg-red-100'
-                        }`}
+                      </Button>
+                      <Button 
+                        variant={match.userResponse === 'notAttending' ? 'destructive' : 'secondary'} 
+                        className="flex-1 flex items-center justify-center"
                         onClick={() => handleAttendanceChange(match.id, 'notAttending')}
                       >
                         <X size={18} className="mr-1" />
                         불참
-                      </button>
+                      </Button>
                     </div>
-                    {(userRole === 'executive' || userRole === 'coach') && (
-                      <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+                    {canManageAnnouncements() && (
+                      <Button className="flex items-center justify-center">
                         경기 관리
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -235,6 +229,7 @@ const MatchManagement = () => {
           
           {matches.filter(match => match.status === 'upcoming').length === 0 && (
             <div className="text-center py-8 bg-gray-50 rounded">
+              <AlertCircle className="mx-auto h-6 w-6 text-gray-400 mb-2" />
               <p className="text-gray-500">예정된 경기가 없습니다.</p>
             </div>
           )}
@@ -245,14 +240,20 @@ const MatchManagement = () => {
         <h2 className="text-2xl font-semibold mb-4">최근 경기</h2>
         <div className="grid grid-cols-1 gap-4">
           {matches.filter(match => match.status === 'completed').map(match => (
-            <Card key={match.id} className="border-l-4 border-l-green-500">
+            <Card key={match.id} className={`border-l-4 ${match.result === 'win' ? 'border-l-green-500' : match.result === 'loss' ? 'border-l-red-500' : 'border-l-yellow-500'}`}>
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                   <div className="match-info mb-4 md:mb-0">
                     <div className="flex items-center mb-1">
                       <h3 className="text-xl font-semibold">vs {match.opponent}</h3>
-                      <span className="ml-3 px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full">
-                        승리 {match.score}
+                      <span className={`ml-3 px-2 py-1 ${
+                        match.result === 'win' 
+                          ? 'bg-green-100 text-green-800' 
+                          : match.result === 'loss' 
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      } text-sm rounded-full`}>
+                        {match.result === 'win' ? '승리' : match.result === 'loss' ? '패배' : '무승부'} {match.score}
                       </span>
                     </div>
                     <p className="text-gray-600 mb-1">
@@ -282,9 +283,9 @@ const MatchManagement = () => {
                     </div>
                   </div>
                   <div className="match-actions">
-                    <button className="px-4 py-2 text-blue-600 hover:underline">
+                    <Button variant="ghost" className="text-blue-600 hover:text-blue-800">
                       경기 결과 보기
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -293,6 +294,7 @@ const MatchManagement = () => {
           
           {matches.filter(match => match.status === 'completed').length === 0 && (
             <div className="text-center py-8 bg-gray-50 rounded">
+              <AlertCircle className="mx-auto h-6 w-6 text-gray-400 mb-2" />
               <p className="text-gray-500">완료된 경기가 없습니다.</p>
             </div>
           )}
