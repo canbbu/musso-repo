@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, CreditCard, BarChart2, AlertCircle, PlusCircle, Home, Menu, X, Wallet, Receipt, ChevronsUp, ChevronsDown } from "lucide-react";
@@ -39,7 +38,6 @@ const Finance = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   
   const [transactions, setTransactions] = useState<FinanceTransaction[]>([
     {
@@ -169,7 +167,6 @@ const Finance = () => {
   });
   
   useEffect(() => {
-    // Check authentication and permissions
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     const role = localStorage.getItem('userRole');
     const name = localStorage.getItem('userName');
@@ -190,7 +187,6 @@ const Finance = () => {
     setUserId(id);
   }, [navigate]);
 
-  // Calculate financial summary
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -209,7 +205,6 @@ const Finance = () => {
     .filter(m => m.status === 'pending' || m.status === 'overdue')
     .reduce((sum, m) => sum + m.amount, 0);
 
-  // Calculate category summaries
   const calculateCategorySummaries = (transactionType: 'income' | 'expense'): CategorySummary[] => {
     const filteredTransactions = transactions.filter(t => t.type === transactionType);
     const categoryTotals = filteredTransactions.reduce((acc, t) => {
@@ -267,9 +262,6 @@ const Finance = () => {
   };
   
   const handleAddTransaction = () => {
-    // In a real app, this would open a modal or navigate to a form
-    console.log("Add transaction clicked - would open form");
-    // For demo, we'll just add a dummy transaction
     if (!userName) return;
     
     const newTransaction: FinanceTransaction = {
@@ -290,7 +282,6 @@ const Finance = () => {
     setMobileNavOpen(!mobileNavOpen);
   };
 
-  // Generate month options for the filter
   const getMonthOptions = () => {
     const options = [];
     const currentDate = new Date();
@@ -305,17 +296,10 @@ const Finance = () => {
 
   const monthOptions = getMonthOptions();
 
-  // Filter member dues by selected month
   const filteredMemberDues = memberDues;
 
   return (
-    <div className="finance-container p-6">
-      {/* Home Button */}
-      <a href="/dashboard" className="home-button">
-        <Home className="home-icon" size={16} />
-        홈으로 돌아가기
-      </a>
-
+    <div className="finance-container">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Finance Management</h1>
         <p className="text-gray-600">Track team finances, dues, and expenses</p>
@@ -599,7 +583,6 @@ const Finance = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
       <button onClick={toggleMobileNav} className="fixed bottom-4 right-4 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg md:hidden">
         <Menu size={24} />
       </button>

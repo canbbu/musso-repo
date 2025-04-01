@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../styles/Dashboard.css';
-import { Menu, X, Home, Calendar, Trophy, Users, Image, DollarSign } from 'lucide-react';
+import { Calendar, Users, Trophy } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface UpcomingMatch {
   id: number;
@@ -20,11 +21,6 @@ interface Announcement {
 }
 
 const Dashboard = () => {
-  const [userRole] = useState<string>('member');
-  const [userName] = useState('방문자');
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const navigate = useNavigate();
-  
   const [upcomingMatches] = useState<UpcomingMatch[]>([
     { id: 1, date: '2023-11-25 19:00', location: '서울 마포구 풋살장', opponent: 'FC 서울' },
     { id: 2, date: '2023-12-02 18:00', location: '강남 체육공원', opponent: '강남 유나이티드' },
@@ -49,138 +45,108 @@ const Dashboard = () => {
     },
   ]);
 
-  const hasPermission = (feature: string): boolean => {
-    return true;
-  };
-
-  const toggleMobileNav = () => {
-    setMobileNavOpen(!mobileNavOpen);
-  };
-
   return (
-    <div className="dashboard">
-      <header className="dashboard-header sticky">
-        <div className="container">
-          <nav className="navbar">
-            <a href="/" className="navbar-brand">축구회</a>
-            <button className="mobile-nav-toggle" onClick={toggleMobileNav}>
-              <Menu size={24} />
-            </button>
-            <ul className="navbar-nav">
-              <li><a href="/dashboard" className="nav-link active">홈</a></li>
-              <li><a href="/matches" className="nav-link">경기</a></li>
-              <li><a href="/stats" className="nav-link">기록</a></li>
-              <li><a href="/gallery" className="nav-link">갤러리</a></li>
-              <li><a href="/finance" className="nav-link">회계</a></li>
-            </ul>
-          </nav>
-        </div>
-      </header>
-      
-      <div className={`mobile-sidebar ${mobileNavOpen ? 'open' : ''}`}>
-        <div className="mobile-sidebar-header">
-          <h3>축구회</h3>
-          <button className="close-sidebar" onClick={toggleMobileNav}>
-            <X size={20} />
-          </button>
-        </div>
-        <ul className="mobile-nav-links">
-          <li><a href="/dashboard" className="active">홈</a></li>
-          <li><a href="/matches">경기</a></li>
-          <li><a href="/stats">기록</a></li>
-          <li><a href="/gallery">갤러리</a></li>
-          <li><a href="/finance">회계</a></li>
-        </ul>
+    <div className="dashboard-content">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">대시보드</h1>
+        <p className="text-gray-600">축구회 관리 시스템에 오신 것을 환영합니다.</p>
       </div>
       
-      <main className="dashboard-main container">
-        <div className="welcome-section">
-          <h1>안녕하세요, {userName}님!</h1>
-          <p className="welcome-subtitle">축구회 관리 시스템에 오신 것을 환영합니다.</p>
-          <div className="user-role-badge">
-            <span className="role member">방문자</span>
-          </div>
-        </div>
-        
-        <div className="dashboard-grid">
-          <div className="dashboard-card upcoming-matches">
-            <h2><Calendar size={20} /> 다가오는 경기</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center">
+              <Calendar className="mr-2 h-5 w-5 text-green-600" />
+              다가오는 경기
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             {upcomingMatches.length > 0 ? (
-              <ul className="match-list">
+              <ul className="space-y-4">
                 {upcomingMatches.map(match => (
-                  <li key={match.id} className="match-item">
-                    <div className="match-date">
-                      <span className="day">{new Date(match.date).toLocaleDateString('ko-KR', { day: '2-digit' })}</span>
-                      <span className="month">{new Date(match.date).toLocaleDateString('ko-KR', { month: 'short' })}</span>
+                  <li key={match.id} className="flex justify-between items-center border-b pb-4">
+                    <div className="flex gap-4">
+                      <div className="bg-green-100 p-3 rounded-lg text-green-800 text-center min-w-16">
+                        <div className="text-xl font-bold">{new Date(match.date).getDate()}</div>
+                        <div className="text-sm">{new Date(match.date).toLocaleDateString('ko-KR', { month: 'short' })}</div>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{match.opponent || '내부 경기'}</h3>
+                        <p className="text-sm text-gray-600">{match.location}</p>
+                        <p className="text-xs text-gray-500">{new Date(match.date).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
                     </div>
-                    <div className="match-details">
-                      <h3>{match.opponent || '내부 경기'}</h3>
-                      <p className="match-location">{match.location}</p>
-                      <p className="match-time">{new Date(match.date).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</p>
-                    </div>
-                    <button className="btn btn-primary">참석</button>
+                    <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">참석</button>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="no-data">예정된 경기가 없습니다.</p>
+              <p className="text-gray-500 text-center py-4">예정된 경기가 없습니다.</p>
             )}
-            <a href="/matches" className="view-all">모든 경기 보기</a>
-          </div>
-          
-          <div className="dashboard-card announcements">
-            <h2><Users size={20} /> 공지사항</h2>
-            {announcements.length > 0 ? (
-              <ul className="announcement-list">
-                {announcements.map(announcement => (
-                  <li key={announcement.id} className="announcement-item">
-                    <h3>{announcement.title}</h3>
-                    <div className="announcement-meta">
-                      <p className="announcement-date">{announcement.date}</p>
-                      <p className="announcement-author">작성자: {announcement.author}</p>
-                    </div>
-                    <p className="announcement-content">{announcement.content}</p>
-                    {announcement.updatedAt && (
-                      <p className="announcement-updated">최종 수정: {announcement.updatedAt}</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="no-data">공지사항이 없습니다.</p>
-            )}
-            <a href="/gallery" className="view-all">모든 공지 보기</a>
-          </div>
-          
-          <div className="dashboard-card quick-actions">
-            <h2><Trophy size={20} /> 바로가기</h2>
-            <div className="action-buttons">
-              <a href="/stats" className="action-button stats-button">
-                <span className="action-icon">📊</span>
-                <span className="action-text">통계 확인</span>
-              </a>
-              <a href="/gallery" className="action-button gallery-button">
-                <span className="action-icon">🖼️</span>
-                <span className="action-text">갤러리</span>
-              </a>
-              <a href="/matches" className="action-button new-match-button">
-                <span className="action-icon">🏆</span>
-                <span className="action-text">경기 관리</span>
-              </a>
-              <a href="/finance" className="action-button finance-button">
-                <span className="action-icon">💰</span>
-                <span className="action-text">회계 관리</span>
-              </a>
+            <div className="mt-4 text-right">
+              <a href="/matches" className="text-green-600 hover:underline text-sm">모든 경기 보기</a>
             </div>
-          </div>
-        </div>
-      </main>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center">
+              <Trophy className="mr-2 h-5 w-5 text-yellow-600" />
+              Quick Stats
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">승률</span>
+                <span className="font-semibold">65%</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">경기 참여율</span>
+                <span className="font-semibold">80%</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">팀내 득점 순위</span>
+                <span className="font-semibold">3위</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">팀내 어시스트 순위</span>
+                <span className="font-semibold">5위</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       
-      <footer className="dashboard-footer">
-        <div className="container">
-          <p>&copy; 2023 축구회 관리 시스템. All rights reserved.</p>
-        </div>
-      </footer>
+      <div className="mt-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center">
+              <Users className="mr-2 h-5 w-5 text-blue-600" />
+              공지사항
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {announcements.length > 0 ? (
+              <ul className="divide-y">
+                {announcements.map(announcement => (
+                  <li key={announcement.id} className="py-4">
+                    <h3 className="font-semibold">{announcement.title}</h3>
+                    <div className="flex gap-2 text-xs text-gray-500 mt-1">
+                      <span>{announcement.date}</span>
+                      <span>작성자: {announcement.author}</span>
+                    </div>
+                    <p className="mt-2 text-gray-700">{announcement.content}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 text-center py-4">공지사항이 없습니다.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

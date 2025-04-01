@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Index from "./pages/Index";
+import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import MatchManagement from "./pages/MatchManagement";
 import PlayerStats from "./pages/PlayerStats";
@@ -22,11 +22,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/matches" element={<MatchManagement />} />
-          <Route path="/stats" element={<PlayerStats />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/finance" element={<Finance />} />
+          <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+          <Route path="/matches" element={<Layout><MatchManagement /></Layout>} />
+          <Route path="/stats" element={<Layout><PlayerStats /></Layout>} />
+          <Route path="/gallery" element={<Layout><Gallery /></Layout>} />
+          <Route path="/finance" element={<Layout><Finance /></Layout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
