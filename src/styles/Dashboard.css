@@ -288,100 +288,66 @@
   font-size: 0.9rem;
 }
 
-/* Mobile navigation styling */
-.mobile-nav-toggle {
-  display: none;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
+/* Calendar styles */
+.calendar-wrapper {
+  width: 100%;
+  height: 100%;
 }
 
-.mobile-sidebar {
+.calendar-wrapper > div {
+  width: 100%;
+}
+
+.calendar-wrapper .react-calendar {
+  width: 100% !important;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile navigation styling */
+.mobile-nav-header {
   position: fixed;
   top: 0;
-  left: -250px;
-  width: 250px;
-  height: 100vh;
-  background-color: #fff;
-  z-index: 1000;
-  transition: left 0.3s ease;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;
-}
-
-.mobile-sidebar.open {
   left: 0;
-}
-
-.mobile-sidebar-header {
-  padding: 1rem;
-  background-color: #468e43;
-  color: white;
+  right: 0;
+  z-index: 100;
+  background-color: white;
+  border-bottom: 1px solid #eee;
+  padding: 0.75rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.mobile-sidebar-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.close-sidebar {
+.mobile-nav-trigger {
   background: none;
   border: none;
-  color: white;
-  font-size: 1.5rem;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
 }
 
-.mobile-nav-links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.mobile-nav-links li {
-  border-bottom: 1px solid #eee;
-}
-
-.mobile-nav-links a {
-  display: block;
+.mobile-nav-content {
   padding: 1rem;
-  color: #333;
+}
+
+.mobile-nav-item {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
   text-decoration: none;
+  color: #333;
   transition: background-color 0.3s;
 }
 
-.mobile-nav-links a:hover, .mobile-nav-links a.active {
+.mobile-nav-item:hover {
   background-color: #f5f5f5;
 }
 
-.mobile-sidebar-footer {
-  padding: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.home-button {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
+.mobile-nav-item.active {
   background-color: #468e43;
   color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  transition: background-color 0.3s;
-}
-
-.home-button:hover {
-  background-color: #3a7536;
-}
-
-.home-icon {
-  margin-right: 0.5rem;
 }
 
 @media (max-width: 768px) {
@@ -391,13 +357,6 @@
   
   .navbar-nav {
     display: none;
-  }
-  
-  .mobile-nav-toggle {
-    display: block;
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
   }
   
   .dashboard-grid {
@@ -420,5 +379,26 @@
   
   .match-details {
     margin-bottom: 10px;
+  }
+
+  /* Ensure readability on small screens */
+  .text-sm {
+    font-size: 0.75rem;
+  }
+
+  .calendar-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Fix button alignment on mobile */
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+
+  /* Ensure proper spacing in mobile tables */
+  .table-cell {
+    white-space: nowrap;
+    padding: 8px;
   }
 }

@@ -53,6 +53,7 @@ export function useAuth() {
 
   // Check if user can manage announcements and matches (president, vice president, coach)
   const canManageAnnouncements = () => {
+    // Add 'coach' to the allowed roles if not already included
     return hasPermission(['president', 'vice_president', 'coach']);
   };
 
