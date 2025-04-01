@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -36,54 +37,56 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Layout><Dashboard /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/matches" element={
-            <ProtectedRoute>
-              <Layout><MatchManagement /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/stats" element={
-            <ProtectedRoute>
-              <Layout><PlayerStats /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/gallery" element={
-            <ProtectedRoute>
-              <Layout><Gallery /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/finance" element={
-            <ProtectedRoute>
-              <Layout><Finance /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/stats-management" element={
-            <ProtectedRoute>
-              <Layout><StatsManagement /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/announcement-management" element={
-            <ProtectedRoute>
-              <Layout><AnnouncementManagement /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Layout><Dashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/matches" element={
+              <ProtectedRoute>
+                <Layout><MatchManagement /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/stats" element={
+              <ProtectedRoute>
+                <Layout><PlayerStats /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/gallery" element={
+              <ProtectedRoute>
+                <Layout><Gallery /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/finance" element={
+              <ProtectedRoute>
+                <Layout><Finance /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/stats-management" element={
+              <ProtectedRoute>
+                <Layout><StatsManagement /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/announcement-management" element={
+              <ProtectedRoute>
+                <Layout><AnnouncementManagement /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;
