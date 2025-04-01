@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Dashboard.css';
@@ -21,7 +20,6 @@ interface Announcement {
 }
 
 const Dashboard = () => {
-  // Default to member role with visitor name
   const [userRole] = useState<string>('member');
   const [userName] = useState('방문자');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -52,7 +50,6 @@ const Dashboard = () => {
   ]);
 
   const hasPermission = (feature: string): boolean => {
-    // All features accessible to everyone
     return true;
   };
 
@@ -73,7 +70,6 @@ const Dashboard = () => {
               <li><a href="/dashboard" className="nav-link active">홈</a></li>
               <li><a href="/matches" className="nav-link">경기</a></li>
               <li><a href="/stats" className="nav-link">기록</a></li>
-              <li><a href="/community" className="nav-link">커뮤니티</a></li>
               <li><a href="/gallery" className="nav-link">갤러리</a></li>
               <li><a href="/finance" className="nav-link">회계</a></li>
             </ul>
@@ -92,7 +88,6 @@ const Dashboard = () => {
           <li><a href="/dashboard" className="active">홈</a></li>
           <li><a href="/matches">경기</a></li>
           <li><a href="/stats">기록</a></li>
-          <li><a href="/community">커뮤니티</a></li>
           <li><a href="/gallery">갤러리</a></li>
           <li><a href="/finance">회계</a></li>
         </ul>
@@ -154,7 +149,7 @@ const Dashboard = () => {
             ) : (
               <p className="no-data">공지사항이 없습니다.</p>
             )}
-            <a href="/community" className="view-all">모든 공지 보기</a>
+            <a href="/gallery" className="view-all">모든 공지 보기</a>
           </div>
           
           <div className="dashboard-card quick-actions">
@@ -163,10 +158,6 @@ const Dashboard = () => {
               <a href="/stats" className="action-button stats-button">
                 <span className="action-icon">📊</span>
                 <span className="action-text">통계 확인</span>
-              </a>
-              <a href="/community" className="action-button community-button">
-                <span className="action-icon">💬</span>
-                <span className="action-text">게시판</span>
               </a>
               <a href="/gallery" className="action-button gallery-button">
                 <span className="action-icon">🖼️</span>

@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import MatchManagement from "./pages/MatchManagement";
 import PlayerStats from "./pages/PlayerStats";
-import Community from "./pages/Community";
 import Gallery from "./pages/Gallery";
 import Finance from "./pages/Finance";
 import NotFound from "./pages/NotFound";
@@ -26,7 +25,6 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/matches" element={<MatchManagement />} />
           <Route path="/stats" element={<PlayerStats />} />
-          <Route path="/community" element={<Community />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/finance" element={<Finance />} />
           <Route path="*" element={<NotFound />} />

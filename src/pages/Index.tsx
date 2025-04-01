@@ -69,9 +69,9 @@ const Index = () => {
               </div>
               
               <div className="feature-card">
-                <div className="feature-icon">💬</div>
-                <h3>커뮤니티</h3>
-                <p>게시판, 갤러리를 통해 서로 소통하고 팀 문화를 만들어가세요.</p>
+                <div className="feature-icon">🖼️</div>
+                <h3>갤러리</h3>
+                <p>팀의 사진과 영상을 공유하고 소중한 순간을 기록하세요.</p>
               </div>
             </div>
           </div>
