@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, CreditCard, BarChart2, AlertCircle, PlusCircle, Home, Menu, X, Wallet, Receipt, ChevronsUp, ChevronsDown } from "lucide-react";
@@ -38,6 +39,7 @@ const Finance = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   
   const [transactions, setTransactions] = useState<FinanceTransaction[]>([
     {
@@ -598,7 +600,6 @@ const Finance = () => {
           <li><a href="/dashboard">홈</a></li>
           <li><a href="/matches">경기</a></li>
           <li><a href="/stats">기록</a></li>
-          <li><a href="/community">커뮤니티</a></li>
           <li><a href="/gallery">갤러리</a></li>
           <li><a href="/finance" className="active">회계</a></li>
         </ul>

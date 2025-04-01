@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Image, Upload, Tag, Calendar, Home, Menu, X } from "lucide-react";
@@ -77,10 +76,8 @@ const Gallery = () => {
   const [monthFilter, setMonthFilter] = useState('all');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   
-  // Extract all unique tags for category filter
   const categories = [...new Set(gallery.flatMap(item => item.tags))];
   
-  // Extract all unique months for month filter
   const getMonthYear = (dateString: string) => {
     const date = new Date(dateString);
     return `${date.getFullYear()}-${date.getMonth() + 1}`;
@@ -88,7 +85,6 @@ const Gallery = () => {
   
   const months = [...new Set(gallery.map(item => getMonthYear(item.date)))].sort().reverse();
   
-  // Apply filters
   const filteredGallery = gallery.filter(item => {
     const categoryMatch = categoryFilter === 'all' || item.tags.includes(categoryFilter);
     const monthMatch = monthFilter === 'all' || getMonthYear(item.date) === monthFilter;
@@ -101,7 +97,6 @@ const Gallery = () => {
 
   return (
     <div className="gallery-container p-6">
-      {/* Home Button */}
       <a href="/dashboard" className="home-button">
         <Home className="home-icon" size={16} />
         홈으로 돌아가기
@@ -236,7 +231,6 @@ const Gallery = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
       <button onClick={toggleMobileNav} className="fixed bottom-4 right-4 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg md:hidden">
         <Menu size={24} />
       </button>
