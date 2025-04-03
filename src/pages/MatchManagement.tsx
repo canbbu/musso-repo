@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Users, Check, X, AlertCircle } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
 
 interface Attendance {
   attending: number;
@@ -27,9 +27,24 @@ interface Match {
   updatedAt?: string;
 }
 
+interface Player {
+  id: string;
+  name: string;
+}
+
 const MatchManagement = () => {
-  const { canManageAnnouncements } = useAuth();
+  const { canManageAnnouncements, canManagePlayerStats } = useAuth();
   const { toast } = useToast();
+  
+  const [players] = useState<Player[]>([
+    { id: 'player1', name: '김선수' },
+    { id: 'player2', name: '이공격수' },
+    { id: 'player3', name: '박수비' },
+    { id: 'player4', name: '정미드필더' },
+    { id: 'player5', name: '최골키퍼' },
+    { id: 'player6', name: '강수비수' },
+    { id: 'player7', name: '장미드필더' },
+  ]);
   
   const [matches, setMatches] = useState<Match[]>([
     { 
@@ -80,18 +95,14 @@ const MatchManagement = () => {
     }
   ]);
   
-  // Get the current year's total matches
-  const currentYearMatches = matches.filter(
-    match => new Date(match.date).getFullYear() === new Date().getFullYear()
-  ).length;
-
+  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
+  
   const handleAttendanceChange = (matchId: number, response: 'attending' | 'notAttending') => {
     setMatches(matches.map(match => {
       if (match.id === matchId) {
         const oldResponse = match.userResponse;
         const newAttendance = { ...match.attendance };
         
-        // Adjust counts based on the old and new responses
         if (oldResponse === 'attending') newAttendance.attending--;
         if (oldResponse === 'notAttending') newAttendance.notAttending--;
         if (oldResponse === null) newAttendance.pending--;
@@ -113,6 +124,31 @@ const MatchManagement = () => {
       return match;
     }));
   };
+
+  const checkForTodaysMatch = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todaysMatch = matches.find(match => {
+      const matchDate = new Date(match.date);
+      matchDate.setHours(0, 0, 0, 0);
+      return matchDate.getTime() === today.getTime() && match.status === 'upcoming';
+    });
+    
+    if (todaysMatch) {
+      setSelectedMatchId(todaysMatch.id);
+    }
+    
+    return todaysMatch;
+  };
+  
+  useEffect(() => {
+    checkForTodaysMatch();
+  }, []);
+
+  const currentYearMatches = matches.filter(
+    match => new Date(match.date).getFullYear() === new Date().getFullYear()
+  ).length;
 
   return (
     <div className="match-management-container">
@@ -164,7 +200,6 @@ const MatchManagement = () => {
                     </p>
                     <p className="text-gray-600 mb-3">{match.location}</p>
                     
-                    {/* Attendance information */}
                     <div className="flex gap-4 text-sm">
                       <div className="flex items-center">
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded-full mr-1">
@@ -236,6 +271,16 @@ const MatchManagement = () => {
         </div>
       </div>
 
+      {selectedMatchId && (
+        <PlayerAttendanceForm 
+          matchId={selectedMatchId}
+          matchDate={matches.find(m => m.id === selectedMatchId)?.date || ''}
+          opponent={matches.find(m => m.id === selectedMatchId)?.opponent || ''}
+          players={players}
+          isCoach={canManagePlayerStats()}
+        />
+      )}
+
       <div className="completed-matches">
         <h2 className="text-2xl font-semibold mb-4">최근 경기</h2>
         <div className="grid grid-cols-1 gap-4">
@@ -265,7 +310,6 @@ const MatchManagement = () => {
                     </p>
                     <p className="text-gray-600">{match.location}</p>
                     
-                    {/* Attendance information */}
                     <div className="flex gap-4 text-sm mt-2">
                       <div className="flex items-center">
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded-full mr-1">
