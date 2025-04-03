@@ -66,11 +66,24 @@ export function useDashboardData(): DashboardData {
     },
   ]);
 
-  // Mock data for upcoming matches
+  // Mock data for upcoming matches - 현재 날짜로 업데이트
+  const getCurrentDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const todayFormatted = getCurrentDate();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowFormatted = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+  
   const [upcomingMatches] = useState<UpcomingMatch[]>([
     { 
       id: 1, 
-      date: '2023-11-25 19:00', 
+      date: `${todayFormatted} 19:00`, 
       location: '서울 마포구 풋살장', 
       opponent: 'FC 서울',
       attending: 8,
@@ -80,7 +93,7 @@ export function useDashboardData(): DashboardData {
     },
     { 
       id: 2, 
-      date: '2023-12-02 18:00', 
+      date: `${tomorrowFormatted} 18:00`, 
       location: '강남 체육공원', 
       opponent: '강남 유나이티드',
       attending: 6,
@@ -99,14 +112,14 @@ export function useDashboardData(): DashboardData {
     { title: '재정', path: '/finance' },
   ];
 
-  // Calculate events for the calendar
+  // Calculate events for the calendar - 날짜 형식 수정
   const getCalendarEvents = () => {
     const events: Record<string, CalendarEvent[]> = {};
     
     // Add matches to calendar
     upcomingMatches.forEach(match => {
-      const matchDate = new Date(match.date);
-      const dateStr = matchDate.toISOString().split('T')[0];
+      // 날짜 형식 수정 (시간 부분 제거)
+      const dateStr = match.date.split(' ')[0];
       
       if (!events[dateStr]) events[dateStr] = [];
       events[dateStr].push({ 

@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, CreditCard, BarChart2, AlertCircle, PlusCircle, Home, Menu, X, Wallet, Receipt, ChevronsUp, ChevronsDown } from "lucide-react";
+import { DollarSign, CreditCard, BarChart2, AlertCircle, PlusCircle, Wallet, Receipt, ChevronsUp, ChevronsDown } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
+import MobileNavigation from '@/components/dashboard/MobileNavigation';
 
 interface FinanceTransaction {
   id: number;
@@ -36,10 +38,18 @@ interface CategorySummary {
 
 const Finance = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  
+  const navItems = [
+    { title: '대시보드', path: '/dashboard' },
+    { title: '경기 일정', path: '/matches' },
+    { title: '선수 통계', path: '/stats' },
+    { title: '갤러리', path: '/gallery' },
+    { title: '재정', path: '/finance' },
+  ];
   
   const [transactions, setTransactions] = useState<FinanceTransaction[]>([
     {
@@ -179,10 +189,7 @@ const Finance = () => {
       return;
     }
     
-    if (role !== 'executive' && role !== 'accountant') {
-      navigate('/dashboard');
-      return;
-    }
+    // 재정 페이지 접근 권한 확인 제거 - 모든 사용자가 접근 가능하도록 수정
     
     setUserRole(role);
     setUserName(name);
@@ -280,10 +287,6 @@ const Finance = () => {
     setTransactions([newTransaction, ...transactions]);
   };
 
-  const toggleMobileNav = () => {
-    setMobileNavOpen(!mobileNavOpen);
-  };
-
   const getMonthOptions = () => {
     const options = [];
     const currentDate = new Date();
@@ -302,7 +305,10 @@ const Finance = () => {
 
   return (
     <div className="finance-container">
-      <div className="mb-6">
+      {/* 항상 모바일 네비게이션 표시 */}
+      {isMobile && <MobileNavigation navItems={navItems} />}
+
+      <div className={`mb-6 ${isMobile ? "mt-16" : ""}`}>
         <h1 className="text-3xl font-bold mb-2">Finance Management</h1>
         <p className="text-gray-600">Track team finances, dues, and expenses</p>
       </div>
@@ -363,11 +369,11 @@ const Finance = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="member-dues">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">회비 납부 현황</h2>
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+            <h2 className="text-2xl font-semibold mb-2 md:mb-0">회비 납부 현황</h2>
+            <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-2 w-full md:w-auto">
               <select 
-                className="px-3 py-2 border rounded"
+                className="px-3 py-2 border rounded w-full md:w-auto"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
               >
@@ -377,7 +383,7 @@ const Finance = () => {
                   </option>
                 ))}
               </select>
-              <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition">
+              <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition w-full md:w-auto">
                 납부 알림 보내기
               </button>
             </div>
@@ -389,30 +395,30 @@ const Finance = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">금액</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">마감일</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">확인자</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이름</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">금액</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">마감일</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">확인자</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredMemberDues.map((member) => (
                       <tr key={member.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{member.name}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm text-gray-500">{member.amount.toLocaleString()}원</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm text-gray-500">{member.dueDate}</div>
                           {member.paidDate && (
                             <div className="text-xs text-green-600">납부일: {member.paidDate}</div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                             member.status === 'paid' ? 'bg-green-100 text-green-800' :
                             member.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -422,12 +428,12 @@ const Finance = () => {
                              member.status === 'pending' ? '대기 중' : '기한 초과'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm text-gray-500">
                             {member.confirmedBy || '-'}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                           {member.status !== 'paid' && (
                             <button 
                               className="text-blue-600 hover:text-blue-900"
@@ -447,10 +453,10 @@ const Finance = () => {
         </div>
 
         <div className="recent-transactions">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">최근 거래 내역</h2>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+            <h2 className="text-2xl font-semibold mb-2 md:mb-0">최근 거래 내역</h2>
             <button 
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition flex items-center"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition flex items-center w-full md:w-auto justify-center md:justify-start"
               onClick={handleAddTransaction}
             >
               <PlusCircle className="mr-1 h-4 w-4" />
@@ -464,17 +470,17 @@ const Finance = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">날짜</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">설명</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">금액</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">등록자</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">날짜</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">설명</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">카테고리</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">금액</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">등록자</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {transactions.map((transaction) => (
                       <tr key={transaction.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{transaction.date}</div>
                           <div className="text-xs text-gray-500">
                             등록: {transaction.createdAt}
@@ -485,21 +491,21 @@ const Finance = () => {
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{transaction.description}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
                             {transaction.category}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className={`text-sm font-medium flex items-center ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                             {transaction.type === 'income' ? <ChevronsUp size={16} className="mr-1" /> : <ChevronsDown size={16} className="mr-1" />}
                             {transaction.amount.toLocaleString()}원
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm text-gray-500">
                             {transaction.createdBy}
                             {transaction.updatedBy && (
@@ -583,26 +589,6 @@ const Finance = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      <button onClick={toggleMobileNav} className="fixed bottom-4 right-4 z-50 bg-green-500 text-white rounded-full p-3 shadow-lg md:hidden">
-        <Menu size={24} />
-      </button>
-      
-      <div className={`mobile-sidebar ${mobileNavOpen ? 'open' : ''}`}>
-        <div className="mobile-sidebar-header">
-          <h3>축구회</h3>
-          <button className="close-sidebar" onClick={toggleMobileNav}>
-            <X size={20} />
-          </button>
-        </div>
-        <ul className="mobile-nav-links">
-          <li><a href="/dashboard">홈</a></li>
-          <li><a href="/matches">경기</a></li>
-          <li><a href="/stats">기록</a></li>
-          <li><a href="/gallery">갤러리</a></li>
-          <li><a href="/finance" className="active">회계</a></li>
-        </ul>
       </div>
     </div>
   );

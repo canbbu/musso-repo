@@ -17,7 +17,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-content relative">
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - Always show on mobile */}
       {isMobile && <MobileNavigation navItems={navItems} />}
 
       <div className={`mb-6 ${isMobile ? "mt-16" : ""}`}>

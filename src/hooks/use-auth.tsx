@@ -51,10 +51,10 @@ export function useAuth() {
     return hasPermission(['coach', 'assistant_coach']);
   };
 
-  // Check if user can manage announcements and matches (president, vice president, coach)
+  // 모든 사용자에게 공지사항 및 일정 관리 권한 부여
   const canManageAnnouncements = () => {
-    // Add 'coach' to the allowed roles if not already included
-    return hasPermission(['president', 'vice_president', 'coach']);
+    // 모든 역할에 대해 true 반환
+    return true;
   };
 
   // Check if user can manage finances (treasurer only)
