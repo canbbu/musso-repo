@@ -32,7 +32,6 @@ interface DashboardData {
   announcements: Announcement[];
   upcomingMatches: UpcomingMatch[];
   calendarEvents: Record<string, CalendarEvent[]>;
-  navItems: Array<{ title: string; path: string }>;
 }
 
 export function useDashboardData(): DashboardData {
@@ -103,15 +102,6 @@ export function useDashboardData(): DashboardData {
     },
   ]);
 
-  // Navigation items
-  const navItems = [
-    { title: '대시보드', path: '/dashboard' },
-    { title: '경기 일정', path: '/matches' },
-    { title: '선수 통계', path: '/stats' },
-    { title: '갤러리', path: '/gallery' },
-    { title: '재정', path: '/finance' },
-  ];
-
   // Calculate events for the calendar - 날짜 형식 수정
   const getCalendarEvents = () => {
     const events: Record<string, CalendarEvent[]> = {};
@@ -145,7 +135,6 @@ export function useDashboardData(): DashboardData {
   return {
     announcements,
     upcomingMatches,
-    calendarEvents,
-    navItems
+    calendarEvents
   };
 }

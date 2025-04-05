@@ -13,12 +13,12 @@ import { useDashboardData } from '@/hooks/use-dashboard-data';
 const Dashboard = () => {
   const { userName, canManageAnnouncements } = useAuth();
   const isMobile = useIsMobile();
-  const { announcements, upcomingMatches, calendarEvents, navItems } = useDashboardData();
+  const { announcements, upcomingMatches, calendarEvents } = useDashboardData();
 
   return (
     <div className="dashboard-content relative">
       {/* Mobile Navigation - Always show on mobile */}
-      {isMobile && <MobileNavigation navItems={navItems} />}
+      {isMobile && <MobileNavigation />}
 
       <div className={`mb-6 ${isMobile ? "mt-16" : ""}`}>
         <h1 className="text-3xl font-bold mb-2">대시보드</h1>
