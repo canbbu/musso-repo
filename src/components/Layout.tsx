@@ -1,7 +1,15 @@
 
 import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sidebar, SidebarContent, SidebarGroup, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { 
+  Sidebar, 
+  SidebarContent, 
+  SidebarGroup, 
+  SidebarMenu, 
+  SidebarMenuItem, 
+  SidebarMenuButton,
+  SidebarProvider
+} from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Calendar, Trophy, Image, CreditCard, LogOut } from 'lucide-react';
@@ -26,42 +34,44 @@ const Layout = ({ children }: LayoutProps) => {
   ];
 
   return (
-    <div className="min-h-screen flex">
-      {!isMobile && (
-        <Sidebar>
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarMenu>
-                {navItems.map((item) => (
-                  <SidebarMenuItem key={item.path}>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        {!isMobile && (
+          <Sidebar>
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarMenu>
+                  {navItems.map((item) => (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        className={location.pathname === item.path ? "bg-primary/10" : ""}
+                        onClick={() => navigate(item.path)}
+                      >
+                        <item.icon className="h-5 w-5 mr-3 text-primary" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                  <SidebarMenuItem>
                     <SidebarMenuButton
-                      className={location.pathname === item.path ? "bg-primary/10" : ""}
-                      onClick={() => navigate(item.path)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={logout}
                     >
-                      <item.icon className="h-5 w-5 mr-3 text-primary" />
-                      <span>{item.title}</span>
+                      <LogOut className="h-5 w-5 mr-3" />
+                      <span>로그아웃</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ))}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={logout}
-                  >
-                    <LogOut className="h-5 w-5 mr-3" />
-                    <span>로그아웃</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
-      )}
-      <div className={`flex-1 min-h-screen ${isMobile ? 'pt-14' : ''}`}>
-        {isMobile && <MobileNavigation />}
-        <div className="p-6">{children}</div>
+                </SidebarMenu>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+        )}
+        <div className={`flex-1 min-h-screen ${isMobile ? 'pt-14' : ''}`}>
+          {isMobile && <MobileNavigation />}
+          <div className="p-6">{children}</div>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
