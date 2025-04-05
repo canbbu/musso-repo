@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import FinanceSummaryCards from './FinanceSummaryCards';
 import TransactionTable from './TransactionTable';
-import { Transaction } from '@/types/finance';
+import { Transaction, MemberDues } from '@/types/finance';
 
 interface FinanceSummaryTabProps {
   balance: number;
@@ -15,6 +15,8 @@ interface FinanceSummaryTabProps {
   duesCompletionPercent: number;
   currentMonthTransactionsCount: number;
   paginatedTransactions: Transaction[];
+  memberDues?: MemberDues[];
+  allTransactions?: Transaction[];
   setActiveTab: (tab: 'summary' | 'dues' | 'transactions') => void;
 }
 
@@ -27,6 +29,8 @@ const FinanceSummaryTab = ({
   duesCompletionPercent,
   currentMonthTransactionsCount,
   paginatedTransactions,
+  memberDues = [],
+  allTransactions = [],
   setActiveTab
 }: FinanceSummaryTabProps) => {
   return (
@@ -44,6 +48,9 @@ const FinanceSummaryTab = ({
           totalDuesCount={totalDuesCount}
           duesCompletionPercent={duesCompletionPercent}
           currentMonthTransactionsCount={currentMonthTransactionsCount}
+          memberDues={memberDues}
+          transactions={allTransactions}
+          setActiveTab={setActiveTab}
         />
         
         <div className="mt-8">

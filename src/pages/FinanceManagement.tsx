@@ -14,6 +14,7 @@ const FinanceManagement = () => {
   const [saveChanges, setSaveChanges] = useState(false);
   
   const {
+    transactions,
     paginatedTransactions,
     transactionPage,
     setTransactionPage,
@@ -83,6 +84,7 @@ const FinanceManagement = () => {
         canManageFinance={canManageFinance}
         handleRefresh={handleRefresh}
         saveChanges={saveChanges}
+        allTransactions={transactions}
       />
     </div>
   );

@@ -27,6 +27,7 @@ interface FinanceManagementTabsProps {
   canManageFinance: () => boolean;
   handleRefresh: () => void;
   saveChanges: boolean;
+  allTransactions?: Transaction[];
 }
 
 const FinanceManagementTabs = ({
@@ -47,7 +48,8 @@ const FinanceManagementTabs = ({
   currentMonthTransactionsCount,
   canManageFinance,
   handleRefresh,
-  saveChanges
+  saveChanges,
+  allTransactions = []
 }: FinanceManagementTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'summary' | 'dues' | 'transactions')}>
@@ -74,6 +76,8 @@ const FinanceManagementTabs = ({
           duesCompletionPercent={duesCompletionPercent}
           currentMonthTransactionsCount={currentMonthTransactionsCount}
           paginatedTransactions={paginatedTransactions}
+          memberDues={memberDues}
+          allTransactions={allTransactions}
           setActiveTab={setActiveTab}
         />
       </TabsContent>

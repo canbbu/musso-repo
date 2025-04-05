@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
+import PlayerStatsRecorder from './PlayerStatsRecorder';
 
 interface Player {
   id: string;
@@ -87,13 +88,32 @@ const PlayerAttendanceForm = ({ matchId, matchDate, opponent, players, isCoach }
   // Generate rating options from 5 to 10 with 0.5 increments
   const ratingOptions = Array.from({ length: 11 }, (_, i) => 5 + i * 0.5);
 
+  // Format date from ISO string to readable format
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ko-KR', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <Card className="mt-6">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="flex items-center">
           <Users className="mr-2 h-5 w-5 text-blue-600" />
           선수 출석 및 평점
         </CardTitle>
+        {isCoach && (
+          <PlayerStatsRecorder 
+            matchId={matchId}
+            matchDate={formatDate(matchDate)}
+            opponent={opponent}
+            players={players}
+          />
+        )}
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
