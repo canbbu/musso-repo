@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar as CalendarIcon, MessageSquare, Save, Plus, Trash2, Edit, Eye } from 'lucide-react';
+import { Calendar as CalendarIcon, MessageSquare, Save, Plus, Trash2, Edit, Eye, Users } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -27,6 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Announcement {
   id: number;
@@ -38,6 +39,7 @@ interface Announcement {
   location?: string;
   opponent?: string;
   matchTime?: string;
+  attendanceTracking?: boolean;
 }
 
 const AnnouncementManagement = () => {
@@ -63,7 +65,8 @@ const AnnouncementManagement = () => {
       author: '박감독',
       location: '서울 마포구 풋살장',
       opponent: 'FC 서울',
-      matchTime: '19:00'
+      matchTime: '19:00',
+      attendanceTracking: true
     },
     {
       id: 3, 
@@ -71,7 +74,8 @@ const AnnouncementManagement = () => {
       type: 'notice',
       date: '2023-11-18', 
       content: '12월 23일 연말 모임이 있을 예정입니다. 참석 여부를 알려주세요.',
-      author: '박감독'
+      author: '박감독',
+      attendanceTracking: true
     },
   ]);
   
@@ -83,6 +87,7 @@ const AnnouncementManagement = () => {
     content: '',
     date: format(new Date(), 'yyyy-MM-dd'),
     author: userName || '',
+    attendanceTracking: false
   });
   const [editMode, setEditMode] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -126,7 +131,8 @@ const AnnouncementManagement = () => {
       author: userName || '',
       location: '',
       opponent: '',
-      matchTime: ''
+      matchTime: '',
+      attendanceTracking: false
     });
     setActiveTab('create');
   };
@@ -159,6 +165,13 @@ const AnnouncementManagement = () => {
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      attendanceTracking: checked
     }));
   };
 
@@ -196,6 +209,7 @@ const AnnouncementManagement = () => {
         content: formData.content!,
         date: formData.date!,
         author: formData.author!,
+        attendanceTracking: formData.attendanceTracking,
         ...(formData.type === 'match' && {
           location: formData.location,
           opponent: formData.opponent,
@@ -251,6 +265,7 @@ const AnnouncementManagement = () => {
                     <TableHead>제목</TableHead>
                     <TableHead>날짜</TableHead>
                     <TableHead>작성자</TableHead>
+                    <TableHead>참석 확인</TableHead>
                     <TableHead className="w-[100px]">관리</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -272,6 +287,16 @@ const AnnouncementManagement = () => {
                       <TableCell>{item.date}</TableCell>
                       <TableCell>{item.author}</TableCell>
                       <TableCell>
+                        {item.attendanceTracking ? (
+                          <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            사용 중
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 text-xs">미사용</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex gap-2">
                           <Button variant="ghost" size="icon" onClick={() => handleEditItem(item)}>
                             <Edit className="h-4 w-4" />
@@ -286,7 +311,7 @@ const AnnouncementManagement = () => {
                   
                   {announcements.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4">
+                      <TableCell colSpan={6} className="text-center py-4">
                         등록된 항목이 없습니다.
                       </TableCell>
                     </TableRow>
@@ -396,6 +421,15 @@ const AnnouncementManagement = () => {
                     value={formData.content || ''} 
                     onChange={handleInputChange} 
                   />
+                </div>
+                
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox 
+                    id="attendanceTracking" 
+                    checked={formData.attendanceTracking || false}
+                    onCheckedChange={handleCheckboxChange}
+                  />
+                  <Label htmlFor="attendanceTracking" className="cursor-pointer">참석 여부 확인 기능 사용</Label>
                 </div>
                 
                 <div className="flex justify-end gap-2 pt-4">
