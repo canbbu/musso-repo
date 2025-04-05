@@ -12,6 +12,7 @@ import MatchManagement from "./pages/MatchManagement";
 import PlayerStats from "./pages/PlayerStats";
 import Gallery from "./pages/Gallery";
 import Finance from "./pages/Finance";
+import FinanceManagement from "./pages/FinanceManagement";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import StatsManagement from "./pages/StatsManagement";
@@ -69,6 +70,11 @@ const App = () => (
             <Route path="/finance" element={
               <ProtectedRoute>
                 <Layout><Finance /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/finance-management" element={
+              <ProtectedRoute>
+                <Layout><FinanceManagement /></Layout>
               </ProtectedRoute>
             } />
             <Route path="/stats-management" element={
