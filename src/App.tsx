@@ -10,6 +10,7 @@ import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import MatchManagement from "./pages/MatchManagement";
 import PlayerStats from "./pages/PlayerStats";
+import MyStats from "./pages/MyStats";
 import Gallery from "./pages/Gallery";
 import Finance from "./pages/Finance";
 import FinanceManagement from "./pages/FinanceManagement";
@@ -60,6 +61,11 @@ const App = () => (
             <Route path="/stats" element={
               <ProtectedRoute>
                 <Layout><PlayerStats /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/my-stats" element={
+              <ProtectedRoute>
+                <Layout><MyStats /></Layout>
               </ProtectedRoute>
             } />
             <Route path="/gallery" element={

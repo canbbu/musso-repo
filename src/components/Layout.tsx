@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut } from 'lucide-react';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User } from 'lucide-react';
 import MobileNavigation from './dashboard/MobileNavigation';
 
 interface LayoutProps {
@@ -29,6 +29,7 @@ const Layout = ({ children }: LayoutProps) => {
     { title: '대시보드', path: '/dashboard', icon: Home },
     { title: '경기 관리', path: '/matches', icon: Calendar },
     { title: '선수 통계', path: '/stats', icon: Trophy },
+    { title: '내 기록', path: '/my-stats', icon: User },
     { title: '갤러리', path: '/gallery', icon: Image },
     { title: '재정 관리', path: '/finance', icon: CreditCard },
   ];

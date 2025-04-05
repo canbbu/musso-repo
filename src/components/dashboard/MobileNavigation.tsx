@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut } from 'lucide-react';
+import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -15,13 +15,14 @@ import { useAuth } from '@/hooks/use-auth';
 const MobileNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, userName } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const navItems = [
     { title: '대시보드', path: '/dashboard', icon: Home },
     { title: '경기 관리', path: '/matches', icon: Calendar },
     { title: '선수 통계', path: '/stats', icon: Trophy },
+    { title: '내 기록', path: '/my-stats', icon: User },
     { title: '갤러리', path: '/gallery', icon: Image },
     { title: '재정 관리', path: '/finance', icon: CreditCard },
   ];
@@ -40,6 +41,9 @@ const MobileNavigation = () => {
           <SheetHeader className="pb-4">
             <SheetTitle>메뉴</SheetTitle>
           </SheetHeader>
+          <div className="border-b pb-4 mb-4">
+            <p className="text-sm text-gray-500">안녕하세요, {userName}님</p>
+          </div>
           <nav>
             <ul className="space-y-2">
               {navItems.map((item) => (

@@ -2,10 +2,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useMatchData } from '@/hooks/use-match-data';
+import { usePlayerStats } from '@/hooks/use-player-stats';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Plus, Calendar, Users, ChartBar } from 'lucide-react';
 import MatchStatsCard from '@/components/match/MatchStatsCard';
 import MatchSection from '@/components/match/MatchSection';
 import CompletedMatchSection from '@/components/match/CompletedMatchSection';
 import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
+import PlayerStatsRecorder from '@/components/match/PlayerStatsRecorder';
 
 interface Player {
   id: string;
@@ -14,7 +20,10 @@ interface Player {
 
 const MatchManagement = () => {
   const { canManageAnnouncements, canManagePlayerStats } = useAuth();
-  const { matches, selectedMatchId, handleAttendanceChange, currentYearMatches } = useMatchData();
+  const { matches, selectedMatchId, setSelectedMatchId, handleAttendanceChange, currentYearMatches } = useMatchData();
+  const { playerStats, handleStatChange, formatDate } = usePlayerStats();
+  
+  const [activeTab, setActiveTab] = useState<'matches' | 'attendance' | 'stats'>('matches');
   
   const [players] = useState<Player[]>([
     { id: 'player1', name: '김선수' },
@@ -33,6 +42,8 @@ const MatchManagement = () => {
     window.location.href = "/announcement-management";
   };
 
+  const selectedMatch = matches.find(m => m.id === selectedMatchId);
+
   return (
     <div className="match-management-container">
       <div className="mb-6">
@@ -40,35 +51,121 @@ const MatchManagement = () => {
         <p className="text-gray-600">일정, 결과 및 모든 팀 경기 관리</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
-        <MatchStatsCard currentYearMatches={currentYearMatches} />
-      </div>
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle>경기 관리 메뉴</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab as any}>
+            <TabsList className="w-full mb-4">
+              <TabsTrigger value="matches" className="flex-1">
+                <Calendar className="w-4 h-4 mr-2" />
+                경기 일정
+              </TabsTrigger>
+              <TabsTrigger value="attendance" className="flex-1">
+                <Users className="w-4 h-4 mr-2" />
+                출석 관리
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="flex-1">
+                <ChartBar className="w-4 h-4 mr-2" />
+                선수 기록
+              </TabsTrigger>
+            </TabsList>
 
-      <MatchSection
-        title="다가오는 경기"
-        matches={upcomingMatches}
-        onAttendanceChange={handleAttendanceChange}
-        canManageAnnouncements={canManageAnnouncements()}
-        emptyMessage="예정된 경기가 없습니다."
-        showAddButton={true}
-        onAddClick={handleAddMatchClick}
-      />
+            <TabsContent value="matches">
+              <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
+                <MatchStatsCard currentYearMatches={currentYearMatches} />
+              </div>
+              
+              <MatchSection
+                title="다가오는 경기"
+                matches={upcomingMatches}
+                onAttendanceChange={handleAttendanceChange}
+                canManageAnnouncements={canManageAnnouncements()}
+                emptyMessage="예정된 경기가 없습니다."
+                showAddButton={true}
+                onAddClick={handleAddMatchClick}
+              />
+              
+              <CompletedMatchSection
+                title="최근 경기"
+                matches={completedMatches}
+                emptyMessage="완료된 경기가 없습니다."
+              />
+            </TabsContent>
 
-      {selectedMatchId && (
-        <PlayerAttendanceForm 
-          matchId={selectedMatchId}
-          matchDate={matches.find(m => m.id === selectedMatchId)?.date || ''}
-          opponent={matches.find(m => m.id === selectedMatchId)?.opponent || ''}
-          players={players}
-          isCoach={canManagePlayerStats()}
-        />
-      )}
+            <TabsContent value="attendance">
+              {selectedMatchId ? (
+                <PlayerAttendanceForm 
+                  matchId={selectedMatchId}
+                  matchDate={matches.find(m => m.id === selectedMatchId)?.date || ''}
+                  opponent={matches.find(m => m.id === selectedMatchId)?.opponent || ''}
+                  players={players}
+                  isCoach={canManagePlayerStats()}
+                />
+              ) : (
+                <div className="text-center p-8 bg-gray-50 rounded-lg">
+                  <p className="text-gray-600 mb-4">출석 관리를 위해 경기를 선택해주세요</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {upcomingMatches.map(match => (
+                      <Button 
+                        key={match.id} 
+                        variant="outline" 
+                        onClick={() => setSelectedMatchId(match.id)}
+                        className="text-left"
+                      >
+                        <div>
+                          <div className="font-medium">{formatDate(match.date)}</div>
+                          <div className="text-sm text-gray-500">vs {match.opponent}</div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
 
-      <CompletedMatchSection
-        title="최근 경기"
-        matches={completedMatches}
-        emptyMessage="완료된 경기가 없습니다."
-      />
+            <TabsContent value="stats">
+              {canManagePlayerStats() ? (
+                selectedMatch ? (
+                  <PlayerStatsRecorder 
+                    matchId={selectedMatch.id}
+                    matchDate={selectedMatch.date}
+                    opponent={selectedMatch.opponent}
+                    players={players}
+                    playerStats={playerStats}
+                    onStatChange={handleStatChange}
+                  />
+                ) : (
+                  <div className="text-center p-8 bg-gray-50 rounded-lg">
+                    <p className="text-gray-600 mb-4">선수 기록 관리를 위해 경기를 선택해주세요</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {matches.map(match => (
+                        <Button 
+                          key={match.id} 
+                          variant="outline" 
+                          onClick={() => setSelectedMatchId(match.id)}
+                          className="text-left"
+                        >
+                          <div>
+                            <div className="font-medium">{formatDate(match.date)}</div>
+                            <div className="text-sm text-gray-500">vs {match.opponent}</div>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )
+              ) : (
+                <div className="text-center p-10 bg-gray-50 rounded-lg">
+                  <p className="text-red-600 mb-2">접근 권한이 없습니다</p>
+                  <p className="text-gray-600">선수 기록 관리는 감독과 코치만 가능합니다.</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

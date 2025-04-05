@@ -1,22 +1,35 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  DollarSign, 
+  Calendar, 
+  ArrowRightLeft, 
+  ChevronRight 
+} from "lucide-react";
 import { useFinanceData } from '@/hooks/use-finance-data';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import TransactionTable from '@/components/finance/TransactionTable';
 import FinanceSummary from '@/components/finance/FinanceSummary';
+import MemberDuesTable from '@/components/finance/MemberDuesTable';
 
 const Finance = () => {
   const { canManageFinance } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'summary' | 'dues' | 'transactions'>('summary');
   
   const {
+    transactions,
     paginatedTransactions,
     transactionPage,
     setTransactionPage,
     totalTransactionPages,
+    memberDues,
+    togglePaymentStatus,
     balance,
     totalIncome,
     totalExpense,
@@ -46,28 +59,93 @@ const Finance = () => {
         )}
       </div>
       
-      <FinanceSummary 
-        balance={balance}
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        paidDuesCount={paidDuesCount}
-        totalDuesCount={totalDuesCount}
-        duesCompletionPercent={duesCompletionPercent}
-        currentMonthTransactionsCount={currentMonthTransactionsCount}
-      />
-      
-      <div className="transaction-history mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">최근 거래내역</h2>
-        </div>
-        
-        <TransactionTable 
-          transactions={paginatedTransactions}
-          currentPage={transactionPage}
-          totalPages={totalTransactionPages}
-          onPageChange={setTransactionPage}
-        />
-      </div>
+      <Card className="mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle>재정 관리 메뉴</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab as any}>
+            <TabsList className="w-full mb-4">
+              <TabsTrigger value="summary" className="flex-1">
+                <DollarSign className="w-4 h-4 mr-2" />
+                재정 요약
+              </TabsTrigger>
+              <TabsTrigger value="dues" className="flex-1">
+                <Calendar className="w-4 h-4 mr-2" />
+                회비 현황
+              </TabsTrigger>
+              <TabsTrigger value="transactions" className="flex-1">
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+                거래 내역
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="summary">
+              <FinanceSummary 
+                balance={balance}
+                totalIncome={totalIncome}
+                totalExpense={totalExpense}
+                paidDuesCount={paidDuesCount}
+                totalDuesCount={totalDuesCount}
+                duesCompletionPercent={duesCompletionPercent}
+                currentMonthTransactionsCount={currentMonthTransactionsCount}
+              />
+            </TabsContent>
+
+            <TabsContent value="dues">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">이번 달 회비 납부 현황</CardTitle>
+                  <CardDescription>
+                    현재 {paidDuesCount}/{totalDuesCount} 회원이 납부를 완료했습니다 ({duesCompletionPercent}%)
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <MemberDuesTable 
+                    memberDues={memberDues} 
+                    onStatusChange={canManageFinance() ? togglePaymentStatus : undefined}
+                  />
+                </CardContent>
+                {canManageFinance() && (
+                  <CardFooter>
+                    <Button variant="outline" className="w-full" onClick={handleManageFinance}>
+                      회비 관리 페이지로 이동
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                )}
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="transactions">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">최근 거래 내역</CardTitle>
+                  <CardDescription>
+                    이번 달 총 {currentMonthTransactionsCount}건의 거래가 있었습니다
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <TransactionTable 
+                    transactions={paginatedTransactions}
+                    currentPage={transactionPage}
+                    totalPages={totalTransactionPages}
+                    onPageChange={setTransactionPage}
+                  />
+                </CardContent>
+                {canManageFinance() && (
+                  <CardFooter>
+                    <Button variant="outline" className="w-full" onClick={handleManageFinance}>
+                      거래 내역 관리 페이지로 이동
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                )}
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
       
       {canManageFinance() && (
         <div className="flex justify-center mt-8">
