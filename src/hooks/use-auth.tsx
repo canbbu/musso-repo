@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -62,12 +61,20 @@ export function useAuth() {
     return hasPermission(['treasurer']);
   };
 
+  // Check if the user is an admin
+  const isAdmin = () => {
+    // In a real app, this would check the user's role from a database
+    // For this demo, we'll consider users who can manage announcements as admins
+    return canManageAnnouncements();
+  };
+
   return {
     ...userInfo,
     logout,
     hasPermission,
     canManagePlayerStats,
     canManageAnnouncements,
-    canManageFinance
+    canManageFinance,
+    isAdmin
   };
 }

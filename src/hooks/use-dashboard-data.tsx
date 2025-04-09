@@ -1,6 +1,11 @@
 
 import { useState } from 'react';
 
+interface Player {
+  id: string;
+  name: string;
+}
+
 interface Announcement {
   id: number;
   title: string;
@@ -20,6 +25,9 @@ interface UpcomingMatch {
   notAttending?: number;
   pending?: number;
   status?: 'scheduled' | 'cancelled';
+  attendingPlayers?: Player[];
+  notAttendingPlayers?: Player[];
+  pendingPlayers?: Player[];
 }
 
 interface CalendarEvent {
@@ -79,26 +87,63 @@ export function useDashboardData(): DashboardData {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowFormatted = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
   
+  // Sample players data
+  const samplePlayers: Player[] = [
+    { id: "player1", name: "김선수" },
+    { id: "player2", name: "이공격수" },
+    { id: "player3", name: "박수비" },
+    { id: "player4", name: "정미드필더" },
+    { id: "player5", name: "최골키퍼" },
+    { id: "player6", name: "강수비수" },
+    { id: "player7", name: "장미드필더" },
+  ];
+  
   const [upcomingMatches] = useState<UpcomingMatch[]>([
     { 
       id: 1, 
       date: `${todayFormatted} 19:00`, 
       location: '서울 마포구 풋살장', 
       opponent: 'FC 서울',
-      attending: 8,
-      notAttending: 3, 
-      pending: 5,
-      status: 'scheduled'
+      attending: 3,
+      notAttending: 2, 
+      pending: 2,
+      status: 'scheduled',
+      attendingPlayers: [
+        samplePlayers[0],
+        samplePlayers[1],
+        samplePlayers[2]
+      ],
+      notAttendingPlayers: [
+        samplePlayers[3],
+        samplePlayers[4]
+      ],
+      pendingPlayers: [
+        samplePlayers[5],
+        samplePlayers[6]
+      ]
     },
     { 
       id: 2, 
       date: `${tomorrowFormatted} 18:00`, 
       location: '강남 체육공원', 
       opponent: '강남 유나이티드',
-      attending: 6,
-      notAttending: 2,
-      pending: 8,
-      status: 'cancelled'
+      attending: 2,
+      notAttending: 3,
+      pending: 2,
+      status: 'cancelled',
+      attendingPlayers: [
+        samplePlayers[0],
+        samplePlayers[5]
+      ],
+      notAttendingPlayers: [
+        samplePlayers[1],
+        samplePlayers[2],
+        samplePlayers[3]
+      ],
+      pendingPlayers: [
+        samplePlayers[4],
+        samplePlayers[6]
+      ]
     },
   ]);
 
