@@ -1,33 +1,33 @@
 
 import React from 'react';
-import CompletedMatchCard from '@/components/match/CompletedMatchCard';
-import NoMatchesInfo from '@/components/match/NoMatchesInfo';
 import { Match } from '@/hooks/use-match-data';
+import CompletedMatchCard from './CompletedMatchCard';
+import NoMatchesInfo from './NoMatchesInfo';
 
 interface CompletedMatchSectionProps {
   title: string;
   matches: Match[];
   emptyMessage: string;
+  canManagePlayerStats?: boolean;
 }
 
-const CompletedMatchSection = ({
-  title,
-  matches,
-  emptyMessage
-}: CompletedMatchSectionProps) => {
+const CompletedMatchSection = ({ title, matches, emptyMessage, canManagePlayerStats = false }: CompletedMatchSectionProps) => {
   return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-4">{title}</h2>
-      
-      <div className="grid grid-cols-1 gap-4">
-        {matches.length > 0 ? (
-          matches.map(match => (
-            <CompletedMatchCard key={match.id} match={match} />
-          ))
-        ) : (
-          <NoMatchesInfo message={emptyMessage} />
-        )}
-      </div>
+    <div className="mt-8">
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+      {matches.length > 0 ? (
+        <div className="space-y-4">
+          {matches.map(match => (
+            <CompletedMatchCard 
+              key={match.id} 
+              match={match} 
+              canManagePlayerStats={canManagePlayerStats}
+            />
+          ))}
+        </div>
+      ) : (
+        <NoMatchesInfo message={emptyMessage} />
+      )}
     </div>
   );
 };

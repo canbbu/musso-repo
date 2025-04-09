@@ -6,13 +6,13 @@ import { usePlayerStats } from '@/hooks/use-player-stats';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Users, ChartBar } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { Plus, Calendar, Users, ChartBar, Clock, FileText, History } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import MatchStatsCard from '@/components/match/MatchStatsCard';
 import MatchSection from '@/components/match/MatchSection';
 import CompletedMatchSection from '@/components/match/CompletedMatchSection';
-import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
-import PlayerStatsRecorder from '@/components/match/PlayerStatsRecorder';
+import AttendanceRecordForm from '@/components/match/AttendanceRecordForm';
+import MatchRecordForm from '@/components/match/MatchRecordForm';
 
 interface Player {
   id: string;
@@ -23,14 +23,15 @@ const MatchManagement = () => {
   const { canManageAnnouncements, canManagePlayerStats } = useAuth();
   const { matches, selectedMatchId, setSelectedMatchId, handleAttendanceChange, currentYearMatches } = useMatchData();
   const { playerStats, handleStatChange, formatDate } = usePlayerStats();
+  const navigate = useNavigate();
   
   const [searchParams] = useSearchParams();
-  const tabParam = searchParams.get('tab');
   const matchIdParam = searchParams.get('matchId');
+  const editParam = searchParams.get('edit');
   
-  const [activeTab, setActiveTab] = useState<'matches' | 'attendance' | 'stats'>(
-    tabParam === 'attendance' ? 'attendance' : 
-    tabParam === 'stats' ? 'stats' : 
+  const [activeTab, setActiveTab] = useState<'matches' | 'attendance' | 'gameRecord'>(
+    searchParams.get('tab') === 'attendance' ? 'attendance' : 
+    searchParams.get('tab') === 'gameRecord' ? 'gameRecord' : 
     'matches'
   );
   
@@ -41,12 +42,13 @@ const MatchManagement = () => {
     }
     
     // URL에서 tab 파라미터가 있으면 해당 탭을 활성화
+    const tabParam = searchParams.get('tab');
     if (tabParam) {
-      if (tabParam === 'attendance' || tabParam === 'stats') {
+      if (tabParam === 'attendance' || tabParam === 'gameRecord') {
         setActiveTab(tabParam);
       }
     }
-  }, [tabParam, matchIdParam, setSelectedMatchId]);
+  }, [searchParams, matchIdParam, setSelectedMatchId]);
   
   const [players] = useState<Player[]>([
     { id: 'player1', name: '김선수' },
@@ -63,6 +65,10 @@ const MatchManagement = () => {
 
   const handleAddMatchClick = () => {
     window.location.href = "/announcement-management";
+  };
+  
+  const handleMatchHistoryClick = () => {
+    navigate('/match-history');
   };
 
   const selectedMatch = matches.find(m => m.id === selectedMatchId);
@@ -87,17 +93,23 @@ const MatchManagement = () => {
               </TabsTrigger>
               <TabsTrigger value="attendance" className="flex-1">
                 <Users className="w-4 h-4 mr-2" />
-                출석 관리
+                출석 기록
               </TabsTrigger>
-              <TabsTrigger value="stats" className="flex-1">
-                <ChartBar className="w-4 h-4 mr-2" />
-                선수 기록
+              <TabsTrigger value="gameRecord" className="flex-1">
+                <FileText className="w-4 h-4 mr-2" />
+                경기 기록
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="matches">
-              <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 mb-8">
-                <MatchStatsCard currentYearMatches={currentYearMatches} />
+              <div className="flex justify-between mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6">
+                  <MatchStatsCard currentYearMatches={currentYearMatches} />
+                </div>
+                <Button variant="outline" onClick={handleMatchHistoryClick}>
+                  <History className="w-4 h-4 mr-2" />
+                  경기 이력 보기
+                </Button>
               </div>
               
               <MatchSection
@@ -114,23 +126,24 @@ const MatchManagement = () => {
                 title="최근 경기"
                 matches={completedMatches}
                 emptyMessage="완료된 경기가 없습니다."
+                canManagePlayerStats={canManagePlayerStats()}
               />
             </TabsContent>
 
             <TabsContent value="attendance">
               {selectedMatchId ? (
-                <PlayerAttendanceForm 
+                <AttendanceRecordForm 
                   matchId={selectedMatchId}
-                  matchDate={matches.find(m => m.id === selectedMatchId)?.date || ''}
-                  opponent={matches.find(m => m.id === selectedMatchId)?.opponent || ''}
+                  matchDate={selectedMatch?.date || ''}
+                  opponent={selectedMatch?.opponent || ''}
                   players={players}
                   isCoach={canManagePlayerStats()}
                 />
               ) : (
                 <div className="text-center p-8 bg-gray-50 rounded-lg">
-                  <p className="text-gray-600 mb-4">출석 관리를 위해 경기를 선택해주세요</p>
+                  <p className="text-gray-600 mb-4">출석 기록을 위해 경기를 선택해주세요</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {upcomingMatches.map(match => (
+                    {matches.map(match => (
                       <Button 
                         key={match.id} 
                         variant="outline" 
@@ -148,41 +161,35 @@ const MatchManagement = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="stats">
-              {canManagePlayerStats() ? (
-                selectedMatch ? (
-                  <PlayerStatsRecorder 
-                    matchId={selectedMatch.id}
-                    matchDate={selectedMatch.date}
-                    opponent={selectedMatch.opponent}
-                    players={players}
-                    playerStats={playerStats}
-                    onStatChange={handleStatChange}
-                  />
-                ) : (
-                  <div className="text-center p-8 bg-gray-50 rounded-lg">
-                    <p className="text-gray-600 mb-4">선수 기록 관리를 위해 경기를 선택해주세요</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {matches.map(match => (
-                        <Button 
-                          key={match.id} 
-                          variant="outline" 
-                          onClick={() => setSelectedMatchId(match.id)}
-                          className="text-left"
-                        >
-                          <div>
-                            <div className="font-medium">{formatDate(match.date)}</div>
-                            <div className="text-sm text-gray-500">vs {match.opponent}</div>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                )
+            <TabsContent value="gameRecord">
+              {selectedMatchId ? (
+                <MatchRecordForm 
+                  matchId={selectedMatchId}
+                  matchDate={selectedMatch?.date || ''}
+                  opponent={selectedMatch?.opponent || ''}
+                  players={players}
+                  playerStats={playerStats}
+                  onStatChange={handleStatChange}
+                  isCoach={canManagePlayerStats()}
+                />
               ) : (
-                <div className="text-center p-10 bg-gray-50 rounded-lg">
-                  <p className="text-red-600 mb-2">접근 권한이 없습니다</p>
-                  <p className="text-gray-600">선수 기록 관리는 감독과 코치만 가능합니다.</p>
+                <div className="text-center p-8 bg-gray-50 rounded-lg">
+                  <p className="text-gray-600 mb-4">경기 기록을 위해 경기를 선택해주세요</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {matches.map(match => (
+                      <Button 
+                        key={match.id} 
+                        variant="outline" 
+                        onClick={() => setSelectedMatchId(match.id)}
+                        className="text-left"
+                      >
+                        <div>
+                          <div className="font-medium">{formatDate(match.date)}</div>
+                          <div className="text-sm text-gray-500">vs {match.opponent}</div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               )}
             </TabsContent>

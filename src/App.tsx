@@ -1,104 +1,35 @@
-
 import React from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import Layout from "./components/Layout";
-import Dashboard from "./pages/Dashboard";
-import MatchManagement from "./pages/MatchManagement";
-import PlayerStats from "./pages/PlayerStats";
-import MyStats from "./pages/MyStats";
-import Gallery from "./pages/Gallery";
-import Finance from "./pages/Finance";
-import FinanceManagement from "./pages/FinanceManagement";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import StatsManagement from "./pages/StatsManagement";
-import AnnouncementManagement from "./pages/AnnouncementManagement";
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider, RequireAuth } from './components/auth/AuthContext';
+import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Gallery, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory } from './pages';
+import './App.css';
+import { ToastProvider } from '@/components/ui/use-toast';
 
-// Auth guard component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
-    setIsAuthenticated(authStatus);
-  }, []);
-
-  if (isAuthenticated === null) {
-    // Still checking auth status
-    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
-  }
-
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-};
-
-const queryClient = new QueryClient();
-
-const App = () => (
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+function App() {
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <Router>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Layout><Dashboard /></Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/matches" element={
-              <ProtectedRoute>
-                <Layout><MatchManagement /></Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/stats" element={
-              <ProtectedRoute>
-                <Layout><PlayerStats /></Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/my-stats" element={
-              <ProtectedRoute>
-                <Layout><MyStats /></Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/gallery" element={
-              <ProtectedRoute>
-                <Layout><Gallery /></Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/finance" element={
-              <ProtectedRoute>
-                <Layout><Finance /></Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/finance-management" element={
-              <ProtectedRoute>
-                <Layout><FinanceManagement /></Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/stats-management" element={
-              <ProtectedRoute>
-                <Layout><StatsManagement /></Layout>
-              </ProtectedRoute>
-            } />
-            <Route path="/announcement-management" element={
-              <ProtectedRoute>
-                <Layout><AnnouncementManagement /></Layout>
-              </ProtectedRoute>
-            } />
+            <Route element={<RequireAuth />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/matches" element={<MatchManagement />} />
+              <Route path="/match-history" element={<MatchHistory />} />
+              <Route path="/finance" element={<Finance />} />
+              <Route path="/stats" element={<PlayerStats />} />
+              <Route path="/stats-management" element={<StatsManagement />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/announcement-management" element={<AnnouncementManagement />} />
+              <Route path="/finance-management" element={<FinanceManagement />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
-);
+        </Router>
+      </AuthProvider>
+    </ToastProvider>
+  );
+}
 
 export default App;

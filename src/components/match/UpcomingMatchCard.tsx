@@ -16,7 +16,7 @@ const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements }
   const navigate = useNavigate();
   
   const handleManageMatch = () => {
-    navigate(`/matches?tab=attendance&matchId=${match.id}`);
+    navigate(`/matches?matchId=${match.id}&tab=attendance`);
   };
 
   return (

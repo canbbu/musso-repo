@@ -81,6 +81,22 @@ export const useMatchData = () => {
       notes: '수비 집중력이 떨어졌던 경기',
       mvp: '최골키퍼',
       review: '패배했지만 최골키퍼 선수의 여러 차례 선방이 없었다면, 더 큰 점수 차이로 질 뻔했습니다. 다음 경기에서는 수비 조직력을 강화해야 합니다.'
+    },
+    // Let's add today's match for MVP voting feature
+    {
+      id: 5,
+      date: new Date().toISOString(),
+      location: '서울 종합 운동장',
+      opponent: '서울 유나이티드',
+      status: 'completed',
+      attendance: { attending: 12, notAttending: 2, pending: 0 },
+      score: '3-1',
+      result: 'win',
+      createdBy: '박감독',
+      updatedBy: '박감독',
+      updatedAt: new Date().toLocaleTimeString(),
+      notes: '팀워크가 좋았던 경기',
+      review: '좋은 경기력을 보여준 팀원들에게 감사합니다. 승리를 축하합니다!'
     }
   ]);
   
@@ -118,17 +134,17 @@ export const useMatchData = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const todaysMatch = matches.find(match => {
+    const completedTodaysMatch = matches.find(match => {
       const matchDate = new Date(match.date);
       matchDate.setHours(0, 0, 0, 0);
-      return matchDate.getTime() === today.getTime() && match.status === 'upcoming';
+      return matchDate.getTime() === today.getTime() && match.status === 'completed';
     });
     
-    if (todaysMatch) {
-      setSelectedMatchId(todaysMatch.id);
+    if (completedTodaysMatch) {
+      setSelectedMatchId(completedTodaysMatch.id);
     }
     
-    return todaysMatch;
+    return completedTodaysMatch;
   };
   
   useEffect(() => {
@@ -144,6 +160,7 @@ export const useMatchData = () => {
     selectedMatchId,
     setSelectedMatchId,
     handleAttendanceChange,
-    currentYearMatches
+    currentYearMatches,
+    checkForTodaysMatch
   };
 };
