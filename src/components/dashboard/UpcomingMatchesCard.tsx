@@ -120,22 +120,18 @@ const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
                       </TableCell>
                       {isAdmin() && (
                         <TableCell className="text-center">
-                          <Collapsible>
-                            <CollapsibleTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => toggleExpand(match.id)}
-                                className="p-0 h-8 w-8"
-                              >
-                                {expandedMatch === match.id ? (
-                                  <ChevronUp className="h-4 w-4" />
-                                ) : (
-                                  <ChevronDown className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </CollapsibleTrigger>
-                          </Collapsible>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => toggleExpand(match.id)}
+                            className="p-0 h-8 w-8"
+                          >
+                            {expandedMatch === match.id ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
                         </TableCell>
                       )}
                     </TableRow>
@@ -143,54 +139,56 @@ const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
                     {isAdmin() && expandedMatch === match.id && (
                       <TableRow>
                         <TableCell colSpan={6} className="p-0 border-t-0">
-                          <CollapsibleContent className="p-4 bg-gray-50">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div>
-                                <h4 className="text-sm font-medium flex items-center text-green-600 mb-2">
-                                  <Users className="h-4 w-4 mr-1" /> 참석자 ({match.attending}명)
-                                </h4>
-                                {match.attendingPlayers && match.attendingPlayers.length > 0 ? (
-                                  <ul className="text-sm pl-6 list-disc">
-                                    {match.attendingPlayers.map(player => (
-                                      <li key={player.id}>{player.name}</li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <p className="text-sm text-gray-500 pl-6">참석자가 없습니다.</p>
-                                )}
+                          <Collapsible open={expandedMatch === match.id}>
+                            <CollapsibleContent className="p-4 bg-gray-50">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <h4 className="text-sm font-medium flex items-center text-green-600 mb-2">
+                                    <Users className="h-4 w-4 mr-1" /> 참석자 ({match.attending}명)
+                                  </h4>
+                                  {match.attendingPlayers && match.attendingPlayers.length > 0 ? (
+                                    <ul className="text-sm pl-6 list-disc">
+                                      {match.attendingPlayers.map(player => (
+                                        <li key={player.id}>{player.name}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-sm text-gray-500 pl-6">참석자가 없습니다.</p>
+                                  )}
+                                </div>
+                                
+                                <div>
+                                  <h4 className="text-sm font-medium flex items-center text-red-600 mb-2">
+                                    <Users className="h-4 w-4 mr-1" /> 불참자 ({match.notAttending}명)
+                                  </h4>
+                                  {match.notAttendingPlayers && match.notAttendingPlayers.length > 0 ? (
+                                    <ul className="text-sm pl-6 list-disc">
+                                      {match.notAttendingPlayers.map(player => (
+                                        <li key={player.id}>{player.name}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-sm text-gray-500 pl-6">불참자가 없습니다.</p>
+                                  )}
+                                </div>
+                                
+                                <div>
+                                  <h4 className="text-sm font-medium flex items-center text-gray-600 mb-2">
+                                    <Users className="h-4 w-4 mr-1" /> 미정 ({match.pending}명)
+                                  </h4>
+                                  {match.pendingPlayers && match.pendingPlayers.length > 0 ? (
+                                    <ul className="text-sm pl-6 list-disc">
+                                      {match.pendingPlayers.map(player => (
+                                        <li key={player.id}>{player.name}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-sm text-gray-500 pl-6">미정인 회원이 없습니다.</p>
+                                  )}
+                                </div>
                               </div>
-                              
-                              <div>
-                                <h4 className="text-sm font-medium flex items-center text-red-600 mb-2">
-                                  <Users className="h-4 w-4 mr-1" /> 불참자 ({match.notAttending}명)
-                                </h4>
-                                {match.notAttendingPlayers && match.notAttendingPlayers.length > 0 ? (
-                                  <ul className="text-sm pl-6 list-disc">
-                                    {match.notAttendingPlayers.map(player => (
-                                      <li key={player.id}>{player.name}</li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <p className="text-sm text-gray-500 pl-6">불참자가 없습니다.</p>
-                                )}
-                              </div>
-                              
-                              <div>
-                                <h4 className="text-sm font-medium flex items-center text-gray-600 mb-2">
-                                  <Users className="h-4 w-4 mr-1" /> 미정 ({match.pending}명)
-                                </h4>
-                                {match.pendingPlayers && match.pendingPlayers.length > 0 ? (
-                                  <ul className="text-sm pl-6 list-disc">
-                                    {match.pendingPlayers.map(player => (
-                                      <li key={player.id}>{player.name}</li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <p className="text-sm text-gray-500 pl-6">미정인 회원이 없습니다.</p>
-                                )}
-                              </div>
-                            </div>
-                          </CollapsibleContent>
+                            </CollapsibleContent>
+                          </Collapsible>
                         </TableCell>
                       </TableRow>
                     )}
