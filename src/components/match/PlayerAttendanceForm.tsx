@@ -99,6 +99,23 @@ const PlayerAttendanceForm = ({ matchId, matchDate, opponent, players, isCoach }
     });
   };
 
+  // Create empty player stats for PlayerStatsRecorder
+  const emptyPlayerStats = players.map(player => ({
+    id: player.id,
+    name: player.name,
+    matchId: matchId,
+    matchDate: matchDate,
+    attended: attendance.find(a => a.playerId === player.id)?.status === 'attending' || false,
+    goals: 0,
+    assists: 0,
+    rating: attendance.find(a => a.playerId === player.id)?.rating || 0
+  }));
+
+  // Dummy stat change handler for PlayerStatsRecorder
+  const handleStatChange = (playerId: string, field: string, value: any) => {
+    console.log(`Stat change for player ${playerId}: ${field} = ${value}`);
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -112,6 +129,8 @@ const PlayerAttendanceForm = ({ matchId, matchDate, opponent, players, isCoach }
             matchDate={formatDate(matchDate)}
             opponent={opponent}
             players={players}
+            playerStats={emptyPlayerStats}
+            onStatChange={handleStatChange}
           />
         )}
       </CardHeader>

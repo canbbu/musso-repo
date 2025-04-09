@@ -103,7 +103,8 @@ const Finance = () => {
                 <CardContent>
                   <MemberDuesTable 
                     memberDues={memberDues} 
-                    onStatusChange={canManageFinance() ? togglePaymentStatus : undefined}
+                    onTogglePayment={canManageFinance() ? togglePaymentStatus : undefined}
+                    canManage={canManageFinance()}
                   />
                 </CardContent>
                 {canManageFinance() && (
