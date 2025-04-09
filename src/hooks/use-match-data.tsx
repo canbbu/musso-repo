@@ -21,6 +21,9 @@ export interface Match {
   createdBy?: string;
   updatedBy?: string;
   updatedAt?: string;
+  notes?: string;
+  mvp?: string;
+  review?: string;
 }
 
 export const useMatchData = () => {
@@ -58,7 +61,10 @@ export const useMatchData = () => {
       result: 'win',
       createdBy: '박감독',
       updatedBy: '박감독',
-      updatedAt: '2023-11-18 18:30'
+      updatedAt: '2023-11-18 18:30',
+      notes: '비가 오는 가운데 진행된 경기였지만 팀워크가 좋았음',
+      mvp: '이공격수',
+      review: '전반적으로 좋은 경기였습니다. 비가 와서 어려운 조건이었지만 팀원들의 협력이 좋았고, 특히 이공격수 선수의 득점으로 승리할 수 있었습니다.'
     },
     {
       id: 4,
@@ -71,7 +77,10 @@ export const useMatchData = () => {
       result: 'loss',
       createdBy: '박감독',
       updatedBy: '박감독',
-      updatedAt: '2023-11-11 16:30'
+      updatedAt: '2023-11-11 16:30',
+      notes: '수비 집중력이 떨어졌던 경기',
+      mvp: '최골키퍼',
+      review: '패배했지만 최골키퍼 선수의 여러 차례 선방이 없었다면, 더 큰 점수 차이로 질 뻔했습니다. 다음 경기에서는 수비 조직력을 강화해야 합니다.'
     }
   ]);
   

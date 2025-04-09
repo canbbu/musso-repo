@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useMatchData } from '@/hooks/use-match-data';
 import { usePlayerStats } from '@/hooks/use-player-stats';
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar, Users, ChartBar } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import MatchStatsCard from '@/components/match/MatchStatsCard';
 import MatchSection from '@/components/match/MatchSection';
 import CompletedMatchSection from '@/components/match/CompletedMatchSection';
@@ -23,7 +24,29 @@ const MatchManagement = () => {
   const { matches, selectedMatchId, setSelectedMatchId, handleAttendanceChange, currentYearMatches } = useMatchData();
   const { playerStats, handleStatChange, formatDate } = usePlayerStats();
   
-  const [activeTab, setActiveTab] = useState<'matches' | 'attendance' | 'stats'>('matches');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const matchIdParam = searchParams.get('matchId');
+  
+  const [activeTab, setActiveTab] = useState<'matches' | 'attendance' | 'stats'>(
+    tabParam === 'attendance' ? 'attendance' : 
+    tabParam === 'stats' ? 'stats' : 
+    'matches'
+  );
+  
+  useEffect(() => {
+    // URL에서 matchId 파라미터가 있으면 해당 매치를 선택
+    if (matchIdParam) {
+      setSelectedMatchId(Number(matchIdParam));
+    }
+    
+    // URL에서 tab 파라미터가 있으면 해당 탭을 활성화
+    if (tabParam) {
+      if (tabParam === 'attendance' || tabParam === 'stats') {
+        setActiveTab(tabParam);
+      }
+    }
+  }, [tabParam, matchIdParam, setSelectedMatchId]);
   
   const [players] = useState<Player[]>([
     { id: 'player1', name: '김선수' },

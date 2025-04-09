@@ -2,8 +2,9 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Check, X, Clipboard } from "lucide-react";
 import { Match } from '@/hooks/use-match-data';
+import { useNavigate } from 'react-router-dom';
 
 interface UpcomingMatchCardProps {
   match: Match;
@@ -12,6 +13,12 @@ interface UpcomingMatchCardProps {
 }
 
 const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements }: UpcomingMatchCardProps) => {
+  const navigate = useNavigate();
+  
+  const handleManageMatch = () => {
+    navigate(`/matches?tab=attendance&matchId=${match.id}`);
+  };
+
   return (
     <Card key={match.id} className="border-l-4 border-l-blue-500">
       <CardContent className="p-6">
@@ -81,7 +88,8 @@ const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements }
               </Button>
             </div>
             {canManageAnnouncements && (
-              <Button className="flex items-center justify-center">
+              <Button className="flex items-center justify-center" onClick={handleManageMatch}>
+                <Clipboard size={18} className="mr-1" />
                 경기 관리
               </Button>
             )}

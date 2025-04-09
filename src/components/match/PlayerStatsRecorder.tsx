@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { SaveIcon, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,6 +23,7 @@ interface PlayerStats {
   goals: number;
   assists: number;
   rating: number;
+  notes?: string;
 }
 
 interface PlayerStatsRecorderProps {
@@ -43,6 +45,8 @@ const PlayerStatsRecorder = ({
 }: PlayerStatsRecorderProps) => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [matchNotes, setMatchNotes] = useState('');
+  const [mvp, setMvp] = useState('');
   
   // Convert matchDate to readable format
   const formatDate = (dateString: string) => {
@@ -81,11 +85,12 @@ const PlayerStatsRecorder = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">선수명</TableHead>
-              <TableHead className="w-[80px] text-center">출석</TableHead>
-              <TableHead className="w-[80px] text-center">득점</TableHead>
-              <TableHead className="w-[80px] text-center">어시스트</TableHead>
-              <TableHead className="w-[100px] text-center">평점</TableHead>
+              <TableHead className="w-[180px]">선수명</TableHead>
+              <TableHead className="w-[70px] text-center">출석</TableHead>
+              <TableHead className="w-[70px] text-center">득점</TableHead>
+              <TableHead className="w-[70px] text-center">어시스트</TableHead>
+              <TableHead className="w-[80px] text-center">평점</TableHead>
+              <TableHead>비고</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -134,10 +139,41 @@ const PlayerStatsRecorder = ({
                     disabled={!stat.attended}
                   />
                 </TableCell>
+                <TableCell>
+                  <Input
+                    type="text"
+                    placeholder="비고"
+                    value={stat.notes || ''}
+                    onChange={(e) => onStatChange(stat.id, 'notes', e.target.value)}
+                    className="w-full h-8"
+                    disabled={!stat.attended}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+        
+        <div className="mt-6 space-y-4">
+          <div>
+            <h4 className="mb-2 font-medium">경기 메모</h4>
+            <Textarea 
+              placeholder="경기에 대한 전반적인 메모를 입력하세요"
+              value={matchNotes}
+              onChange={(e) => setMatchNotes(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          
+          <div>
+            <h4 className="mb-2 font-medium">MVP 선정</h4>
+            <Input 
+              placeholder="MVP 선수 이름"
+              value={mvp}
+              onChange={(e) => setMvp(e.target.value)}
+            />
+          </div>
+        </div>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" disabled={saving}>
