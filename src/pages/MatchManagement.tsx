@@ -3,14 +3,13 @@ import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlayerAttendanceForm } from '@/components/match/PlayerAttendanceForm';
-import { AttendanceRecordForm } from '@/components/match/AttendanceRecordForm';
-import { MatchRecordForm } from '@/components/match/MatchRecordForm';
-import { CompletedMatchSection } from '@/components/match/CompletedMatchSection';
-import { NoMatchesInfo } from '@/components/match/NoMatchesInfo';
-import { PlayerStatsRecorder } from '@/components/match/PlayerStatsRecorder';
-import { useMatches } from '@/hooks/use-match-data';
-import { Match } from '@/hooks/use-match-data'; // Import Match type
+import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
+import AttendanceRecordForm from '@/components/match/AttendanceRecordForm';
+import MatchRecordForm from '@/components/match/MatchRecordForm';
+import CompletedMatchSection from '@/components/match/CompletedMatchSection';
+import NoMatchesInfo from '@/components/match/NoMatchesInfo';
+import PlayerStatsRecorder from '@/components/match/PlayerStatsRecorder';
+import { useMatchData, Match } from '@/hooks/use-match-data'; // Change to useMatchData which exists
 
 // Define types for attendance status
 type AttendanceStatus = 'present' | 'absent' | 'late';
@@ -20,6 +19,18 @@ interface AttendanceRecord {
   playerId: string;
   status: AttendanceStatus;
 }
+
+// Create a custom hook that builds on useMatchData
+const useMatches = () => {
+  const matchData = useMatchData();
+  return {
+    matches: matchData.matches,
+    isLoading: false, // Since we have static data for now
+    error: null,
+    selectedMatchId: matchData.selectedMatchId,
+    setSelectedMatchId: matchData.setSelectedMatchId
+  };
+};
 
 const MatchManagement = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
@@ -62,11 +73,16 @@ const MatchManagement = () => {
               </Card>
             ))
           ) : (
-            <NoMatchesInfo />
+            <NoMatchesInfo message="등록된 예정 경기가 없습니다." />
           )}
         </TabsContent>
         <TabsContent value="completed">
-          <CompletedMatchSection />
+          <CompletedMatchSection 
+            title="완료된 경기"
+            matches={matches.filter(match => match.status === 'completed')}
+            emptyMessage="완료된 경기가 없습니다."
+            canManagePlayerStats={true} 
+          />
         </TabsContent>
       </Tabs>
 
@@ -91,16 +107,38 @@ const MatchManagement = () => {
                           <CardTitle>출석 체크</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <PlayerAttendanceForm matchId={selectedMatchId} />
-                          <AttendanceRecordForm matchId={selectedMatchId} attendanceRecords={attendanceRecords} setAttendanceRecords={setAttendanceRecords} />
+                          {/* Fixed the props based on what PlayerAttendanceForm expects */}
+                          <PlayerAttendanceForm 
+                            matchId={Number(selectedMatchId)}
+                            matchDate={matches.find(m => m.id === Number(selectedMatchId))?.date || ''}
+                            opponent={matches.find(m => m.id === Number(selectedMatchId))?.opponent || ''}
+                            players={[]}  // This would need real player data
+                            isCoach={true}
+                          />
+                          <AttendanceRecordForm 
+                            matchId={Number(selectedMatchId)}
+                            matchDate={matches.find(m => m.id === Number(selectedMatchId))?.date || ''}
+                            opponent={matches.find(m => m.id === Number(selectedMatchId))?.opponent || ''}
+                            players={[]}  // This would need real player data
+                            isCoach={true}
+                          />
                         </CardContent>
                       </Card>
                     </TabsContent>
                     <TabsContent value="record">
-                      <MatchRecordForm match={matches.find(m => m.id === selectedMatchId)} onSave={handleSaveMatchData} />
+                      <MatchRecordForm match={matches.find(m => m.id === Number(selectedMatchId)) as Match} onSave={handleSaveMatchData} />
                     </TabsContent>
                     <TabsContent value="stats">
-                      <PlayerStatsRecorder matchId={selectedMatchId} />
+                      <PlayerStatsRecorder 
+                        matchId={Number(selectedMatchId)}
+                        matchDate={matches.find(m => m.id === Number(selectedMatchId))?.date || ''}
+                        opponent={matches.find(m => m.id === Number(selectedMatchId))?.opponent || ''}
+                        players={[]}  // This would need real player data
+                        playerStats={[]}  // This would need real player stats data
+                        onStatChange={(playerId, field, value) => {
+                          console.log(`Updating ${field} for player ${playerId} to ${value}`);
+                        }}
+                      />
                     </TabsContent>
                   </Tabs>
                   <Button onClick={() => setSelectedMatchId(null)} className="mt-4">Close</Button>
