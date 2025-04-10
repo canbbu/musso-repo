@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -32,11 +32,11 @@ const AnnouncementManagement = () => {
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    // Redirect if no permissions
+    // Redirect if no permissions (only president and vice_president allowed)
     if (!canManageAnnouncements()) {
       toast({
         title: "접근 권한이 없습니다",
-        description: "공지사항 및 경기 일정 관리는 회장, 부회장, 감독만 가능합니다.",
+        description: "공지사항 및 경기 일정 관리는 회장, 부회장만 가능합니다.",
         variant: "destructive"
       });
       navigate('/dashboard');
@@ -76,7 +76,7 @@ const AnnouncementManagement = () => {
   };
   
   return (
-    <div className="announcement-management-container">
+    <Layout>
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">공지사항 및 경기 일정 관리</h1>
         <p className="text-gray-600">공지사항과 경기 일정을 등록하고 관리합니다.</p>
@@ -134,7 +134,7 @@ const AnnouncementManagement = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </Layout>
   );
 };
 

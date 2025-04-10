@@ -3,11 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import '../styles/Dashboard.css';
 import { useIsMobile } from '@/hooks/use-mobile';
+import Layout from '@/components/Layout';
 
 import MobileNavigation from '@/components/dashboard/MobileNavigation';
 import CalendarView from '@/components/dashboard/CalendarView';
 import AnnouncementsCard from '@/components/dashboard/AnnouncementsCard';
-import UpcomingMatchesCard from '@/components/dashboard/UpcomingMatchesCard';
+import UpcomingMatchesCardWrapper from '@/components/dashboard/UpcomingMatchesCardWrapper';
 import MvpVotingCard from '@/components/dashboard/MvpVotingCard';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useMatchData, Match } from '@/hooks/use-match-data';
@@ -24,13 +25,10 @@ const Dashboard = () => {
     if (match) {
       setTodaysCompletedMatch(match);
     }
-  }, []);
+  }, [checkForTodaysMatch]);
 
   return (
-    <div className="dashboard-content relative">
-      {/* Mobile Navigation - Always show on mobile */}
-      {isMobile && <MobileNavigation />}
-
+    <Layout>
       <div className={`mb-6 ${isMobile ? "mt-16" : ""}`}>
         <h1 className="text-3xl font-bold mb-2">대시보드</h1>
         <p className="text-gray-600">안녕하세요, {userName}님! 축구회 관리 시스템에 오신 것을 환영합니다.</p>
@@ -56,15 +54,15 @@ const Dashboard = () => {
         {/* Announcements */}
         <AnnouncementsCard 
           announcements={announcements} 
-          canManageAnnouncements={canManageAnnouncements} 
+          canManageAnnouncements={canManageAnnouncements()} 
         />
       </div>
       
       {/* Upcoming Match Card */}
       <div className="mt-6">
-        <UpcomingMatchesCard upcomingMatches={upcomingMatches} />
+        <UpcomingMatchesCardWrapper upcomingMatches={upcomingMatches} />
       </div>
-    </div>
+    </Layout>
   );
 };
 

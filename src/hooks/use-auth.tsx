@@ -47,36 +47,45 @@ export function useAuth() {
     return allowedRoles.includes(userInfo.role || '');
   }, [userInfo.role]);
 
-  // Check if user can manage player stats (coaches only)
-  const canManagePlayerStats = useCallback(() => {
-    return hasPermission(['coach', 'assistant_coach']);
+  // 경기관리 권한 (감독에게만 부여)
+  const canManageMatches = useCallback(() => {
+    return hasPermission(['coach']);
   }, [hasPermission]);
 
-  // 모든 사용자에게 공지사항 및 일정 관리 권한 부여
+  // 공지사항 및 일정 관리 권한 (회장, 부회장에게만 부여)
   const canManageAnnouncements = useCallback(() => {
-    // 모든 역할에 대해 true 반환
-    return true;
-  }, []);
+    return hasPermission(['president', 'vice_president']);
+  }, [hasPermission]);
 
-  // Check if user can manage finances (treasurer only)
+  // 재정 관리 권한 (회계에게만 부여)
   const canManageFinance = useCallback(() => {
     return hasPermission(['treasurer']);
   }, [hasPermission]);
 
-  // Check if the user is an admin
+  // 선수 기록 관리 권한 (감독, 코치에게만 부여)
+  const canManagePlayerStats = useCallback(() => {
+    return hasPermission(['coach', 'assistant_coach']);
+  }, [hasPermission]);
+
+  // 일반 사용자 권한 (모든 사용자에게 부여 - 참석, 불참석, 투표, 갤러리 접근)
+  const canAccessBasicFeatures = useCallback(() => {
+    return true; // 모든 사용자가 기본 기능에 접근 가능
+  }, []);
+
+  // 관리자 여부 체크
   const isAdmin = useCallback(() => {
-    // In a real app, this would check the user's role from a database
-    // For this demo, we'll consider users who can manage announcements as admins
-    return canManageAnnouncements();
-  }, [canManageAnnouncements]);
+    return hasPermission(['president', 'vice_president', 'coach']);
+  }, [hasPermission]);
 
   return {
     ...userInfo,
     logout,
     hasPermission,
-    canManagePlayerStats,
+    canManageMatches,
     canManageAnnouncements,
     canManageFinance,
+    canManagePlayerStats,
+    canAccessBasicFeatures,
     isAdmin
   };
 }

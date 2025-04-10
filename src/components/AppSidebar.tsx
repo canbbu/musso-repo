@@ -13,18 +13,31 @@ import { useAuth } from '@/hooks/use-auth';
 import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User } from 'lucide-react';
 
 const AppSidebar = () => {
-  const { logout } = useAuth();
+  const { 
+    logout, 
+    canManageMatches, 
+    canManageAnnouncements, 
+    canManageFinance, 
+    canManagePlayerStats 
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const navItems = [
-    { title: '대시보드', path: '/dashboard', icon: Home },
-    { title: '경기 관리', path: '/matches', icon: Calendar },
-    { title: '선수 통계', path: '/stats', icon: Trophy },
-    { title: '내 기록', path: '/my-stats', icon: User },
-    { title: '갤러리', path: '/gallery', icon: Image },
-    { title: '재정 관리', path: '/finance', icon: CreditCard },
-  ];
+  // Define navigation items with permission checks
+  const getNavItems = () => {
+    const baseItems = [
+      { title: '대시보드', path: '/dashboard', icon: Home, alwaysShow: true },
+      { title: '경기 관리', path: '/matches', icon: Calendar, show: canManageMatches() },
+      { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
+      { title: '내 기록', path: '/my-stats', icon: User, show: true },
+      { title: '갤러리', path: '/gallery', icon: Image, show: true },
+      { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
+    ];
+    
+    return baseItems.filter(item => item.alwaysShow || item.show);
+  };
+
+  const navItems = getNavItems();
 
   return (
     <Sidebar>

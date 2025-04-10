@@ -1,183 +1,73 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, ChevronRight, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
+import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { CalendarDays, Plus, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useMatchData } from '@/hooks/use-match-data';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Collapsible } from "@/components/ui/collapsible";
-import MatchAttendanceDetails from './MatchAttendanceDetails';
-import MatchStatusBadge from './MatchStatusBadge';
-import AttendanceSummary from './AttendanceSummary';
-import NoUpcomingMatches from './NoUpcomingMatches';
-
-interface Player {
-  id: string;
-  name: string;
-}
-
-interface UpcomingMatch {
-  id: number;
-  date: string;
-  location: string;
-  opponent?: string;
-  attending?: number;
-  notAttending?: number;
-  pending?: number;
-  status?: 'scheduled' | 'cancelled';
-  attendingPlayers?: Player[];
-  notAttendingPlayers?: Player[];
-  pendingPlayers?: Player[];
-}
+import { Match } from '@/hooks/use-match-data';
+import { format, parseISO } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
 
 interface UpcomingMatchesCardProps {
-  upcomingMatches: UpcomingMatch[];
+  upcomingMatches: Match[];
 }
 
 const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
-  const { handleAttendanceChange } = useMatchData();
-  const [expandedMatch, setExpandedMatch] = useState<number | null>(null);
   
-  const toggleExpand = (matchId: number) => {
-    setExpandedMatch(expandedMatch === matchId ? null : matchId);
+  const formatMatchDate = (dateString: string) => {
+    const date = parseISO(dateString);
+    return format(date, 'M월 d일 (EEE) HH:mm', { locale: ko });
   };
-  
+
   return (
-    <Card className="bg-white">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center flex-wrap gap-2">
-          <CardTitle className="flex items-center">
-            <CalendarIcon className="mr-2 h-5 w-5 text-green-600" />
-            다가오는 경기
-          </CardTitle>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/matches')}
-            className="whitespace-nowrap"
-          >
-            더 보기
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
+    <>
+      {upcomingMatches.length > 0 ? (
+        <div className="space-y-4">
+          {upcomingMatches.map((match) => (
+            <div key={match.id} className="border rounded-lg p-4 bg-white">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="font-medium text-lg">{match.opponent}</h3>
+                  <p className="text-gray-600">{formatMatchDate(match.date)}</p>
+                  <p className="text-gray-600">{match.location}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge variant={match.status === 'upcoming' ? 'outline' : 'default'}>
+                    {match.status === 'upcoming' ? '예정됨' : '완료'}
+                  </Badge>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => navigate(`/matches?id=${match.id}`)}
+                  >
+                    상세 보기
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="mt-3 flex flex-wrap gap-2">
+                <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  <span className="font-medium">참석:</span> {match.attendees?.length || 0}명
+                </div>
+                <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  <span className="font-medium">불참:</span> {match.absentees?.length || 0}명
+                </div>
+                <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">
+                  <span className="font-medium">미정:</span> {match.undecided?.length || 0}명
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      </CardHeader>
-      <CardContent>
-        {upcomingMatches.length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>날짜</TableHead>
-                  <TableHead>상대팀</TableHead>
-                  <TableHead className="hidden sm:table-cell">장소</TableHead>
-                  <TableHead className="text-center">참석/불참/미정</TableHead>
-                  <TableHead className="text-center">상태</TableHead>
-                  <TableHead className="text-center">출석 선택</TableHead>
-                  {isAdmin() && <TableHead className="text-center">상세보기</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {upcomingMatches.map((match) => (
-                  <React.Fragment key={match.id}>
-                    <TableRow className={match.status === 'cancelled' ? 'bg-red-50' : ''}>
-                      <TableCell>
-                        {new Date(match.date).toLocaleDateString('ko-KR', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </TableCell>
-                      <TableCell className={`font-medium ${match.status === 'cancelled' ? 'line-through text-red-500' : ''}`}>
-                        {match.opponent}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">{match.location}</TableCell>
-                      <TableCell className="text-center">
-                        <AttendanceSummary
-                          attending={match.attending}
-                          notAttending={match.notAttending}
-                          pending={match.pending}
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <MatchStatusBadge status={match.status} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2 justify-center">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-green-50 hover:bg-green-100 p-1 h-8 w-8"
-                            onClick={() => handleAttendanceChange(match.id, 'attending')}
-                          >
-                            <Check className="h-4 w-4 text-green-600" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-red-50 hover:bg-red-100 p-1 h-8 w-8"
-                            onClick={() => handleAttendanceChange(match.id, 'notAttending')}
-                          >
-                            <X className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                      {isAdmin() && (
-                        <TableCell className="text-center">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => toggleExpand(match.id)}
-                            className="p-0 h-8 w-8"
-                          >
-                            {expandedMatch === match.id ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                    
-                    {isAdmin() && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="p-0 border-t-0">
-                          <Collapsible open={expandedMatch === match.id}>
-                            <MatchAttendanceDetails
-                              isOpen={expandedMatch === match.id}
-                              attending={match.attending}
-                              notAttending={match.notAttending}
-                              pending={match.pending}
-                              attendingPlayers={match.attendingPlayers}
-                              notAttendingPlayers={match.notAttendingPlayers}
-                              pendingPlayers={match.pendingPlayers}
-                            />
-                          </Collapsible>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </React.Fragment>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <NoUpcomingMatches />
-        )}
-      </CardContent>
-    </Card>
+      ) : (
+        <div className="text-center py-8">
+          <AlertCircle className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+          <p className="text-gray-500">예정된 경기가 없습니다.</p>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -15,17 +15,31 @@ import { useAuth } from '@/hooks/use-auth';
 const MobileNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, userName } = useAuth();
+  const { 
+    logout, 
+    userName, 
+    canManageMatches, 
+    canManageAnnouncements, 
+    canManageFinance, 
+    canManagePlayerStats 
+  } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  const navItems = [
-    { title: '대시보드', path: '/dashboard', icon: Home },
-    { title: '경기 관리', path: '/matches', icon: Calendar },
-    { title: '선수 통계', path: '/stats', icon: Trophy },
-    { title: '내 기록', path: '/my-stats', icon: User },
-    { title: '갤러리', path: '/gallery', icon: Image },
-    { title: '재정 관리', path: '/finance', icon: CreditCard },
-  ];
+  // Define navigation items with permission checks
+  const getNavItems = () => {
+    const baseItems = [
+      { title: '대시보드', path: '/dashboard', icon: Home, alwaysShow: true },
+      { title: '경기 관리', path: '/matches', icon: Calendar, show: canManageMatches() },
+      { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
+      { title: '내 기록', path: '/my-stats', icon: User, show: true },
+      { title: '갤러리', path: '/gallery', icon: Image, show: true },
+      { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
+    ];
+    
+    return baseItems.filter(item => item.alwaysShow || item.show);
+  };
+  
+  const navItems = getNavItems();
   
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center">

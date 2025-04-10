@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -14,12 +15,27 @@ import MatchSection from '@/components/match/MatchSection';
 import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
 import { useMatchData } from '@/hooks/use-match-data';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 const MatchManagement = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const { matches, handleAttendanceChange } = useMatchData();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { canManageAnnouncements } = useAuth();
+  const { canManageMatches, canAccessBasicFeatures } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Redirect if no permissions
+  useEffect(() => {
+    if (!canManageMatches()) {
+      toast({
+        title: "접근 권한이 없습니다",
+        description: "경기 관리 페이지는 감독만 접근할 수 있습니다.",
+        variant: "destructive"
+      });
+      navigate('/dashboard');
+    }
+  }, [canManageMatches, navigate, toast]);
   
   // Convert the string ID to number when needed
   const getSelectedMatchAsNumber = () => {
@@ -41,6 +57,9 @@ const MatchManagement = () => {
   
   const selectedMatch = matches.find(m => m.id === Number(selectedMatchId));
 
+  // Only the coach can manage matches
+  const isCoach = canManageMatches();
+
   return (
     <Layout>
       <div className="mb-8">
@@ -58,9 +77,9 @@ const MatchManagement = () => {
             title="다가오는 경기"
             matches={upcomingMatches}
             onAttendanceChange={handleAttendanceChange}
-            canManageAnnouncements={canManageAnnouncements()}
+            canManageAnnouncements={isCoach}
             emptyMessage="등록된 예정 경기가 없습니다."
-            showAddButton={true}
+            showAddButton={isCoach}
             onAddClick={() => console.log('Adding new match')}
             onViewMatch={handleViewMatch}
           />
@@ -70,7 +89,7 @@ const MatchManagement = () => {
             title="완료된 경기"
             matches={completedMatches}
             onAttendanceChange={() => {}}
-            canManageAnnouncements={canManageAnnouncements()}
+            canManageAnnouncements={isCoach}
             emptyMessage="완료된 경기가 없습니다."
             onViewMatch={handleViewMatch}
           />
@@ -91,7 +110,7 @@ const MatchManagement = () => {
               matchDate={selectedMatch.date}
               opponent={selectedMatch.opponent}
               players={[]}  // This would need real player data
-              isCoach={true}
+              isCoach={isCoach}
             />
           )}
           
