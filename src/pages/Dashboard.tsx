@@ -27,6 +27,21 @@ const Dashboard = () => {
     }
   }, [checkForTodaysMatch]);
 
+  // Convert UpcomingMatch[] to Match[] by adding required properties
+  const convertedUpcomingMatches: Match[] = upcomingMatches.map(match => ({
+    id: match.id,
+    date: match.date,
+    location: match.location,
+    opponent: match.opponent || '',
+    status: match.status === 'cancelled' ? 'completed' : 'upcoming',
+    attendance: {
+      attending: match.attending || 0,
+      notAttending: match.notAttending || 0,
+      pending: match.pending || 0
+    },
+    userResponse: null
+  }));
+
   return (
     <Layout>
       <div className={`mb-6 ${isMobile ? "mt-16" : ""}`}>
@@ -60,7 +75,7 @@ const Dashboard = () => {
       
       {/* Upcoming Match Card */}
       <div className="mt-6">
-        <UpcomingMatchesCardWrapper upcomingMatches={upcomingMatches} />
+        <UpcomingMatchesCardWrapper upcomingMatches={convertedUpcomingMatches} />
       </div>
     </Layout>
   );

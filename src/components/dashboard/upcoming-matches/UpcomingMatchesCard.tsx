@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
@@ -49,13 +50,13 @@ const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
               
               <div className="mt-3 flex flex-wrap gap-2">
                 <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">
-                  <span className="font-medium">참석:</span> {match.attendees?.length || 0}명
+                  <span className="font-medium">참석:</span> {match.attendance.attending || 0}명
                 </div>
                 <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">
-                  <span className="font-medium">불참:</span> {match.absentees?.length || 0}명
+                  <span className="font-medium">불참:</span> {match.attendance.notAttending || 0}명
                 </div>
                 <div className="bg-gray-100 px-3 py-1 rounded-full text-sm">
-                  <span className="font-medium">미정:</span> {match.undecided?.length || 0}명
+                  <span className="font-medium">미정:</span> {match.attendance.pending || 0}명
                 </div>
               </div>
             </div>
