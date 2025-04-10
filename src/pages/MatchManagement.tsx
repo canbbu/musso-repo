@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -29,19 +28,11 @@ interface AttendanceRecord {
 
 const MatchManagement = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
-  const { matches, isLoading, error, handleAttendanceChange } = useMatchData();
+  const { matches, handleAttendanceChange } = useMatchData();
   const [activeTab, setActiveTab] = useState<string>("attendance");
   const [dialogOpen, setDialogOpen] = useState(false);
   const { canManageAnnouncements } = useAuth();
   
-  if (isLoading) {
-    return <div>Loading matches...</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
-
   // Convert the string ID to number when needed
   const getSelectedMatchAsNumber = () => {
     return selectedMatchId ? Number(selectedMatchId) : null;

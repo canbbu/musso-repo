@@ -1,10 +1,10 @@
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 
-// Create a context for authentication
-const AuthContext = createContext<ReturnType<typeof useAuth> | null>(null);
+// Create a context for authentication with a default undefined value
+const AuthContext = createContext<ReturnType<typeof useAuth> | undefined>(undefined);
 
 // Provider component that wraps your app and makes auth object available to any child component that calls useAuth().
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -16,8 +16,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // Hook for child components to get the auth object and re-render when it changes
 export const useAuthContext = () => {
-  const context = React.useContext(AuthContext);
-  if (context === null) {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
     throw new Error('useAuthContext must be used within an AuthProvider');
   }
   return context;
