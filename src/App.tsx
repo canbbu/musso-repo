@@ -1,13 +1,14 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { AuthProvider, RequireAuth } from './components/auth/AuthContext';
+import { AuthProvider, RequireAuth } from '@/components/auth/AuthContext';
 import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Gallery, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory } from './pages';
 import './App.css';
-import { ToastProvider } from '@/components/ui/use-toast';
+import { Toaster } from '@/components/ui/toaster';
 
 function App() {
   return (
-    <ToastProvider>
+    <>
       <AuthProvider>
         <Router>
           <Routes>
@@ -28,7 +29,8 @@ function App() {
           </Routes>
         </Router>
       </AuthProvider>
-    </ToastProvider>
+      <Toaster />
+    </>
   );
 }
 

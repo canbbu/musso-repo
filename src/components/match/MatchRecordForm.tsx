@@ -17,7 +17,7 @@ interface MatchRecordFormProps {
 const MatchRecordForm = ({ match, onSave }: MatchRecordFormProps) => {
   const { toast } = useToast();
   const [score, setScore] = useState(match.score || '');
-  const [result, setResult] = useState(match.result || '');
+  const [result, setResult] = useState<'win' | 'loss' | 'draw'>(match.result as 'win' | 'loss' | 'draw' || 'win');
   const [mvp, setMvp] = useState(match.mvp || '');
   const [review, setReview] = useState(match.review || '');
 
@@ -67,7 +67,7 @@ const MatchRecordForm = ({ match, onSave }: MatchRecordFormProps) => {
           
           <div className="space-y-2">
             <Label htmlFor="result">결과</Label>
-            <Select value={result} onValueChange={setResult}>
+            <Select value={result} onValueChange={(value: 'win' | 'loss' | 'draw') => setResult(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="결과 선택" />
               </SelectTrigger>

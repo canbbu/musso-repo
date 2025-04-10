@@ -73,6 +73,12 @@ const MatchManagement = () => {
 
   const selectedMatch = matches.find(m => m.id === selectedMatchId);
 
+  // Function to handle saving the match data
+  const handleSaveMatchData = (matchData: Partial<Match>) => {
+    console.log('Saving match data:', matchData);
+    // In a real application, this would update the match data in the backend
+  };
+
   return (
     <div className="match-management-container">
       <div className="mb-6">
@@ -131,7 +137,7 @@ const MatchManagement = () => {
             </TabsContent>
 
             <TabsContent value="attendance">
-              {selectedMatchId ? (
+              {selectedMatchId && selectedMatch ? (
                 <AttendanceRecordForm 
                   matchId={selectedMatchId}
                   matchDate={selectedMatch?.date || ''}
@@ -162,15 +168,10 @@ const MatchManagement = () => {
             </TabsContent>
 
             <TabsContent value="gameRecord">
-              {selectedMatchId ? (
+              {selectedMatchId && selectedMatch ? (
                 <MatchRecordForm 
-                  matchId={selectedMatchId}
-                  matchDate={selectedMatch?.date || ''}
-                  opponent={selectedMatch?.opponent || ''}
-                  players={players}
-                  playerStats={playerStats}
-                  onStatChange={handleStatChange}
-                  isCoach={canManagePlayerStats()}
+                  match={selectedMatch}
+                  onSave={handleSaveMatchData}
                 />
               ) : (
                 <div className="text-center p-8 bg-gray-50 rounded-lg">
