@@ -10,6 +10,8 @@ interface UserInfo {
 }
 
 export function useAuth() {
+  const navigate = useNavigate();
+  
   const [userInfo, setUserInfo] = useState<UserInfo>(() => {
     // Initialize user info from localStorage
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
@@ -24,8 +26,6 @@ export function useAuth() {
       isAuthenticated
     };
   });
-  
-  const navigate = useNavigate();
 
   const logout = useCallback(() => {
     localStorage.removeItem('isAuthenticated');

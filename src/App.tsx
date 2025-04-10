@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 function App() {
   return (
-    <>
+    <React.StrictMode>
       <Router>
         <AuthProvider>
           <Routes>
@@ -28,10 +28,10 @@ function App() {
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Toaster />
         </AuthProvider>
       </Router>
-      <Toaster />
-    </>
+    </React.StrictMode>
   );
 }
 
