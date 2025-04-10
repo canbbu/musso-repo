@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { CalendarDays, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Match, useMatchData } from '@/hooks/use-match-data';
-import UpcomingMatchCard from './UpcomingMatchCard';
+import UpcomingMatchCard from '@/components/match/UpcomingMatchCard';
 
 interface UpcomingMatchesCardWrapperProps {
   upcomingMatches: Match[];
