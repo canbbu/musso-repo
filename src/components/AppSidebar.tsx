@@ -7,14 +7,18 @@ import {
   SidebarGroup, 
   SidebarMenu, 
   SidebarMenuItem, 
-  SidebarMenuButton
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarHeader
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User } from 'lucide-react';
+import UserProfileButton from './profile/UserProfileButton';
 
 const AppSidebar = () => {
   const { 
     logout, 
+    userName,
     canManageMatches, 
     canManageAnnouncements, 
     canManageFinance, 
@@ -41,6 +45,16 @@ const AppSidebar = () => {
 
   return (
     <Sidebar>
+      <SidebarHeader className="px-3 py-2">
+        <div className="flex items-center p-2">
+          <div className="mr-2">
+            <UserProfileButton />
+          </div>
+          <div>
+            <p className="text-sm font-medium">{userName}</p>
+          </div>
+        </div>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>

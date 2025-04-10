@@ -17,7 +17,7 @@ const Dashboard = () => {
   const { userName, canManageAnnouncements } = useAuth();
   const isMobile = useIsMobile();
   const { announcements, upcomingMatches, calendarEvents } = useDashboardData();
-  const { checkForTodaysMatch } = useMatchData();
+  const { checkForTodaysMatch, handleAttendanceChange } = useMatchData();
   const [todaysCompletedMatch, setTodaysCompletedMatch] = useState<Match | null>(null);
   
   useEffect(() => {
@@ -75,7 +75,9 @@ const Dashboard = () => {
       
       {/* Upcoming Match Card */}
       <div className="mt-6">
-        <UpcomingMatchesCardWrapper upcomingMatches={convertedUpcomingMatches} />
+        <UpcomingMatchesCardWrapper 
+          upcomingMatches={convertedUpcomingMatches} 
+        />
       </div>
     </Layout>
   );
