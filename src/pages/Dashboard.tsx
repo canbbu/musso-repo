@@ -69,7 +69,7 @@ const Dashboard = () => {
         {/* Announcements */}
         <AnnouncementsCard 
           announcements={announcements} 
-          canManageAnnouncements={canManageAnnouncements()} 
+          canManageAnnouncements={canManageAnnouncements} 
         />
       </div>
       
