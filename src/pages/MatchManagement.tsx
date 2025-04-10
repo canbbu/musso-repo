@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,7 +10,7 @@ import MatchRecordForm from '@/components/match/MatchRecordForm';
 import CompletedMatchSection from '@/components/match/CompletedMatchSection';
 import NoMatchesInfo from '@/components/match/NoMatchesInfo';
 import PlayerStatsRecorder from '@/components/match/PlayerStatsRecorder';
-import { useMatchData, Match } from '@/hooks/use-match-data'; // Change to useMatchData which exists
+import { useMatchData, Match } from '@/hooks/use-match-data';
 
 // Define types for attendance status
 type AttendanceStatus = 'present' | 'absent' | 'late';
@@ -51,6 +52,11 @@ const MatchManagement = () => {
     // In a real application, this would update the match data in the backend
   };
 
+  // Convert the string ID to number when needed
+  const getSelectedMatchAsNumber = () => {
+    return selectedMatchId ? Number(selectedMatchId) : null;
+  };
+
   return (
     <Layout>
       <Tabs defaultValue="upcoming" className="w-[400px]">
@@ -68,7 +74,7 @@ const MatchManagement = () => {
                 <CardContent>
                   <p>Date: {match.date}</p>
                   <p>Location: {match.location}</p>
-                  <Button onClick={() => setSelectedMatchId(match.id)}>상세보기</Button>
+                  <Button onClick={() => setSelectedMatchId(match.id.toString())}>상세보기</Button>
                 </CardContent>
               </Card>
             ))
