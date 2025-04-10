@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X, Eye, FileEdit } from "lucide-react";
+import { Check, X, Eye, FileEdit, ClipboardCheck } from "lucide-react";
 import { Match } from '@/hooks/use-match-data';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,6 +20,10 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
   
   const handleManageMatch = () => {
     navigate(`/matches?matchId=${match.id}&edit=true`);
+  };
+  
+  const handleManageStats = () => {
+    navigate(`/stats-management?matchId=${match.id}`);
   };
 
   return (
@@ -95,13 +99,23 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
             </Button>
             
             {canManagePlayerStats && (
-              <Button 
-                className="flex items-center justify-center" 
-                onClick={handleManageMatch}
-              >
-                <FileEdit size={18} className="mr-1" />
-                경기 관리
-              </Button>
+              <>
+                <Button 
+                  className="flex items-center justify-center" 
+                  onClick={handleManageMatch}
+                >
+                  <FileEdit size={18} className="mr-1" />
+                  경기 관리
+                </Button>
+                <Button 
+                  variant="secondary"
+                  className="flex items-center justify-center" 
+                  onClick={handleManageStats}
+                >
+                  <ClipboardCheck size={18} className="mr-1" />
+                  선수 기록 입력
+                </Button>
+              </>
             )}
           </div>
         </div>

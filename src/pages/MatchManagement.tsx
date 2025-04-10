@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -16,14 +16,26 @@ import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
 import { useMatchData } from '@/hooks/use-match-data';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { ClipboardCheck } from 'lucide-react';
 
 const MatchManagement = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const { matches, handleAttendanceChange } = useMatchData();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { canManageMatches, canAccessBasicFeatures } = useAuth();
+  const { canManageMatches, canManagePlayerStats } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  
+  // Check if there's a matchId parameter in the URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const matchId = params.get('matchId');
+    if (matchId) {
+      setSelectedMatchId(matchId);
+      setDialogOpen(true);
+    }
+  }, [location]);
   
   // Redirect if no permissions
   useEffect(() => {
@@ -52,6 +64,10 @@ const MatchManagement = () => {
     setSelectedMatchId(null);
   };
 
+  const navigateToStatsManagement = (matchId: number) => {
+    navigate(`/stats-management?matchId=${matchId}`);
+  };
+
   const upcomingMatches = matches.filter(match => match.status === 'upcoming');
   const completedMatches = matches.filter(match => match.status === 'completed');
   
@@ -59,6 +75,7 @@ const MatchManagement = () => {
 
   // Only the coach can manage matches
   const isCoach = canManageMatches();
+  const canManageStats = canManagePlayerStats();
 
   return (
     <Layout>
@@ -105,13 +122,27 @@ const MatchManagement = () => {
           </DialogHeader>
           
           {selectedMatch && (
-            <PlayerAttendanceForm 
-              matchId={getSelectedMatchAsNumber() || 0}
-              matchDate={selectedMatch.date}
-              opponent={selectedMatch.opponent}
-              players={[]}  // This would need real player data
-              isCoach={isCoach}
-            />
+            <>
+              <PlayerAttendanceForm 
+                matchId={getSelectedMatchAsNumber() || 0}
+                matchDate={selectedMatch.date}
+                opponent={selectedMatch.opponent}
+                players={[]}  // This would need real player data
+                isCoach={isCoach}
+              />
+              
+              {canManageStats && selectedMatch.status === 'completed' && (
+                <div className="mt-4">
+                  <Button 
+                    className="w-full" 
+                    onClick={() => navigateToStatsManagement(selectedMatch.id)}
+                  >
+                    <ClipboardCheck className="mr-2 h-4 w-4" />
+                    선수 기록 입력
+                  </Button>
+                </div>
+              )}
+            </>
           )}
           
           <DialogFooter>

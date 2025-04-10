@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle } from 'lucide-react';
@@ -12,6 +13,7 @@ import NoMatchesInfo from '@/components/match/NoMatchesInfo';
 const StatsManagement = () => {
   const { canManagePlayerStats } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   const {
@@ -23,6 +25,15 @@ const StatsManagement = () => {
     handleStatChange,
     formatDate
   } = usePlayerStats();
+  
+  // Check if there's a matchId parameter in the URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const matchId = params.get('matchId');
+    if (matchId) {
+      setSelectedMatch(Number(matchId));
+    }
+  }, [location, setSelectedMatch]);
   
   useEffect(() => {
     // Redirect if no permissions
@@ -47,10 +58,10 @@ const StatsManagement = () => {
   const selectedMatchData = selectedMatch ? matches.find(m => m.id === selectedMatch) : null;
 
   return (
-    <div className="stats-management-container">
+    <Layout>
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">선수 기록 관리</h1>
-        <p className="text-gray-600">선수들의 경기 출석, 득점, 어시스트, 평점을 기록합니다.</p>
+        <p className="text-gray-600">선수들의 경기 출석, 득점, 어시스트, :평점을 기록합니다.</p>
       </div>
       
       <MatchSelector 
@@ -74,7 +85,7 @@ const StatsManagement = () => {
       {!selectedMatch && (
         <NoMatchesInfo message="기록을 관리할 경기를 선택해주세요." />
       )}
-    </div>
+    </Layout>
   );
 };
 
