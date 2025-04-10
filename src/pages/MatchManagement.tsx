@@ -10,26 +10,14 @@ import {
   DialogTitle,
   DialogFooter
 } from "@/components/ui/dialog";
-import NoMatchesInfo from '@/components/match/NoMatchesInfo';
 import MatchSection from '@/components/match/MatchSection';
 import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
-import PlayerStatsRecorder from '@/components/match/PlayerStatsRecorder';
-import { useMatchData, Match } from '@/hooks/use-match-data';
+import { useMatchData } from '@/hooks/use-match-data';
 import { useAuth } from '@/hooks/use-auth';
-
-// Define types for attendance status
-type AttendanceStatus = 'present' | 'absent' | 'late';
-
-// Define a type for the attendance record
-interface AttendanceRecord {
-  playerId: string;
-  status: AttendanceStatus;
-}
 
 const MatchManagement = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const { matches, handleAttendanceChange } = useMatchData();
-  const [activeTab, setActiveTab] = useState<string>("attendance");
   const [dialogOpen, setDialogOpen] = useState(false);
   const { canManageAnnouncements } = useAuth();
   
@@ -98,35 +86,13 @@ const MatchManagement = () => {
           </DialogHeader>
           
           {selectedMatch && (
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="mb-4 w-full">
-                <TabsTrigger value="attendance" className="flex-1">출석 체크</TabsTrigger>
-                <TabsTrigger value="stats" className="flex-1">선수 스탯 기록</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="attendance">
-                <PlayerAttendanceForm 
-                  matchId={getSelectedMatchAsNumber() || 0}
-                  matchDate={selectedMatch.date}
-                  opponent={selectedMatch.opponent}
-                  players={[]}  // This would need real player data
-                  isCoach={true}
-                />
-              </TabsContent>
-              
-              <TabsContent value="stats">
-                <PlayerStatsRecorder 
-                  matchId={getSelectedMatchAsNumber() || 0}
-                  matchDate={selectedMatch.date}
-                  opponent={selectedMatch.opponent}
-                  players={[]}  // This would need real player data
-                  playerStats={[]}  // This would need real player stats data
-                  onStatChange={(playerId, field, value) => {
-                    console.log(`Updating ${field} for player ${playerId} to ${value}`);
-                  }}
-                />
-              </TabsContent>
-            </Tabs>
+            <PlayerAttendanceForm 
+              matchId={getSelectedMatchAsNumber() || 0}
+              matchDate={selectedMatch.date}
+              opponent={selectedMatch.opponent}
+              players={[]}  // This would need real player data
+              isCoach={true}
+            />
           )}
           
           <DialogFooter>

@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronRight, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
+import { useMatchData } from '@/hooks/use-match-data';
 import {
   Table,
   TableBody,
@@ -45,6 +46,7 @@ interface UpcomingMatchesCardProps {
 const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const { handleAttendanceChange } = useMatchData();
   const [expandedMatch, setExpandedMatch] = useState<number | null>(null);
   
   const toggleExpand = (matchId: number) => {
@@ -81,6 +83,7 @@ const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
                   <TableHead className="hidden sm:table-cell">장소</TableHead>
                   <TableHead className="text-center">참석/불참/미정</TableHead>
                   <TableHead className="text-center">상태</TableHead>
+                  <TableHead className="text-center">출석 선택</TableHead>
                   {isAdmin() && <TableHead className="text-center">상세보기</TableHead>}
                 </TableRow>
               </TableHeader>
@@ -110,6 +113,26 @@ const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
                       <TableCell className="text-center">
                         <MatchStatusBadge status={match.status} />
                       </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 justify-center">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-green-50 hover:bg-green-100 p-1 h-8 w-8"
+                            onClick={() => handleAttendanceChange(match.id, 'attending')}
+                          >
+                            <Check className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-red-50 hover:bg-red-100 p-1 h-8 w-8"
+                            onClick={() => handleAttendanceChange(match.id, 'notAttending')}
+                          >
+                            <X className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
                       {isAdmin() && (
                         <TableCell className="text-center">
                           <Button 
@@ -130,7 +153,7 @@ const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
                     
                     {isAdmin() && (
                       <TableRow>
-                        <TableCell colSpan={6} className="p-0 border-t-0">
+                        <TableCell colSpan={7} className="p-0 border-t-0">
                           <Collapsible open={expandedMatch === match.id}>
                             <MatchAttendanceDetails
                               isOpen={expandedMatch === match.id}
