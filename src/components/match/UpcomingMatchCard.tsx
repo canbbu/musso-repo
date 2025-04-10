@@ -2,23 +2,17 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X, Clipboard } from "lucide-react";
+import { Check, X, Clipboard, Eye } from "lucide-react";
 import { Match } from '@/hooks/use-match-data';
-import { useNavigate } from 'react-router-dom';
 
 interface UpcomingMatchCardProps {
   match: Match;
   onAttendanceChange: (matchId: number, response: 'attending' | 'notAttending') => void;
   canManageAnnouncements: boolean;
+  onViewMatch: (matchId: number) => void;
 }
 
-const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements }: UpcomingMatchCardProps) => {
-  const navigate = useNavigate();
-  
-  const handleManageMatch = () => {
-    navigate(`/matches?matchId=${match.id}&tab=attendance`);
-  };
-
+const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements, onViewMatch }: UpcomingMatchCardProps) => {
   return (
     <Card key={match.id} className="border-l-4 border-l-blue-500">
       <CardContent className="p-6">
@@ -87,12 +81,26 @@ const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements }
                 불참
               </Button>
             </div>
-            {canManageAnnouncements && (
-              <Button className="flex items-center justify-center" onClick={handleManageMatch}>
-                <Clipboard size={18} className="mr-1" />
-                경기 관리
+            <div className="flex gap-2">
+              <Button 
+                className="flex-1 flex items-center justify-center" 
+                variant="outline"
+                onClick={() => onViewMatch(match.id)}
+              >
+                <Eye size={18} className="mr-1" />
+                상세보기
               </Button>
-            )}
+              {canManageAnnouncements && (
+                <Button 
+                  className="flex-1 flex items-center justify-center" 
+                  variant="outline"
+                  onClick={() => onViewMatch(match.id)}
+                >
+                  <Clipboard size={18} className="mr-1" />
+                  경기 관리
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

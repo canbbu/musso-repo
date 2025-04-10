@@ -13,6 +13,7 @@ interface MatchSectionProps {
   emptyMessage: string;
   showAddButton?: boolean;
   onAddClick?: () => void;
+  onViewMatch: (matchId: number) => void;
 }
 
 const MatchSection = ({
@@ -22,7 +23,8 @@ const MatchSection = ({
   canManageAnnouncements,
   emptyMessage,
   showAddButton = false,
-  onAddClick
+  onAddClick,
+  onViewMatch
 }: MatchSectionProps) => {
   return (
     <div className="mb-10">
@@ -43,6 +45,7 @@ const MatchSection = ({
               match={match}
               onAttendanceChange={onAttendanceChange}
               canManageAnnouncements={canManageAnnouncements}
+              onViewMatch={onViewMatch}
             />
           ))
         ) : (

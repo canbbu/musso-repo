@@ -4,13 +4,19 @@ import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
-import AttendanceRecordForm from '@/components/match/AttendanceRecordForm';
-import MatchRecordForm from '@/components/match/MatchRecordForm';
-import CompletedMatchSection from '@/components/match/CompletedMatchSection';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
 import NoMatchesInfo from '@/components/match/NoMatchesInfo';
+import MatchSection from '@/components/match/MatchSection';
+import PlayerAttendanceForm from '@/components/match/PlayerAttendanceForm';
 import PlayerStatsRecorder from '@/components/match/PlayerStatsRecorder';
 import { useMatchData, Match } from '@/hooks/use-match-data';
+import { useAuth } from '@/hooks/use-auth';
 
 // Define types for attendance status
 type AttendanceStatus = 'present' | 'absent' | 'late';
@@ -21,23 +27,13 @@ interface AttendanceRecord {
   status: AttendanceStatus;
 }
 
-// Create a custom hook that builds on useMatchData
-const useMatches = () => {
-  const matchData = useMatchData();
-  return {
-    matches: matchData.matches,
-    isLoading: false, // Since we have static data for now
-    error: null,
-    selectedMatchId: matchData.selectedMatchId,
-    setSelectedMatchId: matchData.setSelectedMatchId
-  };
-};
-
 const MatchManagement = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
-  const { matches, isLoading, error } = useMatches();
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
-
+  const { matches, isLoading, error, handleAttendanceChange } = useMatchData();
+  const [activeTab, setActiveTab] = useState<string>("attendance");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const { canManageAnnouncements } = useAuth();
+  
   if (isLoading) {
     return <div>Loading matches...</div>;
   }
@@ -46,116 +42,107 @@ const MatchManagement = () => {
     return <div>Error: {error.message}</div>;
   }
 
-  // Function to handle saving the match data
-  const handleSaveMatchData = (matchData: Partial<Match>) => {
-    console.log('Saving match data:', matchData);
-    // In a real application, this would update the match data in the backend
-  };
-
   // Convert the string ID to number when needed
   const getSelectedMatchAsNumber = () => {
     return selectedMatchId ? Number(selectedMatchId) : null;
   };
+  
+  const handleViewMatch = (matchId: number) => {
+    setSelectedMatchId(matchId.toString());
+    setDialogOpen(true);
+  };
+  
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setSelectedMatchId(null);
+  };
+
+  const upcomingMatches = matches.filter(match => match.status === 'upcoming');
+  const completedMatches = matches.filter(match => match.status === 'completed');
+  
+  const selectedMatch = matches.find(m => m.id === Number(selectedMatchId));
 
   return (
     <Layout>
-      <Tabs defaultValue="upcoming" className="w-[400px]">
-        <TabsList>
-          <TabsTrigger value="upcoming">Upcoming Matches</TabsTrigger>
-          <TabsTrigger value="completed">Completed Matches</TabsTrigger>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">경기 관리</h1>
+        <p className="text-gray-600">팀의 경기 일정을 관리하고 출석을 체크합니다.</p>
+      </div>
+      
+      <Tabs defaultValue="upcoming" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="upcoming">예정된 경기</TabsTrigger>
+          <TabsTrigger value="completed">완료된 경기</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming">
-          {matches.length > 0 ? (
-            matches.map((match) => (
-              <Card key={match.id} className="mb-4">
-                <CardHeader>
-                  <CardTitle>{match.opponent}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Date: {match.date}</p>
-                  <p>Location: {match.location}</p>
-                  <Button onClick={() => setSelectedMatchId(match.id.toString())}>상세보기</Button>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <NoMatchesInfo message="등록된 예정 경기가 없습니다." />
-          )}
+          <MatchSection 
+            title="다가오는 경기"
+            matches={upcomingMatches}
+            onAttendanceChange={handleAttendanceChange}
+            canManageAnnouncements={canManageAnnouncements()}
+            emptyMessage="등록된 예정 경기가 없습니다."
+            showAddButton={true}
+            onAddClick={() => console.log('Adding new match')}
+            onViewMatch={handleViewMatch}
+          />
         </TabsContent>
         <TabsContent value="completed">
-          <CompletedMatchSection 
+          <MatchSection 
             title="완료된 경기"
-            matches={matches.filter(match => match.status === 'completed')}
+            matches={completedMatches}
+            onAttendanceChange={() => {}}
+            canManageAnnouncements={canManageAnnouncements()}
             emptyMessage="완료된 경기가 없습니다."
-            canManagePlayerStats={true} 
+            onViewMatch={handleViewMatch}
           />
         </TabsContent>
       </Tabs>
 
-      {selectedMatchId && (
-        <div className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Match Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {matches.length > 0 ? (
-                <>
-                  <Tabs defaultValue="attendance" className="w-full">
-                    <TabsList>
-                      <TabsTrigger value="attendance">출석 체크</TabsTrigger>
-                      <TabsTrigger value="record">경기 기록</TabsTrigger>
-                      <TabsTrigger value="stats">선수 스탯 기록</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="attendance">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>출석 체크</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {/* Fixed the props based on what PlayerAttendanceForm expects */}
-                          <PlayerAttendanceForm 
-                            matchId={Number(selectedMatchId)}
-                            matchDate={matches.find(m => m.id === Number(selectedMatchId))?.date || ''}
-                            opponent={matches.find(m => m.id === Number(selectedMatchId))?.opponent || ''}
-                            players={[]}  // This would need real player data
-                            isCoach={true}
-                          />
-                          <AttendanceRecordForm 
-                            matchId={Number(selectedMatchId)}
-                            matchDate={matches.find(m => m.id === Number(selectedMatchId))?.date || ''}
-                            opponent={matches.find(m => m.id === Number(selectedMatchId))?.opponent || ''}
-                            players={[]}  // This would need real player data
-                            isCoach={true}
-                          />
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                    <TabsContent value="record">
-                      <MatchRecordForm match={matches.find(m => m.id === Number(selectedMatchId)) as Match} onSave={handleSaveMatchData} />
-                    </TabsContent>
-                    <TabsContent value="stats">
-                      <PlayerStatsRecorder 
-                        matchId={Number(selectedMatchId)}
-                        matchDate={matches.find(m => m.id === Number(selectedMatchId))?.date || ''}
-                        opponent={matches.find(m => m.id === Number(selectedMatchId))?.opponent || ''}
-                        players={[]}  // This would need real player data
-                        playerStats={[]}  // This would need real player stats data
-                        onStatChange={(playerId, field, value) => {
-                          console.log(`Updating ${field} for player ${playerId} to ${value}`);
-                        }}
-                      />
-                    </TabsContent>
-                  </Tabs>
-                  <Button onClick={() => setSelectedMatchId(null)} className="mt-4">Close</Button>
-                </>
-              ) : (
-                <p>No match selected.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedMatch ? `${selectedMatch.opponent} 경기 상세` : '경기 상세'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedMatch && (
+            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="mb-4 w-full">
+                <TabsTrigger value="attendance" className="flex-1">출석 체크</TabsTrigger>
+                <TabsTrigger value="stats" className="flex-1">선수 스탯 기록</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="attendance">
+                <PlayerAttendanceForm 
+                  matchId={getSelectedMatchAsNumber() || 0}
+                  matchDate={selectedMatch.date}
+                  opponent={selectedMatch.opponent}
+                  players={[]}  // This would need real player data
+                  isCoach={true}
+                />
+              </TabsContent>
+              
+              <TabsContent value="stats">
+                <PlayerStatsRecorder 
+                  matchId={getSelectedMatchAsNumber() || 0}
+                  matchDate={selectedMatch.date}
+                  opponent={selectedMatch.opponent}
+                  players={[]}  // This would need real player data
+                  playerStats={[]}  // This would need real player stats data
+                  onStatChange={(playerId, field, value) => {
+                    console.log(`Updating ${field} for player ${playerId} to ${value}`);
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          )}
+          
+          <DialogFooter>
+            <Button onClick={closeDialog}>닫기</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

@@ -2,7 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider, RequireAuth } from '@/components/auth/AuthContext';
-import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Gallery, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory } from './pages';
+import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Gallery, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory, MyStats } from './pages';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -20,6 +20,7 @@ function App() {
               <Route path="/match-history" element={<MatchHistory />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/stats" element={<PlayerStats />} />
+              <Route path="/my-stats" element={<MyStats />} />
               <Route path="/stats-management" element={<StatsManagement />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/announcement-management" element={<AnnouncementManagement />} />
