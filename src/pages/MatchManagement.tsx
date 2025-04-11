@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -27,7 +26,6 @@ const MatchManagement = () => {
   const location = useLocation();
   const { toast } = useToast();
   
-  // Check if there's a matchId parameter in the URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const matchId = params.get('matchId');
@@ -37,7 +35,6 @@ const MatchManagement = () => {
     }
   }, [location]);
   
-  // Redirect if no permissions
   useEffect(() => {
     if (!canManageMatches()) {
       toast({
@@ -49,7 +46,6 @@ const MatchManagement = () => {
     }
   }, [canManageMatches, navigate, toast]);
   
-  // Convert the string ID to number when needed
   const getSelectedMatchAsNumber = () => {
     return selectedMatchId ? Number(selectedMatchId) : null;
   };
@@ -73,15 +69,14 @@ const MatchManagement = () => {
   
   const selectedMatch = matches.find(m => m.id === Number(selectedMatchId));
 
-  // Only the coach can manage matches
   const isCoach = canManageMatches();
   const canManageStats = canManagePlayerStats();
 
   return (
     <Layout>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">경기 관리</h1>
-        <p className="text-gray-600">팀의 경기 일정을 관리하고 출석을 체크합니다.</p>
+        <h1 className="text-3xl font-bold mb-2">경기 일정</h1>
+        <p className="text-gray-600">팀의 경기 일정을 확인하고 출석을 체크합니다.</p>
       </div>
       
       <Tabs defaultValue="upcoming" className="w-full">

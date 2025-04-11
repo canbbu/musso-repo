@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useFinanceData } from '@/hooks/use-finance-data';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Save } from "lucide-react";
 import FinanceManagementTabs from '@/components/finance/FinanceManagementTabs';
+import Layout from '@/components/Layout';
 
 const FinanceManagement = () => {
   const { canManageFinance } = useAuth();
@@ -51,42 +51,44 @@ const FinanceManagement = () => {
   };
 
   return (
-    <div className="finance-management-container">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">재정 관리</h1>
-          <p className="text-gray-600">팀 재정 정보, 회비 납부 및 지출 관리</p>
+    <Layout>
+      <div className="finance-management-container">
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">재정 관리</h1>
+            <p className="text-gray-600">팀 재정 정보, 회비 납부 및 지출 관리</p>
+          </div>
+          {saveChanges && (
+            <Button onClick={handleSaveChanges} className="flex items-center">
+              <Save className="mr-2 h-4 w-4" />
+              변경사항 저장
+            </Button>
+          )}
         </div>
-        {saveChanges && (
-          <Button onClick={handleSaveChanges} className="flex items-center">
-            <Save className="mr-2 h-4 w-4" />
-            변경사항 저장
-          </Button>
-        )}
+        
+        <FinanceManagementTabs 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          paginatedTransactions={paginatedTransactions}
+          transactionPage={transactionPage}
+          setTransactionPage={setTransactionPage}
+          totalTransactionPages={totalTransactionPages}
+          memberDues={memberDues}
+          togglePaymentStatus={handleDuesChange}
+          balance={balance}
+          totalIncome={totalIncome}
+          totalExpense={totalExpense}
+          paidDuesCount={paidDuesCount}
+          totalDuesCount={totalDuesCount}
+          duesCompletionPercent={duesCompletionPercent}
+          currentMonthTransactionsCount={currentMonthTransactionsCount}
+          canManageFinance={canManageFinance}
+          handleRefresh={handleRefresh}
+          saveChanges={saveChanges}
+          allTransactions={transactions}
+        />
       </div>
-      
-      <FinanceManagementTabs 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        paginatedTransactions={paginatedTransactions}
-        transactionPage={transactionPage}
-        setTransactionPage={setTransactionPage}
-        totalTransactionPages={totalTransactionPages}
-        memberDues={memberDues}
-        togglePaymentStatus={handleDuesChange}
-        balance={balance}
-        totalIncome={totalIncome}
-        totalExpense={totalExpense}
-        paidDuesCount={paidDuesCount}
-        totalDuesCount={totalDuesCount}
-        duesCompletionPercent={duesCompletionPercent}
-        currentMonthTransactionsCount={currentMonthTransactionsCount}
-        canManageFinance={canManageFinance}
-        handleRefresh={handleRefresh}
-        saveChanges={saveChanges}
-        allTransactions={transactions}
-      />
-    </div>
+    </Layout>
   );
 };
 
