@@ -45,12 +45,15 @@ const AppSidebar = () => {
 
   return (
     <Sidebar>
-      <SidebarHeader className="px-3 py-2">
-        <div className="flex items-center p-2">
-          <div className="mr-2">
-            <UserProfileButton />
+      <SidebarHeader className="px-3 py-3">
+        <div className="flex flex-col items-center p-2">
+          <div className="mb-2">
+            {/* Increased the size by making the parent div larger */}
+            <div className="h-16 w-16">
+              <UserProfileButton large={true} />
+            </div>
           </div>
-          <div>
+          <div className="text-center">
             <p className="text-sm font-medium">{userName}</p>
           </div>
         </div>

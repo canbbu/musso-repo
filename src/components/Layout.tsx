@@ -4,6 +4,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from './AppSidebar';
 import MobileNavigation from './dashboard/MobileNavigation';
+import { useLocation } from 'react-router-dom';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,7 +12,11 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const isMobile = useIsMobile();
-
+  const location = useLocation();
+  const path = location.pathname;
+  
+  // Previously, the AppSidebar was only shown on certain pages
+  // We'll ensure it appears on all pages now
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
