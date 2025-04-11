@@ -1,13 +1,10 @@
 
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { SaveIcon, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import PlayerStatsTable from './player-stats/PlayerStatsTable';
+import MatchNotesSection from './player-stats/MatchNotesSection';
+import PlayerStatsFooter from './player-stats/PlayerStatsFooter';
 
 interface Player {
   id: string;
@@ -72,6 +69,12 @@ const PlayerStatsRecorder = ({
       });
     }, 1000);
   };
+
+  const handleReset = () => {
+    setMatchNotes('');
+    setMvp('');
+    // You would reset player stats here if needed
+  };
   
   return (
     <Card>
@@ -82,117 +85,24 @@ const PlayerStatsRecorder = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[180px]">선수명</TableHead>
-              <TableHead className="w-[70px] text-center">출석</TableHead>
-              <TableHead className="w-[70px] text-center">득점</TableHead>
-              <TableHead className="w-[70px] text-center">어시스트</TableHead>
-              <TableHead className="w-[80px] text-center">평점</TableHead>
-              <TableHead>비고</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {playerStats.map((stat) => (
-              <TableRow key={stat.id}>
-                <TableCell className="font-medium">{stat.name}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex justify-center">
-                    <Checkbox 
-                      checked={stat.attended} 
-                      onCheckedChange={(checked) => onStatChange(stat.id, 'attended', checked)}
-                    />
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Input 
-                    type="number" 
-                    min="0" 
-                    max="99"
-                    value={stat.goals} 
-                    onChange={(e) => onStatChange(stat.id, 'goals', Number(e.target.value))}
-                    className="w-16 h-8"
-                    disabled={!stat.attended}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input 
-                    type="number" 
-                    min="0" 
-                    max="99"
-                    value={stat.assists} 
-                    onChange={(e) => onStatChange(stat.id, 'assists', Number(e.target.value))}
-                    className="w-16 h-8"
-                    disabled={!stat.attended}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input 
-                    type="number" 
-                    min="0" 
-                    max="10" 
-                    step="0.1" 
-                    value={stat.rating} 
-                    onChange={(e) => onStatChange(stat.id, 'rating', Number(e.target.value))}
-                    className="w-20 h-8"
-                    disabled={!stat.attended}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="text"
-                    placeholder="비고"
-                    value={stat.notes || ''}
-                    onChange={(e) => onStatChange(stat.id, 'notes', e.target.value)}
-                    className="w-full h-8"
-                    disabled={!stat.attended}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <PlayerStatsTable 
+          playerStats={playerStats}
+          onStatChange={onStatChange}
+        />
         
-        <div className="mt-6 space-y-4">
-          <div>
-            <h4 className="mb-2 font-medium">경기 메모</h4>
-            <Textarea 
-              placeholder="경기에 대한 전반적인 메모를 입력하세요"
-              value={matchNotes}
-              onChange={(e) => setMatchNotes(e.target.value)}
-              className="min-h-[100px]"
-            />
-          </div>
-          
-          <div>
-            <h4 className="mb-2 font-medium">MVP 선정</h4>
-            <Input 
-              placeholder="MVP 선수 이름"
-              value={mvp}
-              onChange={(e) => setMvp(e.target.value)}
-            />
-          </div>
-        </div>
+        <MatchNotesSection
+          matchNotes={matchNotes}
+          setMatchNotes={setMatchNotes}
+          mvp={mvp}
+          setMvp={setMvp}
+        />
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" disabled={saving}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          초기화
-        </Button>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              저장 중...
-            </>
-          ) : (
-            <>
-              <SaveIcon className="h-4 w-4 mr-2" />
-              기록 저장
-            </>
-          )}
-        </Button>
+      <CardFooter>
+        <PlayerStatsFooter
+          saving={saving}
+          onSave={handleSave}
+          onReset={handleReset}
+        />
       </CardFooter>
     </Card>
   );
