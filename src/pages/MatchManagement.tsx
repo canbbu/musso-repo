@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -35,16 +36,7 @@ const MatchManagement = () => {
     }
   }, [location]);
   
-  useEffect(() => {
-    if (!canManageMatches()) {
-      toast({
-        title: "접근 권한이 없습니다",
-        description: "경기 관리 페이지는 감독만 접근할 수 있습니다.",
-        variant: "destructive"
-      });
-      navigate('/dashboard');
-    }
-  }, [canManageMatches, navigate, toast]);
+  // Remove the redirect for non-coaches - all users can now access the page
   
   const getSelectedMatchAsNumber = () => {
     return selectedMatchId ? Number(selectedMatchId) : null;
@@ -61,6 +53,15 @@ const MatchManagement = () => {
   };
 
   const navigateToStatsManagement = (matchId: number) => {
+    // Check if user has permission before navigating
+    if (!canManagePlayerStats()) {
+      toast({
+        title: "접근 권한이 없습니다",
+        description: "선수 기록 입력은 감독과 코치만 가능합니다.",
+        variant: "destructive"
+      });
+      return;
+    }
     navigate(`/stats-management?matchId=${matchId}`);
   };
 
@@ -91,8 +92,18 @@ const MatchManagement = () => {
             onAttendanceChange={handleAttendanceChange}
             canManageAnnouncements={isCoach}
             emptyMessage="등록된 예정 경기가 없습니다."
-            showAddButton={isCoach}
-            onAddClick={() => console.log('Adding new match')}
+            showAddButton={isCoach} // Only show add button to coaches
+            onAddClick={() => {
+              if (!isCoach) {
+                toast({
+                  title: "접근 권한이 없습니다",
+                  description: "경기 등록은 감독만 가능합니다.",
+                  variant: "destructive"
+                });
+                return;
+              }
+              console.log('Adding new match');
+            }}
             onViewMatch={handleViewMatch}
           />
         </TabsContent>

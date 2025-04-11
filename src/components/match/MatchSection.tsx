@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import UpcomingMatchCard from '@/components/match/UpcomingMatchCard';
 import NoMatchesInfo from '@/components/match/NoMatchesInfo';
 import { Match } from '@/hooks/use-match-data';
+import { useToast } from '@/hooks/use-toast';
 
 interface MatchSectionProps {
   title: string;
@@ -26,12 +27,29 @@ const MatchSection = ({
   onAddClick,
   onViewMatch
 }: MatchSectionProps) => {
+  const { toast } = useToast();
+  
+  const handleAddClick = () => {
+    if (!canManageAnnouncements) {
+      toast({
+        title: "접근 권한이 없습니다",
+        description: "경기 등록은 감독만 가능합니다.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (onAddClick) {
+      onAddClick();
+    }
+  };
+  
   return (
     <div className="mb-10">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">{title}</h2>
-        {showAddButton && canManageAnnouncements && (
-          <Button onClick={onAddClick} variant="default" className="flex items-center">
+        {showAddButton && (
+          <Button onClick={handleAddClick} variant="default" className="flex items-center">
             새 경기 등록
           </Button>
         )}

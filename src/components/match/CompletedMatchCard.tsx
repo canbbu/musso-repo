@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Check, X, Eye, FileEdit, ClipboardCheck } from "lucide-react";
 import { Match } from '@/hooks/use-match-data';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface CompletedMatchCardProps {
   match: Match;
@@ -13,16 +14,33 @@ interface CompletedMatchCardProps {
 
 const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMatchCardProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const handleViewResults = () => {
     navigate(`/matches?matchId=${match.id}`);
   };
   
   const handleManageMatch = () => {
+    if (!canManagePlayerStats) {
+      toast({
+        title: "접근 권한이 없습니다",
+        description: "경기 관리는 감독과 코치만 가능합니다.",
+        variant: "destructive"
+      });
+      return;
+    }
     navigate(`/matches?matchId=${match.id}&edit=true`);
   };
   
   const handleManageStats = () => {
+    if (!canManagePlayerStats) {
+      toast({
+        title: "접근 권한이 없습니다",
+        description: "선수 기록 입력은 감독과 코치만 가능합니다.",
+        variant: "destructive"
+      });
+      return;
+    }
     navigate(`/stats-management?matchId=${match.id}`);
   };
 
@@ -98,25 +116,22 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
               경기 결과 보기
             </Button>
             
-            {canManagePlayerStats && (
-              <>
-                <Button 
-                  className="flex items-center justify-center" 
-                  onClick={handleManageMatch}
-                >
-                  <FileEdit size={18} className="mr-1" />
-                  경기 관리
-                </Button>
-                <Button 
-                  variant="secondary"
-                  className="flex items-center justify-center" 
-                  onClick={handleManageStats}
-                >
-                  <ClipboardCheck size={18} className="mr-1" />
-                  선수 기록 입력
-                </Button>
-              </>
-            )}
+            {/* Show management buttons to everyone but check permissions when clicked */}
+            <Button 
+              className="flex items-center justify-center" 
+              onClick={handleManageMatch}
+            >
+              <FileEdit size={18} className="mr-1" />
+              경기 관리
+            </Button>
+            <Button 
+              variant="secondary"
+              className="flex items-center justify-center" 
+              onClick={handleManageStats}
+            >
+              <ClipboardCheck size={18} className="mr-1" />
+              선수 기록 입력
+            </Button>
           </div>
         </div>
       </CardContent>
