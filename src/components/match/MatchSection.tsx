@@ -5,6 +5,8 @@ import UpcomingMatchCard from '@/components/match/UpcomingMatchCard';
 import NoMatchesInfo from '@/components/match/NoMatchesInfo';
 import { Match } from '@/hooks/use-match-data';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
 
 interface MatchSectionProps {
   title: string;
@@ -28,6 +30,8 @@ const MatchSection = ({
   onViewMatch
 }: MatchSectionProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { canManagePlayerStats } = useAuth();
   
   const handleAddClick = () => {
     if (!canManageAnnouncements) {
@@ -42,6 +46,18 @@ const MatchSection = ({
     if (onAddClick) {
       onAddClick();
     }
+  };
+
+  const handleManageStats = (matchId: number) => {
+    if (!canManagePlayerStats()) {
+      toast({
+        title: "접근 권한이 없습니다",
+        description: "선수 기록 관리는 감독과 코치만 가능합니다.",
+        variant: "destructive"
+      });
+      return;
+    }
+    navigate(`/stats-management?matchId=${matchId}`);
   };
   
   return (

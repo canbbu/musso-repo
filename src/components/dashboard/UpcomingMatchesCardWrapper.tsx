@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Plus } from 'lucide-react';
+import { CalendarDays, Plus, Check, X } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Match, useMatchData } from '@/hooks/use-match-data';
 import UpcomingMatchCard from '@/components/match/UpcomingMatchCard';
@@ -91,6 +91,7 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
                       }`}
                       onClick={() => handleAttendanceChange(match.id, 'attending')}
                     >
+                      <Check className="mr-1 h-4 w-4" />
                       참석
                     </Button>
                     <Button 
@@ -98,6 +99,7 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
                       className="flex items-center justify-center"
                       onClick={() => handleAttendanceChange(match.id, 'notAttending')}
                     >
+                      <X className="mr-1 h-4 w-4" />
                       불참
                     </Button>
                   </div>

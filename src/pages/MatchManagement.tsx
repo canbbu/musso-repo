@@ -29,7 +29,7 @@ const MatchManagement = () => {
   
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const matchId = params.get('matchId');
+    const matchId = params.get('id');
     if (matchId) {
       setSelectedMatchId(matchId);
       setDialogOpen(true);
