@@ -17,10 +17,16 @@ const AnnouncementManagement = () => {
   const { canManageAnnouncements, userName } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { announcements, createAnnouncement, updateAnnouncement, deleteAnnouncement } = useAnnouncementData();
+  const { 
+    announcements, 
+    loading,
+    createAnnouncement, 
+    updateAnnouncement, 
+    deleteAnnouncement,
+    refreshAnnouncements 
+  } = useAnnouncementData();
   
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
-  const [formType, setFormType] = useState<'notice' | 'match'>('notice');
   const [formData, setFormData] = useState<AnnouncementFormData>({
     title: '',
     type: 'notice',
@@ -32,28 +38,30 @@ const AnnouncementManagement = () => {
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    // Redirect if no permissions (only president and vice_president allowed)
+    // 권한 체크 (회장, 부회장만 접근 가능)
     if (!canManageAnnouncements()) {
       toast({
         title: "접근 권한이 없습니다",
-        description: "공지사항 및 경기 일정 관리는 회장, 부회장만 가능합니다.",
+        description: "공지사항 관리는 회장, 부회장만 가능합니다.",
         variant: "destructive"
       });
       navigate('/dashboard');
     }
   }, [canManageAnnouncements, navigate, toast]);
 
+  // 데이터 로드 시 새로고침 방지
+  useEffect(() => {
+    refreshAnnouncements();
+  }, []);
+
   const handleCreateNew = () => {
     setEditMode(false);
     setFormData({
       title: '',
-      type: formType,
+      type: 'notice',
       content: '',
       date: format(new Date(), 'yyyy-MM-dd'),
       author: userName || '',
-      location: '',
-      opponent: '',
-      matchTime: '',
       attendanceTracking: false
     });
     setActiveTab('create');
@@ -61,25 +69,36 @@ const AnnouncementManagement = () => {
 
   const handleEditItem = (item: AnnouncementFormData) => {
     setEditMode(true);
-    setFormType(item.type || 'notice');
     setFormData(item);
     setActiveTab('create');
   };
 
-  const handleSubmit = (data: AnnouncementFormData) => {
+  const handleSubmit = async (data: AnnouncementFormData) => {
     if (editMode) {
-      updateAnnouncement(data);
+      await updateAnnouncement(data);
     } else {
-      createAnnouncement(data);
+      await createAnnouncement(data);
     }
     setActiveTab('list');
   };
   
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-64">
+          <p>데이터 로딩 중...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  const noticeAnnouncements = announcements.filter(a => a.type === 'notice');
+  
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">공지사항 및 경기 일정 관리</h1>
-        <p className="text-gray-600">공지사항과 경기 일정을 등록하고 관리합니다.</p>
+        <h1 className="text-3xl font-bold mb-2">공지사항 관리</h1>
+        <p className="text-gray-600">공지사항을 등록하고 관리합니다.</p>
       </div>
       
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'list' | 'create')}>
@@ -102,12 +121,12 @@ const AnnouncementManagement = () => {
         <TabsContent value="list">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle>관리 목록</CardTitle>
-              <CardDescription>공지사항 및 경기 일정 목록</CardDescription>
+              <CardTitle>공지사항 목록</CardTitle>
+              <CardDescription>전체 공지사항 목록</CardDescription>
             </CardHeader>
             <CardContent>
               <AnnouncementList 
-                announcements={announcements}
+                announcements={noticeAnnouncements}
                 onEdit={handleEditItem}
                 onDelete={deleteAnnouncement}
               />
@@ -118,9 +137,9 @@ const AnnouncementManagement = () => {
         <TabsContent value="create">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle>{editMode ? '항목 수정' : '새 항목 등록'}</CardTitle>
+              <CardTitle>{editMode ? '공지사항 수정' : '새 공지사항 등록'}</CardTitle>
               <CardDescription>
-                {editMode ? '내용을 수정한 후 저장하세요.' : '새 항목의 정보를 입력하세요.'}
+                {editMode ? '내용을 수정한 후 저장하세요.' : '새 공지사항의 정보를 입력하세요.'}
               </CardDescription>
             </CardHeader>
             <CardContent>

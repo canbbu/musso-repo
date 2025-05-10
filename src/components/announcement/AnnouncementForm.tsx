@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format } from "date-fns";
 import { CalendarIcon, Save } from 'lucide-react';
@@ -6,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,18 +21,13 @@ interface AnnouncementFormProps {
 
 const AnnouncementForm = ({ initialData, onSubmit, onCancel, editMode }: AnnouncementFormProps) => {
   const { toast } = useToast();
-  const [formType, setFormType] = useState<'notice' | 'match'>(initialData.type || 'notice');
-  const [formData, setFormData] = useState<AnnouncementFormData>(initialData);
+  const [formData, setFormData] = useState<AnnouncementFormData>({
+    ...initialData,
+    type: 'notice' // 항상 공지사항 유형으로 고정
+  });
   const [date, setDate] = useState<Date | undefined>(
     initialData.date ? new Date(initialData.date) : new Date()
   );
-
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      type: formType
-    }));
-  }, [formType]);
 
   useEffect(() => {
     if (date) {
@@ -61,9 +54,7 @@ const AnnouncementForm = ({ initialData, onSubmit, onCancel, editMode }: Announc
   };
 
   const handleSubmit = () => {
-    const requiredFields = formType === 'notice' 
-      ? ['title', 'content']
-      : ['title', 'content', 'location', 'opponent', 'matchTime'];
+    const requiredFields = ['title', 'content'];
       
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
     
@@ -81,19 +72,6 @@ const AnnouncementForm = ({ initialData, onSubmit, onCancel, editMode }: Announc
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <Label htmlFor="type">유형</Label>
-        <Select value={formType} onValueChange={(v) => setFormType(v as 'notice' | 'match')}>
-          <SelectTrigger>
-            <SelectValue placeholder="유형 선택" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="notice">공지사항</SelectItem>
-            <SelectItem value="match">경기 일정</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
       <div className="space-y-1">
         <Label htmlFor="title">제목</Label>
         <Input id="title" name="title" value={formData.title || ''} onChange={handleInputChange} />
@@ -125,41 +103,6 @@ const AnnouncementForm = ({ initialData, onSubmit, onCancel, editMode }: Announc
           </PopoverContent>
         </Popover>
       </div>
-      
-      {formType === 'match' && (
-        <>
-          <div className="space-y-1">
-            <Label htmlFor="opponent">상대팀</Label>
-            <Input 
-              id="opponent" 
-              name="opponent" 
-              value={formData.opponent || ''} 
-              onChange={handleInputChange} 
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="location">장소</Label>
-            <Input 
-              id="location" 
-              name="location" 
-              value={formData.location || ''} 
-              onChange={handleInputChange} 
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="matchTime">시간</Label>
-            <Input 
-              id="matchTime" 
-              name="matchTime" 
-              type="time"
-              value={formData.matchTime || ''} 
-              onChange={handleInputChange} 
-            />
-          </div>
-        </>
-      )}
       
       <div className="space-y-1">
         <Label htmlFor="content">내용</Label>

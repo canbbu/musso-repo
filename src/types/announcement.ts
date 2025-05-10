@@ -1,4 +1,3 @@
-
 export interface Announcement {
   id: number;
   title: string;
@@ -10,6 +9,7 @@ export interface Announcement {
   opponent?: string;
   matchTime?: string;
   attendanceTracking?: boolean;
+  isMatch?: boolean;
 }
 
 export interface AnnouncementFormData extends Partial<Announcement> {}

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import '../styles/Dashboard.css';
@@ -16,16 +15,21 @@ import { useMatchData, Match } from '@/hooks/use-match-data';
 const Dashboard = () => {
   const { userName, canManageAnnouncements } = useAuth();
   const isMobile = useIsMobile();
-  const { announcements, upcomingMatches, calendarEvents } = useDashboardData();
+  const { announcements, matchAnnouncements, upcomingMatches, calendarEvents } = useDashboardData();
   const { checkForTodaysMatch, handleAttendanceChange } = useMatchData();
   const [todaysCompletedMatch, setTodaysCompletedMatch] = useState<Match | null>(null);
+  
+  // 디버깅용 로그
+  console.log('Dashboard - upcomingMatches:', upcomingMatches);
+  console.log('Dashboard - handleAttendanceChange:', handleAttendanceChange);
   
   useEffect(() => {
     const match = checkForTodaysMatch();
     if (match) {
       setTodaysCompletedMatch(match);
     }
-  }, [checkForTodaysMatch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 의존성 배열을 비워서 컴포넌트 마운트 시에만 실행되도록 수정
 
   // Convert UpcomingMatch[] to Match[] by adding required properties
   const convertedUpcomingMatches: Match[] = upcomingMatches.map(match => ({
@@ -33,14 +37,17 @@ const Dashboard = () => {
     date: match.date,
     location: match.location,
     opponent: match.opponent || '',
-    status: match.status === 'cancelled' ? 'completed' : 'upcoming',
+    status: match.status,
     attendance: {
-      attending: match.attending || 0,
-      notAttending: match.notAttending || 0,
-      pending: match.pending || 0
+      attending: match.attending,
+      notAttending: match.notAttending,
+      pending: match.pending
     },
     userResponse: null
   }));
+  
+  // 디버깅용 로그
+  console.log('Dashboard - convertedUpcomingMatches:', convertedUpcomingMatches);
 
   return (
     <Layout>

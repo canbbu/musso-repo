@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, ChevronRight, AlertCircle } from 'lucide-react';
+import { MessageSquare, ChevronRight, AlertCircle, Calendar } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 
@@ -13,14 +12,22 @@ interface Announcement {
   content: string;
   author: string;
   updatedAt?: string;
+  isMatch?: boolean;
 }
 
 interface AnnouncementsCardProps {
   announcements: Announcement[];
   canManageAnnouncements: () => boolean;
+  title?: string;
+  icon?: 'message' | 'calendar';
 }
 
-const AnnouncementsCard = ({ announcements, canManageAnnouncements }: AnnouncementsCardProps) => {
+const AnnouncementsCard = ({ 
+  announcements, 
+  canManageAnnouncements, 
+  title = "공지사항", 
+  icon = "message" 
+}: AnnouncementsCardProps) => {
   const navigate = useNavigate();
   
   return (
@@ -28,8 +35,12 @@ const AnnouncementsCard = ({ announcements, canManageAnnouncements }: Announceme
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center flex-wrap gap-2">
           <CardTitle className="flex items-center">
-            <MessageSquare className="mr-2 h-5 w-5 text-indigo-600" />
-            공지사항
+            {icon === "message" ? (
+              <MessageSquare className="mr-2 h-5 w-5 text-indigo-600" />
+            ) : (
+              <Calendar className="mr-2 h-5 w-5 text-green-600" />
+            )}
+            {title}
           </CardTitle>
           {canManageAnnouncements && (
             <Button 

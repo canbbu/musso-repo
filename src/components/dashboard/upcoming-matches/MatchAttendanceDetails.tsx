@@ -45,13 +45,6 @@ const MatchAttendanceDetails = ({
           players={notAttendingPlayers} 
           textColor="text-red-600" 
         />
-        
-        <MatchPlayersList 
-          title="미정" 
-          count={pending} 
-          players={pendingPlayers} 
-          textColor="text-gray-600" 
-        />
       </div>
     </CollapsibleContent>
   );

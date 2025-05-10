@@ -2,7 +2,7 @@
 import React from 'react';
 
 interface MatchStatusBadgeProps {
-  status?: 'scheduled' | 'cancelled';
+  status?: 'upcoming' | 'cancelled';
 }
 
 const MatchStatusBadge = ({ status }: MatchStatusBadgeProps) => {

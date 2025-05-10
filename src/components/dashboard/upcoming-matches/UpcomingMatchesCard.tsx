@@ -43,7 +43,7 @@ const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
                     variant="outline"
                     onClick={() => navigate(`/matches?id=${match.id}`)}
                   >
-                    상세 보기
+                    참석 현황
                   </Button>
                 </div>
               </div>

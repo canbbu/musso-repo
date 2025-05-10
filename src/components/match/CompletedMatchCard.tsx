@@ -56,7 +56,7 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="match-info mb-4 md:mb-0">
             <div className="flex items-center mb-1">
-              <h3 className="text-xl font-semibold">vs {match.opponent}</h3>
+              <h3 className="text-xl font-semibold"> {match.opponent}</h3>
               <span className={`ml-3 px-3 py-1 rounded-full text-sm ${
                 match.result === 'win' 
                   ? 'bg-green-100 text-green-800' 

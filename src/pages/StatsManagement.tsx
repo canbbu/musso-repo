@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -23,8 +22,26 @@ const StatsManagement = () => {
     playerStats,
     isLoading,
     handleStatChange,
+    handleAttendanceChange,
     formatDate
   } = usePlayerStats();
+
+  const playerStatsForUI = playerStats.map(stat => ({
+    ...stat,
+    attended: stat.attendanceStatus === 'attending',
+  }));
+  
+  const handleStatChangeForUI = (
+    playerId: string,
+    field: keyof typeof playerStatsForUI[0] | 'attended',
+    value: any
+  ) => {
+    if (field === 'attended') {
+      handleAttendanceChange(playerId, value ? 'attending' : 'not_attending');
+    } else {
+      handleStatChange(playerId, field, value);
+    }
+  };
   
   // Check if there's a matchId parameter in the URL
   useEffect(() => {
@@ -56,7 +73,7 @@ const StatsManagement = () => {
   };
 
   const selectedMatchData = selectedMatch ? matches.find(m => m.id === selectedMatch) : null;
-
+  console.log("Stats Management selectedMatchData : ", selectedMatchData);
   return (
     <Layout>
       <div className="mb-6">
@@ -75,8 +92,8 @@ const StatsManagement = () => {
         <StatsCard
           matchDate={formatDate(selectedMatchData.date)}
           opponent={selectedMatchData.opponent}
-          playerStats={playerStats}
-          onStatChange={handleStatChange}
+          playerStats={playerStatsForUI}
+          onStatChange={handleStatChangeForUI}
           onSave={handleSaveStats}
           isLoading={isLoading}
         />

@@ -64,7 +64,7 @@ export const getMockUpcomingMatches = (): UpcomingMatch[] => {
       attending: 3,
       notAttending: 2, 
       pending: 2,
-      status: 'scheduled',
+      status: 'upcoming',
       attendingPlayers: [
         samplePlayers[0],
         samplePlayers[1],

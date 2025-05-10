@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import UpcomingMatchCard from '@/components/match/UpcomingMatchCard';
@@ -17,6 +16,8 @@ interface MatchSectionProps {
   showAddButton?: boolean;
   onAddClick?: () => void;
   onViewMatch: (matchId: number) => void;
+  onEditClick?: (matchId: number) => void;
+  onDeleteClick?: (matchId: number) => void;
 }
 
 const MatchSection = ({
@@ -27,7 +28,9 @@ const MatchSection = ({
   emptyMessage,
   showAddButton = false,
   onAddClick,
-  onViewMatch
+  onViewMatch,
+  onEditClick,
+  onDeleteClick
 }: MatchSectionProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -80,6 +83,8 @@ const MatchSection = ({
               onAttendanceChange={onAttendanceChange}
               canManageAnnouncements={canManageAnnouncements}
               onViewMatch={onViewMatch}
+              onEditClick={onEditClick}
+              onDeleteClick={onDeleteClick}
             />
           ))
         ) : (

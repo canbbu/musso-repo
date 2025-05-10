@@ -1,4 +1,3 @@
-
 export interface Player {
   id: string;
   name: string;
@@ -12,6 +11,7 @@ export interface Announcement {
   content: string;
   author: string;
   updatedAt?: string;
+  isMatch?: boolean;
 }
 
 export interface UpcomingMatch {
@@ -22,7 +22,7 @@ export interface UpcomingMatch {
   attending?: number;
   notAttending?: number;
   pending?: number;
-  status?: 'scheduled' | 'cancelled';
+  status?: 'upcoming' | 'cancelled';
   attendingPlayers?: Player[];
   notAttendingPlayers?: Player[];
   pendingPlayers?: Player[];
@@ -31,7 +31,7 @@ export interface UpcomingMatch {
 export interface CalendarEvent {
   type: 'match' | 'notice';
   title: string;
-  status?: 'scheduled' | 'cancelled';
+  status?: 'upcoming' | 'cancelled';
 }
 
 export interface DashboardData {

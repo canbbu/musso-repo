@@ -81,7 +81,7 @@ const PlayerStatsRecorder = ({
       <CardHeader className="pb-2">
         <CardTitle className="text-xl">선수 기록 입력</CardTitle>
         <CardDescription>
-          {formatDate(matchDate)} vs {opponent}
+          {formatDate(matchDate)}  {opponent}
         </CardDescription>
       </CardHeader>
       <CardContent>

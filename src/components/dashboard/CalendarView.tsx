@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -7,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 interface CalendarEvent {
   type: 'match' | 'notice';
   title: string;
-  status?: 'scheduled' | 'cancelled';
+  status?: 'upcoming' | 'cancelled';
 }
 
 interface CalendarViewProps {
@@ -16,6 +15,11 @@ interface CalendarViewProps {
 
 const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
+
+  // 날짜 포맷팅 함수
+  const formatDateToLocalString = (date: Date): string => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
 
   return (
     <Card className="lg:col-span-2 bg-white">
@@ -53,18 +57,18 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
               table: {
                 width: '100%'
               }
-            }}
+            }}  
             modifiers={{
               event: (date) => {
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = formatDateToLocalString(date);
                 return !!calendarEvents[dateStr]?.find(e => e.type === 'match' && e.status !== 'cancelled');
               },
               notice: (date) => {
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = formatDateToLocalString(date);
                 return !!calendarEvents[dateStr]?.find(e => e.type === 'notice');
               },
               cancelled: (date) => {
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = formatDateToLocalString(date);
                 return !!calendarEvents[dateStr]?.find(e => e.type === 'match' && e.status === 'cancelled');
               }
             }}

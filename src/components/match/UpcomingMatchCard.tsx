@@ -1,31 +1,47 @@
-
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X, Clipboard, Eye } from "lucide-react";
+import { Check, X, Clipboard, Eye, Edit, Trash } from "lucide-react";
 import { Match } from '@/hooks/use-match-data';
 import { useToast } from '@/hooks/use-toast';
+import AttendanceListModal from './AttendanceListModal';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
+import { formatKoreanDate } from '@/utils/date-helpers';
 
 interface UpcomingMatchCardProps {
   match: Match;
   onAttendanceChange: (matchId: number, response: 'attending' | 'notAttending') => void;
   canManageAnnouncements: boolean;
   onViewMatch: (matchId: number) => void;
+  onEditClick?: (matchId: number) => void;
+  onDeleteClick?: (matchId: number) => void;
 }
 
-const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements, onViewMatch }: UpcomingMatchCardProps) => {
+const UpcomingMatchCard = ({ 
+  match, 
+  onAttendanceChange, 
+  canManageAnnouncements, 
+  onViewMatch,
+  onEditClick,
+  onDeleteClick
+}: UpcomingMatchCardProps) => {
   const { toast } = useToast();
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const navigate = useNavigate();
+  const { canManagePlayerStats} = useAuth();
   
   const handleManageMatch = (matchId: number) => {
-    if (!canManageAnnouncements) {
+    
+    if (!canManagePlayerStats()) {
       toast({
         title: "접근 권한이 없습니다",
-        description: "경기 관리는 감독만 가능합니다.",
+        description: "경기 관리는 감독과 코치만 가능합니다.",
         variant: "destructive"
       });
       return;
     }
-    onViewMatch(matchId);
+    navigate(`/stats-management?matchId=${matchId}`);
   };
   
   return (
@@ -33,15 +49,9 @@ const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements, 
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="match-info mb-4 md:mb-0">
-            <h3 className="text-xl font-semibold mb-1">vs {match.opponent}</h3>
+            <h3 className="text-xl font-semibold mb-1"> {match.opponent}</h3>
             <p className="text-gray-600 mb-1">
-              {new Date(match.date).toLocaleDateString('ko-KR', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
+              {formatKoreanDate(match.date)}
             </p>
             <p className="text-gray-600 mb-3">{match.location}</p>
             
@@ -57,12 +67,6 @@ const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements, 
                   <X size={12} />
                 </span>
                 <span>불참: {match.attendance.notAttending}명</span>
-              </div>
-              <div className="flex items-center">
-                <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-300 text-gray-700 rounded-full mr-1">
-                  ?
-                </span>
-                <span>미정: {match.attendance.pending}명</span>
               </div>
             </div>
             
@@ -100,12 +104,12 @@ const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements, 
               <Button 
                 className="flex-1 flex items-center justify-center" 
                 variant="outline"
-                onClick={() => onViewMatch(match.id)}
+                onClick={() => setShowAttendanceModal(true)}
               >
                 <Eye size={18} className="mr-1" />
-                상세보기
+                참석 현황
               </Button>
-              {/* Show management button to everyone but check permissions when clicked */}
+              {/* Show management button only to coaches */}
               <Button 
                 className="flex-1 flex items-center justify-center" 
                 variant="outline"
@@ -115,9 +119,45 @@ const UpcomingMatchCard = ({ match, onAttendanceChange, canManageAnnouncements, 
                 경기 관리
               </Button>
             </div>
+            {canManageAnnouncements && (
+              <div className="flex gap-2">
+                {onEditClick && (
+                  <Button 
+                    className="flex-1 flex items-center justify-center" 
+                    variant="outline"
+                    onClick={() => onEditClick(match.id)}
+                  >
+                    <Edit size={18} className="mr-1" />
+                    수정
+                  </Button>
+                )}
+                {onDeleteClick && (
+                  <Button 
+                    className="flex-1 flex items-center justify-center" 
+                    variant="outline"
+                    onClick={() => onDeleteClick(match.id)}
+                  >
+                    <Trash size={18} className="mr-1" />
+                    삭제
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
+      
+      {/* 참석자 목록 모달 */}
+      <AttendanceListModal 
+        isOpen={showAttendanceModal}
+        onClose={() => setShowAttendanceModal(false)}
+        matchId={match.id}
+        matchInfo={{
+          date: match.date,
+          opponent: match.opponent,
+          location: match.location
+        }}
+      />
     </Card>
   );
 };

@@ -122,7 +122,7 @@ const MvpVotingCard = ({ matchId, matchDate, opponent, result, score }: MvpVotin
             </span>
           )}
         </CardTitle>
-        <p className="text-sm text-gray-500">vs {opponent}</p>
+        <p className="text-sm text-gray-500"> {opponent}</p>
       </CardHeader>
       <CardContent>
         {votingEnded ? (

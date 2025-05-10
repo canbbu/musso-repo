@@ -1,8 +1,9 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider, RequireAuth } from '@/components/auth/AuthContext';
 import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Gallery, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory, MyStats } from './pages';
+import DataTestPage from './pages/DataTestPage';
+import Register from './pages/Register';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -15,6 +16,8 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route element={<RequireAuth />}>
+              <Route path="/register" element={<Register />} />
+              <Route path="/data-test" element={<DataTestPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/matches" element={<MatchManagement />} />
               <Route path="/match-history" element={<MatchHistory />} />

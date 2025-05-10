@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User } from 'lucide-react';
+import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -30,11 +29,13 @@ const MobileNavigation = () => {
   const getNavItems = () => {
     const baseItems = [
       { title: '대시보드', path: '/dashboard', icon: Home, alwaysShow: true },
-      { title: '경기 관리', path: '/matches', icon: Calendar, show: canManageMatches() },
+      { title: '경기 관리', path: '/matches', icon: Calendar, show: true },
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
       { title: '갤러리', path: '/gallery', icon: Image, show: true },
+      // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
       { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
+      { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
     ];
     
     return baseItems.filter(item => item.alwaysShow || item.show);

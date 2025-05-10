@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -20,6 +19,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -42,7 +42,7 @@ interface ProfileData {
 }
 
 const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
-  const { userName } = useAuth();
+  const { userName, role } = useAuth();
   const { toast } = useToast();
   const [profileData, setProfileData] = useState<ProfileData>({
     name: userName || '',
@@ -84,6 +84,42 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
       .toUpperCase();
   };
 
+  // 역할에 따른 한글 이름 매핑
+  const getRoleName = (roleCode: string | null) => {
+    switch(roleCode) {
+      case 'president':
+        return '회장';
+      case 'vice_president':
+        return '부회장';
+      case 'coach':
+        return '감독';
+      case 'assistant_coach':
+        return '코치';
+      case 'treasurer':
+        return '회계';
+      case 'player':
+        return '일반회원';
+      default:
+        return '일반회원';
+    }
+  };
+
+  // 역할에 따른 배지 색상 설정
+  const getRoleBadgeColor = (roleCode: string | null) => {
+    switch(roleCode) {
+      case 'president':
+      case 'vice_president':
+        return 'bg-red-500';
+      case 'coach':
+      case 'assistant_coach':
+        return 'bg-blue-500';
+      case 'treasurer':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -93,12 +129,21 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
         
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col items-center mb-6">
-            <Avatar className="h-24 w-24 mb-4">
-              <AvatarImage src="/placeholder.svg" alt={profileData.name} />
-              <AvatarFallback className="text-xl bg-primary text-primary-foreground">
-                {getInitials(profileData.name)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-24 w-24 mb-4">
+                <AvatarImage src="/placeholder.svg" alt={profileData.name} />
+                <AvatarFallback className="text-xl bg-primary text-primary-foreground">
+                  {getInitials(profileData.name)}
+                </AvatarFallback>
+              </Avatar>
+              {role && (
+                <Badge 
+                  className={`absolute -bottom-2 -right-2 ${getRoleBadgeColor(role)}`}
+                >
+                  {getRoleName(role)}
+                </Badge>
+              )}
+            </div>
             <Button type="button" variant="outline" size="sm">
               사진 업로드
             </Button>

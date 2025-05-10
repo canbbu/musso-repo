@@ -106,7 +106,7 @@ const AttendanceRecordForm = ({ matchId, matchDate, opponent, players, isCoach }
     <Card>
       <CardHeader>
         <CardTitle>
-          출석 기록 - {formatDate(matchDate)} vs {opponent}
+          출석 기록 - {formatDate(matchDate)}  {opponent}
         </CardTitle>
       </CardHeader>
       <CardContent>
