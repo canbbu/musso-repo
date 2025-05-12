@@ -14,9 +14,9 @@ const MatchNotesSection = ({ matchNotes, setMatchNotes, mvp, setMvp }: MatchNote
   return (
     <div className="mt-6 space-y-4">
       <div>
-        <h4 className="mb-2 font-medium">경기 메모</h4>
+        <h4 className="mb-2 font-medium">이벤트 메모</h4>
         <Textarea 
-          placeholder="경기에 대한 전반적인 메모를 입력하세요"
+          placeholder="이벤트에 대한 전반적인 메모를 입력하세요"
           value={matchNotes}
           onChange={(e) => setMatchNotes(e.target.value)}
           className="min-h-[100px]"

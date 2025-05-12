@@ -52,8 +52,8 @@ const Index = () => {
             <div className="features-grid">
               <div className="feature-card">
                 <div className="feature-icon">⚽</div>
-                <h3>경기 관리</h3>
-                <p>경기 일정 관리, 출석 체크, 경기 기록을 손쉽게 관리하세요.</p>
+                <h3>이벤트 관리</h3>
+                <p>이벤트 일정 관리, 출석 체크, 이벤트 기록을 손쉽게 관리하세요.</p>
               </div>
               
               <div className="feature-card">

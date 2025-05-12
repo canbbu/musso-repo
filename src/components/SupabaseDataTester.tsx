@@ -36,7 +36,7 @@ const TABLE_SCHEMAS: Record<string, Record<string, FieldConfig>> = {
       label: '유형',
       options: [
         { value: 'notice', label: '공지사항' },
-        { value: 'match', label: '경기 관련' }
+        { value: 'match', label: '이벤트 관련' }
       ]
     },
     content: { type: 'textarea', required: true, label: '내용' },
@@ -44,9 +44,9 @@ const TABLE_SCHEMAS: Record<string, Record<string, FieldConfig>> = {
     author: { type: 'text', required: true, label: '작성자' },
     location: { type: 'text', label: '장소' },
     opponent: { type: 'text', label: '상대팀' },
-    match_time: { type: 'datetime-local', label: '경기 시간' },
+    match_time: { type: 'datetime-local', label: '이벤트 시간' },
     attendance_tracking: { type: 'checkbox', label: '출석 체크' },
-    is_match: { type: 'checkbox', label: '경기 여부' }
+    is_match: { type: 'checkbox', label: '이벤트 여부' }
   },
   'matches': {
     date: { type: 'date', required: true, label: '날짜' },
@@ -65,7 +65,7 @@ const TABLE_SCHEMAS: Record<string, Record<string, FieldConfig>> = {
     match_id: { 
       type: 'select', 
       required: true, 
-      label: '경기',
+      label: '이벤트',
       dynamicOptions: 'matches'
     },
     player_id: { 
@@ -91,7 +91,7 @@ const TABLE_SCHEMAS: Record<string, Record<string, FieldConfig>> = {
       required: true, 
       label: '유형',
       options: [
-        { value: 'match', label: '경기' },
+        { value: 'match', label: '이벤트' },
         { value: 'notice', label: '공지' }
       ]
     },
@@ -189,7 +189,7 @@ export function SupabaseDataTester() {
           }));
         }
         
-        // matches 테이블에서 경기 목록 가져오기
+        // matches 테이블에서 이벤트 목록 가져오기
         const { data: matchesData } = await supabase
           .from('matches')
           .select('id, date, opponent');

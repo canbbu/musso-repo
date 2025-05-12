@@ -56,8 +56,6 @@ const PlayerAttendanceForm = ({ matchId, matchDate, opponent, players, isCoach }
   };
   
   const saveAttendance = () => {
-    // In a real app, this would save to the database
-    console.log('Saving attendance records:', attendance);
     
     toast({
       title: "저장 완료",

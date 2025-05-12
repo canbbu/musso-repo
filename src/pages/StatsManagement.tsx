@@ -8,6 +8,7 @@ import { usePlayerStats } from '@/hooks/use-player-stats';
 import MatchSelector from '@/components/stats/MatchSelector';
 import StatsCard from '@/components/stats/StatsCard';
 import NoMatchesInfo from '@/components/match/NoMatchesInfo';
+import type { Match } from '@/types/dashboard';
 
 const StatsManagement = () => {
   const { canManagePlayerStats } = useAuth();
@@ -78,11 +79,11 @@ const StatsManagement = () => {
     <Layout>
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">선수 기록 관리</h1>
-        <p className="text-gray-600">선수들의 경기 출석, 득점, 어시스트, :평점을 기록합니다.</p>
+        <p className="text-gray-600">선수들의 이벤트 출석, 득점, 어시스트, :평점을 기록합니다.</p>
       </div>
       
       <MatchSelector 
-        matches={matches}
+        matches={matches as Match[]}
         selectedMatch={selectedMatch}
         onMatchSelect={setSelectedMatch}
         formatDate={formatDate}
@@ -100,7 +101,7 @@ const StatsManagement = () => {
       )}
       
       {!selectedMatch && (
-        <NoMatchesInfo message="기록을 관리할 경기를 선택해주세요." />
+        <NoMatchesInfo message="기록을 관리할 이벤트를 선택해주세요." />
       )}
     </Layout>
   );

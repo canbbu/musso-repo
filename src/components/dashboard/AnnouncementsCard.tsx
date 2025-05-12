@@ -64,7 +64,7 @@ const AnnouncementsCard = ({
                   <h3 className="font-medium">{announcement.title}</h3>
                   {announcement.type === 'match' && (
                     <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
-                      경기
+                      이벤트
                     </span>
                   )}
                 </div>

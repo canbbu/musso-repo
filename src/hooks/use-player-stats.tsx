@@ -22,7 +22,7 @@ interface Match {
 interface Player {
   id: string;
   name: string;
-  nickname: string;
+  username: string;
   role: string;
 }
 
@@ -41,7 +41,7 @@ export const usePlayerStats = () => {
         .select('*')
         .order('date', { ascending: false });
       if (error) {
-        console.error('경기 목록을 불러오는 중 오류 발생:', error);
+        console.error('이벤트 목록을 불러오는 중 오류 발생:', error);
         return;
       }
       // date를 ISO string으로 변환

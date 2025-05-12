@@ -22,26 +22,26 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
   };
 
   return (
-    <Card className="lg:col-span-2 bg-white">
+    <Card className="lg:col-span-2 bg-white flex-1 w-full min-w-0 max-w-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center">
           <CalendarIcon className="mr-2 h-5 w-5 text-blue-600" />
           팀 일정
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="calendar-wrapper h-full w-full">
+      <CardContent className="w-full p-6">
+        <div className="calendar-wrapper w-full h-full min-w-0 max-w-full">
           <Calendar
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="p-0 w-full"
+            className="p-0 w-full min-w-0 max-w-full"
             modifiersClassNames={{
               selected: 'bg-blue-500 text-white hover:bg-blue-600',
             }}
             modifiersStyles={{
               event: { border: '2px solid #16a34a' },
-              notice: { backgroundColor: '#e0f2fe' },
+              // notice: { backgroundColor: '#e0f2fe' },
               cancelled: { backgroundColor: '#fee2e2', textDecoration: 'line-through' },
             }}
             styles={{
@@ -63,10 +63,6 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
                 const dateStr = formatDateToLocalString(date);
                 return !!calendarEvents[dateStr]?.find(e => e.type === 'match' && e.status !== 'cancelled');
               },
-              notice: (date) => {
-                const dateStr = formatDateToLocalString(date);
-                return !!calendarEvents[dateStr]?.find(e => e.type === 'notice');
-              },
               cancelled: (date) => {
                 const dateStr = formatDateToLocalString(date);
                 return !!calendarEvents[dateStr]?.find(e => e.type === 'match' && e.status === 'cancelled');
@@ -77,7 +73,7 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
           <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm">
             <div className="flex items-center">
               <div className="h-4 w-4 rounded border-2 border-green-500 mr-2"></div>
-              <span>경기 일정</span>
+              <span>이벤트 일정</span>
             </div>
             <div className="flex items-center">
               <div className="h-4 w-4 rounded bg-blue-100 mr-2"></div>
@@ -85,7 +81,7 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
             </div>
             <div className="flex items-center">
               <div className="h-4 w-4 rounded bg-red-100 mr-2"></div>
-              <span>취소된 경기</span>
+              <span>취소된 이벤트</span>
             </div>
           </div>
         </div>
@@ -96,9 +92,9 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
               {date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
             </h3>
             
-            {calendarEvents[date.toISOString().split('T')[0]] ? (
+            {calendarEvents[formatDateToLocalString(date)] ? (
               <ul className="space-y-2">
-                {calendarEvents[date.toISOString().split('T')[0]].map((event, idx) => (
+                {calendarEvents[formatDateToLocalString(date)].map((event, idx) => (
                   <li key={idx} className="flex items-center">
                     {event.type === 'match' ? (
                       <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
@@ -106,7 +102,7 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
                           ? 'bg-red-100 text-red-800' 
                           : 'bg-green-100 text-green-800'
                       }`}>
-                        {event.status === 'cancelled' ? '취소된 경기' : '경기'}
+                        {event.status === 'cancelled' ? '취소된 이벤트' : '이벤트'}
                       </div>
                     ) : (
                       <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">

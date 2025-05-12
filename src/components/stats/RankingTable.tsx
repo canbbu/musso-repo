@@ -78,7 +78,7 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
               <TableHead className="w-[80px] text-center">순위</TableHead>
               <TableHead>선수</TableHead>
               <TableHead>포지션</TableHead>
-              <TableHead>경기</TableHead>
+              <TableHead>출전 경기 수</TableHead>
               <TableHead className="text-center">
                 <div className="flex items-center justify-center">
                   {getIconByTab()}

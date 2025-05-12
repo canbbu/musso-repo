@@ -32,7 +32,7 @@ export function useAnnouncements(showOnlyMatches: boolean = false) {
         .from('announcements')
         .select('*');
       
-      // 경기 관련 공지만 표시하는 경우
+      // 이벤트 관련 공지만 표시하는 경우
       if (showOnlyMatches) {
         query = query.eq('is_match', true);
       }
@@ -46,8 +46,6 @@ export function useAnnouncements(showOnlyMatches: boolean = false) {
         console.error('[DB 오류] 공지사항 조회 실패:', error);
         throw error;
       }
-      
-      console.log('[DB 응답] announcements 테이블 조회 결과:', data);
 
       const formattedAnnouncements = (data || []).map((item: any) => ({
         id: item.id,

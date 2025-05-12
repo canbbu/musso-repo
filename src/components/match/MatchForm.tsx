@@ -20,14 +20,6 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
   
   // 수정 모드일 경우 기존 데이터 가져오기
   const selectedMatch = matchId ? matches.find(m => m.id === matchId) : null;
-  console.log('[선택된 경기 정보]', {
-    id: selectedMatch?.id,
-    date: selectedMatch?.date,
-    time: selectedMatch?.time,
-    location: selectedMatch?.location,
-    opponent: selectedMatch?.opponent,
-    status: selectedMatch?.status
-  });
   
   // 사용 가능한 상태 옵션 추가
   const statusOptions = [
@@ -47,7 +39,7 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
     }
   });
 
-  // 선택된 경기가 바뀌면 폼 값도 업데이트
+  // 선택된 이벤트가 바뀌면 폼 값도 업데이트
   useEffect(() => {
     if (selectedMatch) {
       const matchDate = new Date(selectedMatch.date);
@@ -58,8 +50,6 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
         opponent: selectedMatch.opponent,
         status: selectedMatch.status
       });
-      // form 값 설정 후 확인
-      console.log('form values after reset:', form.getValues());
     }
   }, [selectedMatch, form]);
 
@@ -96,7 +86,7 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
             name="date"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>경기 날짜</FormLabel>
+                <FormLabel>이벤트 날짜</FormLabel>
                 <FormControl>
                   <Input type="date" {...field} />
                 </FormControl>
@@ -111,7 +101,7 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
             render={({ field }) => {
               return (
                 <FormItem>
-                  <FormLabel>경기 시간</FormLabel>
+                  <FormLabel>이벤트 시간</FormLabel>
                   <FormControl>
                     <Input 
                       type="time"
@@ -130,9 +120,9 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>경기 장소</FormLabel>
+              <FormLabel>이벤트 장소</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="경기 장소를 입력하세요" />
+                <Input {...field} placeholder="이벤트 장소를 입력하세요" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -157,7 +147,6 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
           control={form.control}
           name="status"
           render={({ field }) => {
-            console.log('Status field value:', field.value);
             return (
               <FormItem>
                 <FormLabel>상태</FormLabel>
@@ -193,7 +182,7 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
             취소
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? '처리 중...' : editMode ? '경기 수정' : '경기 등록'}
+            {loading ? '처리 중...' : editMode ? '이벤트 수정' : '이벤트 등록'}
           </Button>
         </div>
       </form>

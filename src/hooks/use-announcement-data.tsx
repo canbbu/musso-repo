@@ -93,7 +93,7 @@ export function useAnnouncementData() {
       
       toast({
         title: "등록 완료",
-        description: `새 ${formData.type === 'notice' ? '공지사항' : '경기 일정'}이 등록되었습니다.`,
+        description: `새 ${formData.type === 'notice' ? '공지사항' : '이벤트 일정'}이 등록되었습니다.`,
       });
       
       return createdItem;

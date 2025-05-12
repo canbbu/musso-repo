@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,10 +8,15 @@ import Layout from '@/components/Layout';
 
 const MyStats = () => {
   const { userName } = useAuth();
-  const { players } = usePlayerRankings();
+  const { players, loading } = usePlayerRankings();
+
+  if (loading || !players.length) {
+    return <div>로딩 중...</div>;
+  }
   
   // Find player stats based on username (in a real app, this would be more robust)
   const playerStats = players.find(p => p.name === userName) || players[0];
+
   
   const attendanceRate = playerStats.attendance;
   const goalEfficiency = Math.round((playerStats.goals / playerStats.games) * 100);
@@ -25,6 +29,28 @@ const MyStats = () => {
           <h1 className="text-3xl font-bold mb-2">내 기록</h1>
           <p className="text-gray-600">{userName}님의 이번 시즌 활동 기록입니다.</p>
         </div>
+
+        {/* MVP 트로피 섹션 */}
+      <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-8">
+        {/* Daily MVP */}
+        <div className="flex flex-col items-center">
+          <Trophy className="h-6 w-6 text-gray-400 mb-1" />
+          <span className="text-xs text-gray-500">일간 MVP</span>
+          <span className="text-base font-bold text-gray-700 mt-1">{playerStats.daily_mvp ?? 0}회</span>
+        </div>
+        {/* Monthly MVP */}
+        <div className="flex flex-col items-center">
+          <Trophy className="h-10 w-10 text-amber-500 mb-1" />
+          <span className="text-xs text-amber-600">월간 MVP</span>
+          <span className="text-base font-bold text-amber-700 mt-1">{playerStats.monthly_mvp ?? 0}회</span>
+        </div>
+        {/* Yearly MVP */}
+        <div className="flex flex-col items-center">
+          <Trophy className="h-16 w-16 text-yellow-400 mb-1" />
+          <span className="text-xs text-yellow-600">연간 MVP</span>
+          <span className="text-base font-bold text-yellow-700 mt-1">{playerStats.yearly_mvp ?? 0}회</span>
+        </div>
+      </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -52,7 +78,7 @@ const MyStats = () => {
                 
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium">참여 경기</span>
+                    <span className="font-medium">참여 경기기</span>
                     <span>{playerStats.games}경기</span>
                   </div>
                 </div>
@@ -71,7 +97,7 @@ const MyStats = () => {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
                 <Award className="mr-2 h-5 w-5 text-primary" />
-                경기 기록
+                이벤트 기록
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -147,7 +173,7 @@ const MyStats = () => {
                 <Calendar className="h-8 w-8 text-yellow-600 mb-2" />
                 <p className="text-sm font-medium text-yellow-800">출석률</p>
                 <h3 className="text-2xl font-bold text-yellow-700">{attendanceRate}%</h3>
-                <p className="text-xs text-yellow-600 mt-1">{Math.round(playerStats.games * (attendanceRate/100))}회 참석</p>
+                <p className="text-xs text-yellow-600 mt-1">{Math.round(playerStats.games * (attendanceRate/100))}경기 참석</p>
               </div>
             </CardContent>
           </Card>

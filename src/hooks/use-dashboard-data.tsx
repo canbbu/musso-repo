@@ -7,7 +7,7 @@ export function useDashboardData(): DashboardData & { matchAnnouncements: any[] 
   // 모든 공지사항 가져오기
   const { announcements } = useAnnouncements();
   
-  // 경기 정보만 가져오기 (isMatch가 true인 공지사항)
+  // 이벤트 정보만 가져오기 (isMatch가 true인 공지사항)
   const { announcements: matchAnnouncements } = useAnnouncements(true);
   
   const { upcomingMatches } = useUpcomingMatches();

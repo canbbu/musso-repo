@@ -16,9 +16,13 @@ const Register = () => {
   const { toast } = useToast();
   const { canManageAnnouncements } = useAuth();
   const [name, setName] = useState('');
-  const [nickname, setNickname] = useState('');
+  const [username, setusername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('player');
+  const [birthday, setBirthday] = useState('');
+  const [position, setPosition] = useState('');
+  const [bootsBrand, setBootsBrand] = useState('');
+  const [favClub, setFavClub] = useState('');
   const [loading, setLoading] = useState(false);
 
   // 회장/부회장 권한 체크
@@ -30,10 +34,10 @@ const Register = () => {
     e.preventDefault();
     
     // 유효성 검사
-    if (!name || !nickname || !password) {
+    if (!name || !username || !password || !birthday || !position || !bootsBrand || !favClub) {
       toast({
         title: "회원등록 실패",
-        description: "이름, 닉네임, 비밀번호를 모두 입력해주세요.",
+        description: "이름, 아이디, 비밀번호, 생년월일, 포지션, 축구화 브랜드, 선호 구단을 모두 입력해주세요.",
         variant: "destructive"
       });
       return;
@@ -46,7 +50,7 @@ const Register = () => {
       const { data: existingUser, error: checkError } = await supabase
         .from('players')
         .select('id')
-        .eq('nickname', nickname)
+        .eq('username', username)
         .single();
         
       if (existingUser) {
@@ -63,10 +67,14 @@ const Register = () => {
         .from('players')
         .insert({
           name: name,
-          nickname: nickname,
+          username: username,
           password: password, // 실제 구현에서는 암호화된 비밀번호 사용
           role: role,
-          is_deleted: false
+          is_deleted: false,
+          birthday: birthday || null,
+          position: position || null,
+          boots_brand: bootsBrand || null,
+          fav_club: favClub || null
         })
         .select()
         .single();
@@ -82,9 +90,13 @@ const Register = () => {
       
       // 입력 필드 초기화
       setName('');
-      setNickname('');
+      setusername('');
       setPassword('');
       setRole('player');
+      setBirthday('');
+      setPosition('');
+      setBootsBrand('');
+      setFavClub('');
     } catch (error) {
       toast({
         title: "회원등록 실패",
@@ -106,6 +118,23 @@ const Register = () => {
     { value: 'player', label: '일반회원' },
   ];
 
+  const positionOptions = [
+    { value: 'DF', label: 'DF' },
+    { value: 'MF', label: 'MF' },
+    { value: 'FW', label: 'FW' },
+    { value: 'ST', label: 'ST' },
+    { value: 'GK', label: 'GK' },
+  ];
+
+  const bootsBrandOptions = [
+    { value: 'PUMA', label: 'PUMA' },
+    { value: 'ADIDAS', label: 'ADIDAS' },
+    { value: 'UNDERAMOUR', label: 'UNDERAMOUR' },
+    { value: 'NIKE', label: 'NIKE' },
+    { value: 'NEWBALANCE', label: 'NEWBALANCE' },
+    { value: 'MIZNO', label: 'MIZNO' },
+  ];
+
   return (
     <Layout>
       <div className="container mx-auto py-8">
@@ -121,7 +150,7 @@ const Register = () => {
             <CardContent>
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">이름</Label>
+                  <Label htmlFor="name">이름 (예시: 홍길동/91)</Label>
                   <Input 
                     id="name" 
                     placeholder="회원 이름을 입력하세요" 
@@ -131,12 +160,12 @@ const Register = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nickname">닉네임</Label>
+                  <Label htmlFor="username">아이디</Label>
                   <Input 
-                    id="nickname" 
-                    placeholder="사용할 닉네임을 입력하세요" 
-                    value={nickname} 
-                    onChange={(e) => setNickname(e.target.value)}
+                    id="username" 
+                    placeholder="사용할 아이디 입력하세요" 
+                    value={username} 
+                    onChange={(e) => setusername(e.target.value)}
                     disabled={loading}
                   />
                 </div>
@@ -148,6 +177,56 @@ const Register = () => {
                     placeholder="초기 비밀번호를 설정하세요" 
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="birthday">생년월일</Label>
+                  <Input
+                    id="birthday"
+                    type="date"
+                    value={birthday}
+                    onChange={e => setBirthday(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="position">포지션</Label>
+                  <Select value={position} onValueChange={setPosition} disabled={loading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="포지션을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {positionOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="boots_brand">축구화 브랜드</Label>
+                  <Select value={bootsBrand} onValueChange={setBootsBrand} disabled={loading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="축구화 브랜드를 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bootsBrandOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fav_club">선호 구단</Label>
+                  <Input
+                    id="fav_club"
+                    placeholder="선호하는 축구 구단을 입력하세요"
+                    value={favClub}
+                    onChange={e => setFavClub(e.target.value)}
                     disabled={loading}
                   />
                 </div>
@@ -201,9 +280,9 @@ const Register = () => {
               <CardContent>
                 <ul className="list-disc pl-5 space-y-2">
                   <li><span className="font-medium">회장/부회장:</span> 회원관리, 공지사항, 일정 관리</li>
-                  <li><span className="font-medium">감독/코치:</span> 경기 관리, 기록 관리</li>
+                  <li><span className="font-medium">감독/코치:</span> 이벤트 관리, 기록 관리</li>
                   <li><span className="font-medium">회계:</span> 재정 관리</li>
-                  <li><span className="font-medium">일반회원:</span> 경기 참석 확인, 투표 참여</li>
+                  <li><span className="font-medium">일반회원:</span> 이벤트 참석 확인, 투표 참여</li>
                 </ul>
               </CardContent>
             </Card>

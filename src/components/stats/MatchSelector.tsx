@@ -23,9 +23,9 @@ const MatchSelector = ({ matches, selectedMatch, onMatchSelect, formatDate }: Ma
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center">
           <Award className="mr-2 h-5 w-5 text-blue-600" />
-          경기 선택
+          이벤트 선택
         </CardTitle>
-        <CardDescription>기록을 관리할 경기를 선택하세요</CardDescription>
+        <CardDescription>기록을 관리할 이벤트를 선택하세요</CardDescription>
       </CardHeader>
       <CardContent>
         <Select 
@@ -33,11 +33,11 @@ const MatchSelector = ({ matches, selectedMatch, onMatchSelect, formatDate }: Ma
           onValueChange={(value) => onMatchSelect(Number(value))}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="경기를 선택하세요" />
+            <SelectValue placeholder="이벤트를 선택하세요" />
           </SelectTrigger>
           <SelectContent>
             {matches.map((match) => {
-              // cancelled 경기는 필터링
+              // cancelled 이벤트는 필터링
               if (match.status === 'cancelled') return null;
               
               // 상태에 따른 텍스트 및 스타일 지정
@@ -46,10 +46,10 @@ const MatchSelector = ({ matches, selectedMatch, onMatchSelect, formatDate }: Ma
               
               if (match.status === 'upcoming') {
                 statusText = '(예정됨)';
-                itemStyle = { color: '#1d4ed8' }; // 파란색: 다가오는 경기
+                itemStyle = { color: '#1d4ed8' }; // 파란색: 다가오는 이벤트
               } else if (match.status === 'completed') {
                 statusText = '(완료됨)';
-                itemStyle = { color: '#6b7280', fontStyle: 'italic' }; // 회색: 완료된 경기
+                itemStyle = { color: '#6b7280', fontStyle: 'italic' }; // 회색: 완료된 이벤트
               }
               
               return (

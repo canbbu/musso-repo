@@ -12,6 +12,7 @@ export interface Announcement {
   author: string;
   updatedAt?: string;
   isMatch?: boolean;
+  attendance_tracking?: boolean;
 }
 
 export interface UpcomingMatch {
@@ -38,4 +39,15 @@ export interface DashboardData {
   announcements: Announcement[];
   upcomingMatches: UpcomingMatch[];
   calendarEvents: Record<string, CalendarEvent[]>;
+}
+
+export interface Match {
+  id: number;
+  date: string;
+  opponent: string;
+  status: string;
+  created_by: string;
+  updated_by: string;
+  deleted_by: string;
+  // ...필요한 필드 추가
 }

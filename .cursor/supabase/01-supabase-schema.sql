@@ -26,8 +26,13 @@ CREATE TABLE matches (
   date DATE NOT NULL,
   location TEXT NOT NULL,
   opponent TEXT,
-  status TEXT DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'cancelled'))
+  status TEXT DEFAULT 'upcoming' CHECK (status IN ('upcoming','completed', 'cancelled'))
 );
+
+ALTER TABLE matches 
+ADD COLUMN created_by TEXT NOT NULL DEFAULT '장미드필더',
+ADD COLUMN updated_by TEXT,
+ADD COLUMN deleted_by TEXT;
 
 -- Match_Attendance 테이블
 CREATE TABLE match_attendance (
@@ -37,6 +42,11 @@ CREATE TABLE match_attendance (
   status TEXT NOT NULL CHECK (status IN ('attending', 'not_attending', 'pending')),
   UNIQUE(match_id, player_id)
 );
+
+ALTER TABLE match_attendance 
+ADD COLUMN goals INTEGER DEFAULT 0,
+ADD COLUMN assists INTEGER DEFAULT 0,
+ADD COLUMN rating DECIMAL(3, 1) DEFAULT 0;
 
 -- Calendar_Events 테이블
 CREATE TABLE calendar_events (
@@ -81,16 +91,16 @@ INSERT INTO players (id, name) VALUES
 
 -- 6. 샘플 데이터 추가: 공지사항 추가
 INSERT INTO announcements (type, title, date, content, author, updated_at, location, opponent, match_time, attendance_tracking, is_match) VALUES
-  ('notice', '이번 주 경기 공지', '2023-11-20', '이번 주 경기는 비로 인해 취소되었습니다. 다음 일정을 확인해주세요.', '김운영', '2023-11-20 14:30:00+00', NULL, NULL, NULL, NULL, FALSE),
+  ('notice', '이번 주 이벤트 공지', '2023-11-20', '이번 주 이벤트는 비로 인해 취소되었습니다. 다음 일정을 확인해주세요.', '김운영', '2023-11-20 14:30:00+00', NULL, NULL, NULL, NULL, FALSE),
   ('notice', '연말 모임 안내', '2023-11-18', '12월 23일 연말 모임이 있을 예정입니다. 참석 여부를 알려주세요.', '박감독', '2023-11-18 10:15:00+00', NULL, NULL, NULL, NULL, FALSE),
-  ('match', 'FC 서울과의 경기', '2023-11-25', '이번 경기는 중요한 라이벌전입니다. 많은 참여 부탁드립니다.', '박감독', NOW(), '서울 마포구 풋살장', 'FC 서울', '2023-11-25 19:00:00', TRUE, TRUE);
+  ('match', 'FC 서울과의 이벤트', '2023-11-25', '이번 이벤트는 중요한 라이벌전입니다. 많은 참여 부탁드립니다.', '박감독', NOW(), '서울 마포구 풋살장', 'FC 서울', '2023-11-25 19:00:00', TRUE, TRUE);
 
--- 7. 샘플 데이터 추가: 경기 추가
+-- 7. 샘플 데이터 추가: 이벤트 추가
 INSERT INTO matches (date, location, opponent, status) VALUES
   (CURRENT_DATE, '서울 마포구 풋살장', 'FC 서울', 'upcoming'),
   (CURRENT_DATE + 1, '강남 체육공원', '강남 유나이티드', 'cancelled');
 
--- 8. 샘플 데이터 추가: 참석 현황 추가 (첫 번째 경기)
+-- 8. 샘플 데이터 추가: 참석 현황 추가 (첫 번째 이벤트)
 INSERT INTO match_attendance (match_id, player_id, status) VALUES
   (1, 'player1', 'attending'),
   (1, 'player2', 'attending'),
@@ -100,7 +110,7 @@ INSERT INTO match_attendance (match_id, player_id, status) VALUES
   (1, 'player6', 'pending'),
   (1, 'player7', 'pending');
 
--- 9. 샘플 데이터 추가: 참석 현황 추가 (두 번째 경기)
+-- 9. 샘플 데이터 추가: 참석 현황 추가 (두 번째 이벤트)
 INSERT INTO match_attendance (match_id, player_id, status) VALUES
   (2, 'player1', 'attending'),
   (2, 'player6', 'attending'),
@@ -112,8 +122,8 @@ INSERT INTO match_attendance (match_id, player_id, status) VALUES
 
 -- 10. 샘플 데이터 추가: 캘린더 이벤트 추가
 INSERT INTO calendar_events (type, title, date, status) VALUES
-  ('match', 'FC 서울과의 경기', CURRENT_DATE, 'upcoming'),
-  ('match', '강남 유나이티드와의 경기', CURRENT_DATE + 1, 'cancelled'),
+  ('match', 'FC 서울과의 이벤트', CURRENT_DATE, 'upcoming'),
+  ('match', '강남 유나이티드와의 이벤트', CURRENT_DATE + 1, 'cancelled'),
   ('notice', '연말 모임', '2023-12-23', NULL);
 
 -- 11. 샘플 데이터 추가: 거래 내역 추가

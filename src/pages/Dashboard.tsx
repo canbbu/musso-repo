@@ -19,10 +19,6 @@ const Dashboard = () => {
   const { checkForTodaysMatch, handleAttendanceChange } = useMatchData();
   const [todaysCompletedMatch, setTodaysCompletedMatch] = useState<Match | null>(null);
   
-  // 디버깅용 로그
-  console.log('Dashboard - upcomingMatches:', upcomingMatches);
-  console.log('Dashboard - handleAttendanceChange:', handleAttendanceChange);
-  
   useEffect(() => {
     const match = checkForTodaysMatch();
     if (match) {

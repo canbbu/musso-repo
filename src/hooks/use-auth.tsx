@@ -44,7 +44,7 @@ export function useAuth() {
         // players 테이블에서 사용자 정보 확인
         const { data, error } = await supabase
           .from('players')
-          .select('id, name, nickname, role, is_deleted')
+          .select('*')
           .eq('id', userId)
           .single();
           
@@ -62,7 +62,7 @@ export function useAuth() {
           setUserInfo(prev => ({
             ...prev,
             userId: data.id,
-            userName: data.name || data.nickname,
+            userName: data.name || data.username,
             role: userRole,
             isAuthenticated: true
           }));
@@ -96,7 +96,7 @@ export function useAuth() {
     return allowedRoles.includes(userInfo.role || '');
   }, [userInfo.role]);
 
-  // 경기관리 권한 (감독에게만 부여)
+  // 이벤트관리 권한 (감독에게만 부여)
   const canManageMatches = useCallback(() => {
     return hasPermission(['coach']) 
     // || process.env.NODE_ENV !== 'production';

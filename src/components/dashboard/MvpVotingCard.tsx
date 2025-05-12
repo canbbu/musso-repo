@@ -145,7 +145,7 @@ const MvpVotingCard = ({ matchId, matchDate, opponent, result, score }: MvpVotin
                 )}
               </p>
               <p className="text-sm text-gray-600 mt-1">
-                오늘 경기에서 가장 활약한 선수를 선택해주세요.
+                오늘 이벤트에서 가장 활약한 선수를 선택해주세요.
               </p>
             </div>
             

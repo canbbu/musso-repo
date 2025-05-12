@@ -8,7 +8,7 @@ import { formatKoreanDate } from '@/utils/date-helpers';
 
 interface Player {
   id: number | string;
-  nickname: string;
+  username: string;
   name: string;
   role: string;
   attendance_status?: string;
@@ -57,11 +57,11 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
       // 전체 회원 목록 가져오기
       const { data: playersData, error: playersError } = await supabase
         .from('players')
-        .select('id, nickname, name, role');
+        .select('*');
         
       if (playersError) throw playersError;
       
-      // 해당 경기에 대한 참석 정보 가져오기
+      // 해당 이벤트에 대한 참석 정보 가져오기
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('match_attendance')
         .select('player_id, status')
@@ -78,23 +78,8 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
         };
       });
       
-      // 디버깅용 로그
-      console.log('플레이어 데이터:', playersWithAttendance);
-      
-      // 역할과 이름으로 정렬
-      const sortedPlayers = playersWithAttendance.sort((a: Player, b: Player) => {
-        // 역할 우선 정렬
-        const roleOrderA = roleOrder[a.role as keyof typeof roleOrder] || 6;
-        const roleOrderB = roleOrder[b.role as keyof typeof roleOrder] || 6;
-        
-        if (roleOrderA !== roleOrderB) {
-          return roleOrderA - roleOrderB;
-        }
-        
-        // 같은 역할이면 이름으로 정렬
-        return a.name.localeCompare(b.name, 'ko');
-      });
-      
+      // 이름 기준 오름차순 정렬
+      const sortedPlayers = playersWithAttendance.sort((a: Player, b: Player) => a.name.localeCompare(b.name, 'ko'));
       setPlayers(sortedPlayers);
     } catch (error) {
       console.error('참석 정보를 불러오는 중 오류가 발생했습니다:', error);
@@ -145,7 +130,7 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {formattedDate} 경기 참석 현황
+            {formattedDate} 이벤트 참석 현황
           </DialogTitle>
           <div className="mt-2 text-sm text-gray-500">
             <p>상대팀: {matchInfo.opponent}</p>
@@ -205,43 +190,27 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
       return <div className="py-8 text-center">해당 분류의 회원이 없습니다.</div>;
     }
     
-    let currentRole = '';
-    
     return (
       <div className="space-y-4">
-        {playerList.map((player, index) => {
-          const isNewRole = player.role !== currentRole;
-          if (isNewRole) {
-            currentRole = player.role;
-          }
-          
-          return (
-            <React.Fragment key={player.id}>
-              {isNewRole && (
-                <div className="text-sm font-semibold mt-4 text-gray-500 border-b pb-1">
-                  {player.role || '역할 미지정'}
-                </div>
-              )}
-              <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
-                <div className="flex items-center">
-                  <div>
-                    <div className="font-medium">{player.name}</div>
-                    <div className="text-sm text-gray-500">{player.nickname}</div>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Badge
-                    variant="outline"
-                    className={`flex items-center gap-1 ${getAttendanceStatusColor(player.attendance_status || '미정')}`}
-                  >
-                    {getAttendanceStatusIcon(player.attendance_status || '미정')}
-                    {player.attendance_status || '미정'}
-                  </Badge>
-                </div>
+        {playerList.map((player) => (
+          <div key={player.id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
+            <div className="flex items-center">
+              <div>
+                <div className="font-medium">{player.name}</div>
+                <div className="text-sm text-gray-500">{player.username}</div>
               </div>
-            </React.Fragment>
-          );
-        })}
+            </div>
+            <div className="flex items-center">
+              <Badge
+                variant="outline"
+                className={`flex items-center gap-1 ${getAttendanceStatusColor(player.attendance_status || '미정')}`}
+              >
+                {getAttendanceStatusIcon(player.attendance_status || '미정')}
+                {player.attendance_status || '미정'}
+              </Badge>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

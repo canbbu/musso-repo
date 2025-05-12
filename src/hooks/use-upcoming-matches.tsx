@@ -13,7 +13,7 @@ export function useUpcomingMatches() {
       try {
         setLoading(true);
         
-        // 오늘 이후의 경기만 가져오기
+        // 오늘 이후의 이벤트만 가져오기
         const today = new Date().toISOString().split('T')[0];
         
         console.log('[DB 요청] 오늘 이후 매치 조회:', today);
@@ -105,8 +105,8 @@ export function useUpcomingMatches() {
         
         setUpcomingMatches(matchesWithAttendance);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '경기 정보를 불러오는 중 오류가 발생했습니다');
-        console.error('경기 정보를 불러오는 중 오류 발생:', err);
+        setError(err instanceof Error ? err.message : '이벤트 정보를 불러오는 중 오류가 발생했습니다');
+        console.error('이벤트 정보를 불러오는 중 오류 발생:', err);
       } finally {
         setLoading(false);
       }

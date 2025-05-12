@@ -34,7 +34,7 @@ const StatsCard = ({ matchDate, opponent, playerStats, onStatChange, onSave, isL
           선수 기록 입력
         </CardTitle>
         <CardDescription>
-          선택된 경기: {matchDate}  {opponent}
+          선택된 이벤트: {matchDate}  {opponent}
         </CardDescription>
       </CardHeader>
       <CardContent>

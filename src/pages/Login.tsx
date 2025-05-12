@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [nickname, setNickname] = useState('');
+  const [username, setusername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -26,7 +26,7 @@ const Login = () => {
     e.preventDefault();
     
     // Simple validation
-    if (!nickname || !password) {
+    if (!username || !password) {
       toast({
         title: "로그인 실패",
         description: "닉네임과 비밀번호를 모두 입력해주세요.",
@@ -41,8 +41,8 @@ const Login = () => {
       // players 테이블에서 사용자 조회
       const { data, error } = await supabase
         .from('players')
-        .select('id, name, nickname, password, role')
-        .eq('nickname', nickname)
+        .select('*')
+        .eq('username', username)
         .eq('is_deleted', false)
         .single();
       
@@ -58,12 +58,12 @@ const Login = () => {
       // 로그인 성공
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userId', data.id);
-      localStorage.setItem('userName', data.name || data.nickname);
+      localStorage.setItem('userName', data.name || data.username);
       localStorage.setItem('userRole', data.role || 'player'); // 역할 저장
       
       toast({
         title: "로그인 성공",
-        description: `${data.name || data.nickname}님, 환영합니다!`,
+        description: `${data.name || data.username}님, 환영합니다!`,
       });
       
       navigate('/dashboard');
@@ -88,12 +88,12 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="nickname">닉네임</Label>
+              <Label htmlFor="username">유저네임</Label>
               <Input 
-                id="nickname" 
-                placeholder="닉네임을 입력하세요" 
-                value={nickname} 
-                onChange={(e) => setNickname(e.target.value)}
+                id="username" 
+                placeholder="유저네임을 입력하세요" 
+                value={username} 
+                onChange={(e) => setusername(e.target.value)}
                 disabled={loading}
               />
             </div>

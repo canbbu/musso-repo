@@ -41,7 +41,7 @@ const AnnouncementList = ({ announcements, onEdit, onDelete }: AnnouncementListP
                 </span>
               ) : (
                 <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                  경기 일정
+                  이벤트 일정
                 </span>
               )}
             </TableCell>

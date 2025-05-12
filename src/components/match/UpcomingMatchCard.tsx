@@ -8,6 +8,64 @@ import AttendanceListModal from './AttendanceListModal';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { formatKoreanDate } from '@/utils/date-helpers';
+import { format, subDays } from 'date-fns';
+import { ko } from 'date-fns/locale';
+
+// 날짜 문자열에서 YYYY-MM-DD 부분만 추출하는 함수
+function extractDatePart(dateString: string): string {
+  if (!dateString) return '';
+  
+  // 'YYYY-MM-DD' 패턴 추출 (하이픈으로 구분된 첫 3부분만)
+  const match = dateString.match(/^\d{4}-\d{2}-\d{2}/);
+  if (match) {
+    return match[0];
+  }
+  
+  // 정규식으로 매치되지 않으면 첫 10글자 시도
+  if (dateString.length >= 10) {
+    return dateString.substring(0, 10);
+  }
+  
+  return dateString;
+}
+
+function getAttendanceDeadline(matchDate: string) {
+  try {
+    // 날짜가 유효한지 확인
+    if (!matchDate) {
+      return new Date(); // 기본값으로 현재 날짜 사용
+    }
+    
+    // YYYY-MM-DD 부분만 추출
+    const cleanDateString = extractDatePart(matchDate);
+    
+    const eventDate = new Date(cleanDateString);
+    
+    // 유효한 날짜인지 확인 (Invalid Date 체크)
+    if (isNaN(eventDate.getTime())) {
+      return new Date();
+    }
+    
+    const deadline = subDays(eventDate, 4);
+    deadline.setHours(23, 59, 0, 0);
+    return deadline;
+  } catch (error) {
+    return new Date(); // 오류 발생 시 현재 날짜 반환
+  }
+}
+
+function formatDeadline(deadline: Date) {
+  try {
+    // 유효한 날짜인지 확인
+    if (!deadline || isNaN(deadline.getTime())) {
+      return "날짜 정보 없음";
+    }
+    
+    return format(deadline, "M월 d일(E) HH:mm", { locale: ko });
+  } catch (error) {
+    return "날짜 정보 없음";
+  }
+}
 
 interface UpcomingMatchCardProps {
   match: Match;
@@ -31,18 +89,25 @@ const UpcomingMatchCard = ({
   const navigate = useNavigate();
   const { canManagePlayerStats} = useAuth();
   
+  // 참석 마감일 계산
+  const now = new Date();
+  const matchDeadline = getAttendanceDeadline(match.date);
+  const isDeadlinePassed = now > matchDeadline;
+  
   const handleManageMatch = (matchId: number) => {
     
     if (!canManagePlayerStats()) {
       toast({
         title: "접근 권한이 없습니다",
-        description: "경기 관리는 감독과 코치만 가능합니다.",
+        description: "이벤트 관리는 감독과 코치만 가능합니다.",
         variant: "destructive"
       });
       return;
     }
     navigate(`/stats-management?matchId=${matchId}`);
   };
+
+  console.log("match 객체:", match);
   
   return (
     <Card key={match.id} className="border-l-4 border-l-blue-500">
@@ -71,9 +136,9 @@ const UpcomingMatchCard = ({
             </div>
             
             <div className="text-xs text-gray-500 mt-2">
-              등록자: {match.createdBy}
-              {match.updatedBy && (
-                <span> | 최종 수정: {match.updatedBy} ({match.updatedAt})</span>
+              등록자: {match.created_by}
+              {match.updated_by && (
+                <span> | 최종 수정: {match.updated_by}</span>
               )}
             </div>
           </div>
@@ -87,6 +152,7 @@ const UpcomingMatchCard = ({
                     : ''
                 }`}
                 onClick={() => onAttendanceChange(match.id, 'attending')}
+                disabled={isDeadlinePassed}
               >
                 <Check size={18} className="mr-1" />
                 참석
@@ -95,6 +161,7 @@ const UpcomingMatchCard = ({
                 variant={match.userResponse === 'notAttending' ? 'destructive' : 'secondary'} 
                 className="flex-1 flex items-center justify-center"
                 onClick={() => onAttendanceChange(match.id, 'notAttending')}
+                disabled={isDeadlinePassed}
               >
                 <X size={18} className="mr-1" />
                 불참
@@ -116,7 +183,7 @@ const UpcomingMatchCard = ({
                 onClick={() => handleManageMatch(match.id)}
               >
                 <Clipboard size={18} className="mr-1" />
-                경기 관리
+                이벤트 관리
               </Button>
             </div>
             {canManageAnnouncements && (
@@ -143,6 +210,12 @@ const UpcomingMatchCard = ({
                 )}
               </div>
             )}
+
+            {/* 참석여부 마감일 표시 */}
+            <div className={`text-xs mt-2 px-2 py-1 border rounded ${isDeadlinePassed ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-500 border-gray-200'}`}>
+              참석여부 마감: {match.date ? formatDeadline(matchDeadline) : "날짜 정보 없음"}
+              {isDeadlinePassed && ' (마감됨)'}
+            </div>
           </div>
         </div>
       </CardContent>

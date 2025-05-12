@@ -35,7 +35,7 @@ const positions = [
 
 interface ProfileData {
   name: string;
-  nickname: string;
+  username: string;
   age: string;
   position: string;
   phone: string;
@@ -46,7 +46,7 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
   const { toast } = useToast();
   const [profileData, setProfileData] = useState<ProfileData>({
     name: userName || '',
-    nickname: '',
+    username: '',
     age: '',
     position: '',
     phone: '',
@@ -63,8 +63,6 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would save to the database
-    console.log('Saving profile data:', profileData);
     
     toast({
       title: "프로필 업데이트",
@@ -164,13 +162,13 @@ const UserProfileModal = ({ isOpen, onClose }: UserProfileModalProps) => {
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="nickname" className="text-right">
+              <Label htmlFor="username" className="text-right">
                 활동명
               </Label>
               <Input
-                id="nickname"
-                name="nickname"
-                value={profileData.nickname}
+                id="username"
+                name="username"
+                value={profileData.username}
                 onChange={handleChange}
                 className="col-span-3"
               />

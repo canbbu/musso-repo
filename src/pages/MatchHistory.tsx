@@ -36,14 +36,14 @@ const MatchHistory = () => {
     <Layout>
       <div className="match-history-container">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">경기 이력</h1>
-          <p className="text-gray-600">전체 경기 기록을 확인합니다.</p>
+          <h1 className="text-3xl font-bold mb-2">이벤트 이력</h1>
+          <p className="text-gray-600">전체 이벤트 기록을 확인합니다.</p>
         </div>
         
         <Card>
           <CardHeader className="pb-2">
             <div className="flex justify-between items-center">
-              <CardTitle>전체 경기 목록</CardTitle>
+              <CardTitle>전체 이벤트 목록</CardTitle>
               <div className="search-container">
                 <input
                   type="text"

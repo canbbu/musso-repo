@@ -26,6 +26,9 @@ export interface Match {
   mvp?: string;
   review?: string;
   time?: string;
+  created_by?: string;
+  updated_by?: string;
+  deleted_by?: string;
 }
 
 interface MatchFormData {
@@ -49,10 +52,10 @@ export function useMatchData() {
       setLoading(true);
       setError(null);
 
-      // 1. 경기 목록 가져오기
+      // 1. 이벤트 목록 가져오기
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
-        .select('*, id, date, location, opponent, status, time')
+        .select('*')
         .order('date', { ascending: true });
 
       if (matchesError) throw matchesError;
@@ -64,7 +67,7 @@ export function useMatchData() {
         return;
       }
 
-      // 2. 각 경기에 대한 출석 정보 가져오기
+      // 2. 각 이벤트에 대한 출석 정보 가져오기
       const matchesWithAttendance = await Promise.all(
         matchesData.map(async (match) => {
           // 출석 정보 가져오기
@@ -109,7 +112,7 @@ export function useMatchData() {
             }
           });
 
-          // 경기 상태 처리 (날짜 기준으로 완료/예정 구분)
+          // 이벤트 상태 처리 (날짜 기준으로 완료/예정 구분)
           const matchDate = new Date(match.date);
           const today = new Date();
           today.setHours(0, 0, 0, 0); // 오늘 날짜의 시작 시간으로 설정
@@ -129,12 +132,15 @@ export function useMatchData() {
             status,
             time: match.time,
             attendance,
-            userResponse
+            userResponse,
+            created_by: match.created_by,
+            updated_by: match.updated_by,
+            deleted_by: match.deleted_by,
           };
         })
       );
 
-      // 날짜 기준으로 정렬 (과거 경기는 내림차순, 미래 경기는 오름차순)
+      // 날짜 기준으로 정렬 (과거 이벤트는 내림차순, 미래 이벤트는 오름차순)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -149,7 +155,7 @@ export function useMatchData() {
       setMatches([...futureMatches, ...pastMatches]);
     } catch (err) {
       console.error('Error fetching matches:', err);
-      setError(err instanceof Error ? err.message : '경기 정보를 불러오는 중 오류가 발생했습니다');
+      setError(err instanceof Error ? err.message : '이벤트 정보를 불러오는 중 오류가 발생했습니다');
     } finally {
       setLoading(false);
     }
@@ -276,7 +282,7 @@ export function useMatchData() {
     }
   };
 
-  // 경기 상태 값을 데이터베이스가 허용하는 값으로 변환
+  // 이벤트 상태 값을 데이터베이스가 허용하는 값으로 변환
   const normalizeStatus = (status: string): string => {
     // 허용되는 상태: upcoming, completed, cancelled
     if (['upcoming', 'completed', 'cancelled'].includes(status)) {
@@ -284,9 +290,9 @@ export function useMatchData() {
     }
   };
 
-  const createMatch = async (matchData: MatchFormData) => {
+  const createMatch = async (matchData: MatchFormData, created_by: string) => {
     try {
-      console.log('[DB 요청] 새 경기 생성 데이터:', matchData);
+      console.log('[DB 요청] 새 이벤트 생성 데이터:', matchData);
       
       // 날짜 및 상태 정규화
       const formattedDate = normalizeDate(matchData.date);
@@ -304,40 +310,34 @@ export function useMatchData() {
             date: formattedDate,
             location: matchData.location,
             opponent: matchData.opponent,
-            status: formattedStatus
+            status: formattedStatus,
+            created_by: created_by,
           }
         ])
         .select();
 
       if (error) {
-        console.error('[DB 오류] 경기 생성 실패:', error);
+        console.error('[DB 오류] 이벤트 생성 실패:', error);
         throw error;
       }
       
-      console.log('[DB 응답] 경기 생성 결과:', data);
+      console.log('[DB 응답] 이벤트 생성 결과:', data);
       // 상태 새로고침
       refreshMatches();
       return data;
     } catch (err) {
-      console.error('경기 생성 중 예외 발생:', err);
-      setError(err instanceof Error ? err.message : '경기를 생성하는 중 알 수 없는 오류가 발생했습니다');
+      console.error('이벤트 생성 중 예외 발생:', err);
+      setError(err instanceof Error ? err.message : '이벤트를 생성하는 중 알 수 없는 오류가 발생했습니다');
       throw err;
     }
   };
 
-  const updateMatch = async (matchId: number, matchData: MatchFormData) => {
+  const updateMatch = async (matchId: number, matchData: MatchFormData, updated_by: string) => {
     try {
-      console.log('[DB 요청] 경기 업데이트 매개변수:', { matchId, matchData });
       
       // 날짜 및 상태 정규화
       const formattedDate = normalizeDate(matchData.date);
       const formattedStatus = normalizeStatus(matchData.status);
-      
-      console.log('[DB 처리] 정규화된 데이터:', { 
-        date: formattedDate, 
-        status: formattedStatus ,
-        time: matchData.time
-      });
       
       const { data, error } = await supabase
         .from('matches')
@@ -346,66 +346,67 @@ export function useMatchData() {
           location: matchData.location,
           opponent: matchData.opponent,
           status: formattedStatus,
-          time: matchData.time
+          time: matchData.time,
+          updated_by: updated_by
         })
         .eq('id', matchId)
         .select();
 
       if (error) {
-        console.error('[DB 오류] 경기 업데이트 실패:', error);
+        console.error('[DB 오류] 이벤트 업데이트 실패:', error);
         throw error;
       }
       
-      console.log('[DB 응답] 경기 업데이트 결과:', data);
+      console.log('[DB 응답] 이벤트 업데이트 결과:', data);
       console.log('[DB 확인] 저장된 status 값:', data?.[0]?.status);
       // 상태 새로고침
       refreshMatches();
     } catch (err) {
-      console.error('경기 업데이트 중 예외 발생:', err);
-      setError(err instanceof Error ? err.message : '경기를 수정하는 중 알 수 없는 오류가 발생했습니다');
+      console.error('이벤트 업데이트 중 예외 발생:', err);
+      setError(err instanceof Error ? err.message : '이벤트를 수정하는 중 알 수 없는 오류가 발생했습니다');
       throw err;
     }
   };
 
   const deleteMatch = async (matchId: number) => {
     try {
-      console.log('[DB 요청] 경기 삭제 매개변수:', { matchId });
+      console.log('[DB 요청] 이벤트 삭제 매개변수:', { matchId });
       
-      // 먼저 이 경기에 대한 모든 출석 정보 삭제
+      // 먼저 이 이벤트에 대한 모든 출석 정보 삭제
       const { error: attendanceError } = await supabase
         .from('match_attendance')
         .delete()
         .eq('match_id', matchId);
 
       if (attendanceError) {
-        console.error('[DB 오류] 경기 관련 출석 정보 삭제 실패:', attendanceError);
+        console.error('[DB 오류] 이벤트 관련 출석 정보 삭제 실패:', attendanceError);
         throw attendanceError;
       }
       
-      console.log('[DB 응답] 경기 관련 출석 정보 삭제 성공');
+      console.log('[DB 응답] 이벤트 관련 출석 정보 삭제 성공');
 
-      // 이제 경기 자체 삭제
+      // 이제 이벤트 자체 삭제
       const { error: matchError } = await supabase
         .from('matches')
         .delete()
         .eq('id', matchId);
 
       if (matchError) {
-        console.error('[DB 오류] 경기 삭제 실패:', matchError);
+        console.error('[DB 오류] 이벤트 삭제 실패:', matchError);
         throw matchError;
       }
       
-      console.log('[DB 응답] 경기 삭제 성공');
+      console.log('[DB 응답] 이벤트 삭제 성공');
       // 상태 새로고침
       refreshMatches();
     } catch (err) {
-      console.error('경기 삭제 중 예외 발생:', err);
-      setError(err instanceof Error ? err.message : '경기를 삭제하는 중 알 수 없는 오류가 발생했습니다');
+      console.error('이벤트 삭제 중 예외 발생:', err);
+      setError(err instanceof Error ? err.message : '이벤트를 삭제하는 중 알 수 없는 오류가 발생했습니다');
       throw err;
     }
   };
 
-  // 오늘 경기 확인
+  // 오늘 이벤트 확인
   const checkForTodaysMatch = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -423,14 +424,14 @@ export function useMatchData() {
     return completedTodaysMatch;
   };
   
-  // 오늘 경기 자동 확인
+  // 오늘 이벤트 자동 확인
   useEffect(() => {
     if (matches.length > 0) {
     checkForTodaysMatch();
     }
   }, [matches]);
 
-  // 현재 연도 경기 수
+  // 현재 연도 이벤트 수
   const currentYearMatches = matches.filter(
     match => new Date(match.date).getFullYear() === new Date().getFullYear()
   ).length;

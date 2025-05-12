@@ -62,8 +62,6 @@ const AttendanceRecordForm = ({ matchId, matchDate, opponent, players, isCoach }
   };
   
   const handleSave = () => {
-    // In a real app, we would send this data to an API
-    console.log('Saving attendance records:', { matchId, attendanceRecords, notes });
     
     toast({
       title: "출석 기록 저장 완료",

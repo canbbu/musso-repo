@@ -65,7 +65,7 @@ const UpcomingMatchesCard = ({ upcomingMatches }: UpcomingMatchesCardProps) => {
       ) : (
         <div className="text-center py-8">
           <AlertCircle className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-          <p className="text-gray-500">예정된 경기가 없습니다.</p>
+          <p className="text-gray-500">예정된 이벤트가 없습니다.</p>
         </div>
       )}
     </>

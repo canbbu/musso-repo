@@ -56,9 +56,6 @@ const TransactionsTab = ({
   const handleNewTransactionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real app, this would add to the database
-    console.log('Adding new transaction:', newTransaction);
-    
     toast({
       title: "거래 추가 완료",
       description: `새 ${newTransaction.type === 'income' ? '수입' : '지출'} 항목이 추가되었습니다.`,

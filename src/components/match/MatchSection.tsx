@@ -40,7 +40,7 @@ const MatchSection = ({
     if (!canManageAnnouncements) {
       toast({
         title: "접근 권한이 없습니다",
-        description: "경기 등록은 감독만 가능합니다.",
+        description: "이벤트 등록은 감독만 가능합니다.",
         variant: "destructive"
       });
       return;
@@ -69,7 +69,7 @@ const MatchSection = ({
         <h2 className="text-2xl font-semibold">{title}</h2>
         {showAddButton && (
           <Button onClick={handleAddClick} variant="default" className="flex items-center">
-            새 경기 등록
+            새 이벤트 등록
           </Button>
         )}
       </div>

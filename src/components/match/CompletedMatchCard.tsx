@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,8 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  console.log("match 객체:", match);
+  
   const handleViewResults = () => {
     navigate(`/matches?matchId=${match.id}`);
   };
@@ -24,7 +25,7 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
     if (!canManagePlayerStats) {
       toast({
         title: "접근 권한이 없습니다",
-        description: "경기 관리는 감독과 코치만 가능합니다.",
+        description: "이벤트 관리는 감독과 코치만 가능합니다.",
         variant: "destructive"
       });
       return;
@@ -93,16 +94,16 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
               </div>
             </div>
             
-            {match.mvp && (
+            {/* {match.mvp && (
               <div className="mt-2 text-sm">
                 <span className="font-semibold">MVP:</span> {match.mvp}
               </div>
-            )}
+            )} */}
             
             <div className="text-xs text-gray-500 mt-2">
-              등록자: {match.createdBy}
-              {match.updatedBy && (
-                <span> | 최종 수정: {match.updatedBy} ({match.updatedAt})</span>
+              등록자: {match.created_by}
+              {match.updated_by && (
+                <span> | 최종 수정: {match.updated_by}</span>
               )}
             </div>
           </div>
@@ -113,7 +114,7 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
               onClick={handleViewResults}
             >
               <Eye size={18} className="mr-1" />
-              경기 결과 보기
+              이벤트 결과 보기
             </Button>
             
             {/* Show management buttons to everyone but check permissions when clicked */}
@@ -122,7 +123,7 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
               onClick={handleManageMatch}
             >
               <FileEdit size={18} className="mr-1" />
-              경기 관리
+              이벤트 관리
             </Button>
             <Button 
               variant="secondary"

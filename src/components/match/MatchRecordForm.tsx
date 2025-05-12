@@ -43,15 +43,15 @@ const MatchRecordForm = ({ match, onSave }: MatchRecordFormProps) => {
     });
     
     toast({
-      title: "경기 기록 저장 완료",
-      description: "경기 기록이 성공적으로 저장되었습니다."
+      title: "이벤트 기록 저장 완료",
+      description: "이벤트 기록이 성공적으로 저장되었습니다."
     });
   };
   
   return (
     <Card>
       <CardHeader>
-        <CardTitle>경기 기록</CardTitle>
+        <CardTitle>이벤트 기록</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -90,10 +90,10 @@ const MatchRecordForm = ({ match, onSave }: MatchRecordFormProps) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="review">경기 총평</Label>
+            <Label htmlFor="review">이벤트 총평</Label>
             <Textarea 
               id="review" 
-              placeholder="경기에 대한 총평을 입력하세요" 
+              placeholder="이벤트에 대한 총평을 입력하세요" 
               value={review}
               onChange={(e) => setReview(e.target.value)}
               rows={4}

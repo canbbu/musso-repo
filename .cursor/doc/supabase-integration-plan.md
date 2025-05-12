@@ -17,7 +17,7 @@ CREATE TABLE players (
 
 -- players 테이블에 회원 관리에 필요한 필드 추가
 ALTER TABLE players 
-ADD COLUMN nickname VARCHAR(255),
+ADD COLUMN username VARCHAR(255),
 ADD COLUMN password VARCHAR(255),
 ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;
 

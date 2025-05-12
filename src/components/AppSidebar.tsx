@@ -30,7 +30,7 @@ const AppSidebar = () => {
   const getNavItems = () => {
     const baseItems = [
       { title: '대시보드', path: '/dashboard', icon: Home, alwaysShow: true },
-      { title: '경기 관리', path: '/matches', icon: Calendar, show: true }, // Show to everyone
+      { title: '이벤트 관리', path: '/matches', icon: Calendar, show: true }, // Show to everyone
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
       { title: '갤러리', path: '/gallery', icon: Image, show: true },

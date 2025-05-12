@@ -81,7 +81,6 @@ export const SupabaseDataTester = () => {
         schema: 'public',
         table: selectedTable
       }, (payload) => {
-        console.log('실시간 변경 감지:', payload);
         
         // 변경 유형에 따라 UI 업데이트
         if (payload.eventType === 'INSERT') {
