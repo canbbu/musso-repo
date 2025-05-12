@@ -18,12 +18,11 @@ interface Player {
 type RankingTab = 'goals' | 'assists' | 'attendance' | 'rating';
 
 // Supabase 클라이언트 생성
-
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const usePlayerRankings = () => {
+export const usePlayerRankings = (year?: number, month?: number) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<RankingTab>('goals');
@@ -37,24 +36,36 @@ export const usePlayerRankings = () => {
         const { data: playersData, error: playersError } = await supabase
           .from('players')
           .select('id, name, position, boots_brand, fav_club, birthday, daily_mvp, monthly_mvp, yearly_mvp');
-        console.log('usePlayerRankings playersData:', playersData);
         
         if (playersError) throw playersError;
         
-        // 완료된 이벤트 수 가져오기
-        const { data: completedMatches, error: matchesError } = await supabase
+        // 완료된 이벤트 쿼리 구성
+        let matchesQuery = supabase
           .from('matches')
-          .select('id')
+          .select('id, date')
           .eq('status', 'completed');
-        console.log('usePlayerRankings completedMatches:', completedMatches);
+        
+        // 연도와 월 필터 적용
+        if (year) {
+          const startDate = month 
+            ? new Date(year, month - 1, 1).toISOString()
+            : new Date(year, 0, 1).toISOString();
+          
+          const endDate = month
+            ? new Date(year, month, 0).toISOString() // 해당 월의 마지막 날
+            : new Date(year, 11, 31).toISOString();
+          
+          matchesQuery = matchesQuery
+            .gte('date', startDate)
+            .lte('date', endDate);
+        }
+        
+        // 필터링된 이벤트 가져오기
+        const { data: completedMatches, error: matchesError } = await matchesQuery;
         
         if (matchesError) throw matchesError;
         
-        // 스키마에 'completed' 상태가 없는 경우를 위한 대비책
-        // matches 테이블의 status는 현재 'upcoming'과 'cancelled'만 있음
-        // 향후 'completed' 상태를 추가할 예정이므로, 임시로 전체 이벤트 수를 계산
         const totalCompletedMatches = completedMatches?.length || 0;
-        console.log('usePlayerRankings totalCompletedMatches:', totalCompletedMatches);
         
         // 완료된 이벤트 id 배열 추출
         const completedMatchIds = (completedMatches ?? []).map(m => m.id);
@@ -62,14 +73,13 @@ export const usePlayerRankings = () => {
         // 각 선수별 참석 정보 가져오기
         const playerStats = await Promise.all(
           playersData.map(async (player) => {
-            // 'completed' 이벤트만 필터링
+            // 필터링된 이벤트에 대한 참석 기록만 가져오기
             const { data: attendanceData, error: attendanceError } = await supabase
               .from('match_attendance')
               .select('*')
               .eq('player_id', player.id)
               .eq('status', 'attending')
-              .in('match_id', completedMatchIds);
-            console.log(`usePlayerRankings attendanceData for ${player.name}:`, attendanceData);
+              .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]); // 빈 배열 대신 [0] 사용하여 쿼리 오류 방지
             
             if (attendanceError) throw attendanceError;
             
@@ -83,16 +93,12 @@ export const usePlayerRankings = () => {
               ? matchesWithRating.reduce((sum, match) => sum + match.rating, 0) / matchesWithRating.length
               : 0;
             
-            // 포지션은 임시로 설정 (실제로는 데이터베이스에서 가져와야 함)
-            const positions = player.position;
-            
             // 출석률 계산 (완료된 이벤트 대비 참석 이벤트 비율)
-            // 완료된 이벤트가 없으면 0으로 설정
             const attendance = totalCompletedMatches > 0
               ? Math.round((attendanceData.length / totalCompletedMatches) * 100)
               : 0;
             
-            const stat = {
+            return {
               id: player.id,
               name: player.name,
               position: player.position,
@@ -108,11 +114,8 @@ export const usePlayerRankings = () => {
               attendance,
               rating: parseFloat(averageRating.toFixed(1))
             };
-            console.log(`usePlayerRankings stat for ${player.name}:`, stat);
-            return stat;
           })
         );
-        console.log('usePlayerRankings 최종 playerStats:', playerStats);
         
         setPlayers(playerStats);
       } catch (error) {
@@ -123,7 +126,7 @@ export const usePlayerRankings = () => {
     };
     
     fetchPlayerData();
-  }, []);
+  }, [year, month]); // 연도나 월이 변경되면 데이터 다시 불러오기
   
   // Get the top players in each category
   const goalRanking = [...players].sort((a, b) => b.goals - a.goals);

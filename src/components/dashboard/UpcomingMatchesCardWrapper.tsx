@@ -189,10 +189,9 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
                     className="w-full" 
                     variant="outline"
                     onClick={() => openAttendanceModal(match.id)}
-                    disabled={isMatchDeadlinePassed}
                   >
                     <Eye size={18} className="mr-1" />
-                    {isMatchDeadlinePassed ? "참가 현황 보기" : "참가 현황 보기"}
+                    참가 현황 보기
                   </Button>
                   <div className={`text-xs mt-2 px-2 py-1 border rounded ${isMatchDeadlinePassed ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-500 border-gray-200'}`}>
                     참석여부 마감: {match.date ? formatDeadline(matchDeadline) : "날짜 정보 없음"}
