@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider, RequireAuth } from '@/components/auth/AuthContext';
-import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Gallery, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory, MyStats } from './pages';
+import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory, MyStats, EntirePlayerStats } from './pages';
 import DataTestPage from './pages/DataTestPage';
 import Register from './pages/Register';
+import ChangePassword from './pages/ChangePassword';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -25,9 +26,10 @@ function App() {
               <Route path="/stats" element={<PlayerStats />} />
               <Route path="/my-stats" element={<MyStats />} />
               <Route path="/stats-management" element={<StatsManagement />} />
-              <Route path="/gallery" element={<Gallery />} />
               <Route path="/announcement-management" element={<AnnouncementManagement />} />
-              <Route path="/finance-management" element={<FinanceManagement />} />
+              <Route path="/entire-player-stats" element={<EntirePlayerStats />} />
+              <Route path="/change-password" element={<ChangePassword />} />
+              {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

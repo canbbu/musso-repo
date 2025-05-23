@@ -21,6 +21,15 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   };
 
+  // formatDateToLocalString 결과와 calendarEvents 매칭 확인
+  const formattedDate = formatDateToLocalString(date);
+  console.log('[CalendarView] 날짜별 데이터:', {
+    현재날짜: date,
+    변환된날짜형식: formattedDate,
+    해당날짜이벤트: calendarEvents[formattedDate],
+    전체이벤트: calendarEvents
+  });
+
   return (
     <Card className="lg:col-span-2 bg-white flex-1 w-full min-w-0 max-w-full">
       <CardHeader className="pb-2">
@@ -92,28 +101,37 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
               {date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
             </h3>
             
-            {calendarEvents[formatDateToLocalString(date)] ? (
+            {calendarEvents[formattedDate] ? (
               <ul className="space-y-2">
-                {calendarEvents[formatDateToLocalString(date)].map((event, idx) => (
-                  <li key={idx} className="flex items-center">
-                    {event.type === 'match' ? (
-                      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
-                        event.status === 'cancelled' 
-                          ? 'bg-red-100 text-red-800' 
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        {event.status === 'cancelled' ? '취소된 이벤트' : '이벤트'}
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                        공지
-                      </div>
-                    )}
-                    <span className={`ml-2 ${event.status === 'cancelled' ? 'line-through text-red-500' : ''}`}>
-                      {event.title}
-                    </span>
-                  </li>
-                ))}
+                {calendarEvents[formattedDate].map((event, idx) => {
+                  console.log('[CalendarView] 이벤트 데이터:', {
+                    이벤트번호: idx,
+                    이벤트타입: event.type,
+                    이벤트상태: event.status,
+                    이벤트제목: event.title
+                  });
+                  
+                  return (
+                    <li key={idx} className="flex items-center">
+                      {event.type === 'match' ? (
+                        <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                          event.status === 'cancelled' 
+                            ? 'bg-red-100 text-red-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {event.status === 'cancelled' ? '취소된 이벤트' : '이벤트'}
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                          공지
+                        </div>
+                      )}
+                      <span className={`ml-2 ${event.status === 'cancelled' ? 'line-through text-red-500' : ''}`}>
+                        {event.title}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               <p className="text-gray-500">일정이 없습니다.</p>

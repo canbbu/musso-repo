@@ -107,7 +107,6 @@ const UpcomingMatchCard = ({
     navigate(`/stats-management?matchId=${matchId}`);
   };
 
-  console.log("match 객체:", match);
   
   return (
     <Card key={match.id} className="border-l-4 border-l-blue-500">

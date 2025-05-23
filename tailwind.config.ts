@@ -1,6 +1,7 @@
+import { fontFamily } from "tailwindcss/defaultTheme";
 import type { Config } from "tailwindcss";
 
-export default {
+const config = {
 	darkMode: ["class"],
 	content: [
 		"./pages/**/*.{ts,tsx}",
@@ -18,6 +19,12 @@ export default {
 			}
 		},
 		extend: {
+			rotate: {
+				'y-180': 'rotateY(180deg)',
+			},
+			transitionProperty: {
+				'transform': 'transform',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -68,6 +75,9 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			fontFamily: {
+				sans: ["var(--font-sans)", ...fontFamily.sans],
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
@@ -94,3 +104,5 @@ export default {
 	},
 	plugins: [require("tailwindcss-animate")],
 } satisfies Config;
+
+export default config;

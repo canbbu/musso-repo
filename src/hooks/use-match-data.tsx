@@ -60,7 +60,6 @@ export function useMatchData() {
 
       if (matchesError) throw matchesError;
       
-      console.log('[DB 응답] matches 테이블 조회 결과:', matchesData);
       
       if (!matchesData) {
         setMatches([]);
@@ -78,7 +77,6 @@ export function useMatchData() {
 
           if (attendanceError) throw attendanceError;
           
-          console.log(`[DB 응답] match_id ${match.id}에 대한 attendance 조회 결과:`, attendanceData);
 
           // 출석 상태별 카운트
           const attendance = {
@@ -168,7 +166,6 @@ export function useMatchData() {
     const matchesSubscription = supabase
       .channel('matches_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, (payload) => {
-        console.log('[DB 실시간] matches 테이블 변경 감지:', payload);
         refreshMatches();
       })
       .subscribe();
@@ -176,15 +173,12 @@ export function useMatchData() {
     const attendanceSubscription = supabase
       .channel('match_attendance_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'match_attendance' }, (payload) => {
-        console.log('[DB 실시간] match_attendance 테이블 변경 감지:', payload);
         refreshMatches();
       })
       .subscribe();
 
     return () => {
-      console.log('[DB 구독] matches_changes 구독 해제');
       matchesSubscription.unsubscribe();
-      console.log('[DB 구독] match_attendance_changes 구독 해제');
       attendanceSubscription.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -200,7 +194,6 @@ export function useMatchData() {
         return;
       }
 
-      console.log('[DB 요청] 출석 상태 업데이트 매개변수:', { matchId, status, userId });
       
       // 먼저 기존 응답이 있는지 확인
       const { data: existingResponse, error: fetchError } = await supabase
@@ -218,10 +211,8 @@ export function useMatchData() {
 
       // 응답 상태를 supabase 형식으로 변환
       const statusValue = status === 'notAttending' ? 'not_attending' : status;
-      console.log('변환된 상태값:', statusValue);
 
       if (existingResponse) {
-        console.log('기존 응답 발견, 업데이트 진행:', existingResponse);
         // 기존 응답이 있으면 업데이트
         const { error: updateError } = await supabase
           .from('match_attendance')
@@ -234,7 +225,6 @@ export function useMatchData() {
           return;
         }
       } else {
-        console.log('새 응답 생성 중...');
         // 없으면 새로 생성
         const { error: insertError } = await supabase
           .from('match_attendance')
@@ -251,7 +241,6 @@ export function useMatchData() {
         }
       }
 
-      console.log('출석 상태 업데이트 성공');
       // 상태 새로고침
       refreshMatches();
     } catch (err) {
@@ -273,7 +262,7 @@ export function useMatchData() {
       
       // T가 포함된 ISO 형식이거나 다른 형식이면 처리
       const parts = dateString.split('T')[0].split(' ')[0];
-      console.log('[날짜 정규화] 원본:', dateString, '-> 변환:', parts);
+      
       return parts;
     } catch (err) {
       console.error('[날짜 정규화] 오류:', err, '원본:', dateString);
@@ -292,7 +281,7 @@ export function useMatchData() {
 
   const createMatch = async (matchData: MatchFormData, created_by: string) => {
     try {
-      console.log('[DB 요청] 새 이벤트 생성 데이터:', matchData);
+      
       
       // 날짜 및 상태 정규화
       const formattedDate = normalizeDate(matchData.date);
@@ -321,7 +310,7 @@ export function useMatchData() {
         throw error;
       }
       
-      console.log('[DB 응답] 이벤트 생성 결과:', data);
+      
       // 상태 새로고침
       refreshMatches();
       return data;
@@ -357,8 +346,8 @@ export function useMatchData() {
         throw error;
       }
       
-      console.log('[DB 응답] 이벤트 업데이트 결과:', data);
-      console.log('[DB 확인] 저장된 status 값:', data?.[0]?.status);
+      
+      
       // 상태 새로고침
       refreshMatches();
     } catch (err) {
@@ -370,7 +359,7 @@ export function useMatchData() {
 
   const deleteMatch = async (matchId: number) => {
     try {
-      console.log('[DB 요청] 이벤트 삭제 매개변수:', { matchId });
+      
       
       // 먼저 이 이벤트에 대한 모든 출석 정보 삭제
       const { error: attendanceError } = await supabase
@@ -383,7 +372,7 @@ export function useMatchData() {
         throw attendanceError;
       }
       
-      console.log('[DB 응답] 이벤트 관련 출석 정보 삭제 성공');
+      
 
       // 이제 이벤트 자체 삭제
       const { error: matchError } = await supabase
@@ -396,7 +385,7 @@ export function useMatchData() {
         throw matchError;
       }
       
-      console.log('[DB 응답] 이벤트 삭제 성공');
+      
       // 상태 새로고침
       refreshMatches();
     } catch (err) {

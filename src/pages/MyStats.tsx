@@ -2,9 +2,10 @@ import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from "@/components/ui/progress";
-import { User, Award, Calendar, Goal, Trophy } from 'lucide-react';
+import { User, Award, Calendar, Goal, Trophy, Zap, Target, Send, Move, Shield, Dumbbell } from 'lucide-react';
 import { usePlayerRankings } from '@/hooks/use-player-rankings';
 import Layout from '@/components/Layout';
+import FlipPlayerCard from '@/components/FlipPlayerCard';
 
 const MyStats = () => {
   const { userName } = useAuth();
@@ -21,7 +22,7 @@ const MyStats = () => {
   const attendanceRate = playerStats.attendance;
   const goalEfficiency = Math.round((playerStats.goals / playerStats.games) * 100);
   const assistEfficiency = Math.round((playerStats.assists / playerStats.games) * 100);
-  
+
   return (
     <Layout>
       <div className="player-personal-stats">
@@ -30,29 +31,66 @@ const MyStats = () => {
           <p className="text-gray-600">{userName}님의 이번 시즌 활동 기록입니다.</p>
         </div>
 
-        {/* MVP 트로피 섹션 */}
-      <div className="mt-10 flex flex-col md:flex-row items-center justify-center gap-8">
-        {/* Daily MVP */}
-        <div className="flex flex-col items-center">
-          <Trophy className="h-6 w-6 text-gray-400 mb-1" />
-          <span className="text-xs text-gray-500">일간 MVP</span>
-          <span className="text-base font-bold text-gray-700 mt-1">{playerStats.daily_mvp ?? 0}회</span>
+        {/* 카드와 MVP 섹션을 가로로 배치 */}
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* 선수 카드 - 왼쪽 배치 */}
+          <div className="md:w-1/3">
+            <h2 className="text-2xl font-bold mb-4">선수 카드</h2>
+            <div className="flex justify-center">
+              <FlipPlayerCard
+                name={playerStats.name}
+                position={playerStats.position}
+                rating={playerStats.avr_stat || 0}
+                pacStat={playerStats.pac || 0}
+                shoStat={playerStats.sho || 0}
+                pasStat={playerStats.pas || 0}
+                driStat={playerStats.dri || 0}
+                defStat={playerStats.def || 0}
+                phyStat={playerStats.phy || 0}
+                bootsBrand={`/images/${playerStats.boots_brand}.jpg`}
+                favoriteTeam={`/images/${playerStats.favorite_team}.jpg`}
+                teamLogo={`/images/무쏘_누끼.jpg`}
+                playerImageUrl={playerStats.name ? `/images/${playerStats.name}.jpg` : undefined}
+              />
+            </div>
+            <p className="text-center text-sm text-gray-500 mt-4">카드를 클릭하면 상세 능력치를 확인할 수 있습니다.</p>
+          </div>
+
+          {/* MVP 트로피 섹션 - 오른쪽 세로 배치 */}
+          <div className="md:w-2/3">
+            <h2 className="text-2xl font-bold mb-4">MVP 기록</h2>
+            <div className="flex flex-col gap-6">
+              {/* Weekly MVP */}
+              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
+                <Trophy className="h-10 w-10 text-gray-400" />
+                <div>
+                  <h3 className="font-medium">주간 MVP</h3>
+                  <p className="text-xl font-bold">{playerStats.weekly_mvp_count ?? 0}회</p>
+                </div>
+              </div>
+              
+              {/* Monthly MVP */}
+              <div className="flex items-center gap-4 bg-amber-50 p-4 rounded-lg">
+                <Trophy className="h-10 w-10 text-amber-500" />
+                <div>
+                  <h3 className="font-medium">월간 MVP</h3>
+                  <p className="text-xl font-bold text-amber-700">{playerStats.monthly_mvp_count ?? 0}회</p>
+                </div>
+              </div>
+              
+              {/* Yearly MVP */}
+              <div className="flex items-center gap-4 bg-yellow-50 p-4 rounded-lg">
+                <Trophy className="h-10 w-10 text-yellow-600" />
+                <div>
+                  <h3 className="font-medium">연간 MVP</h3>
+                  <p className="text-xl font-bold text-yellow-700">{playerStats.yearly_mvp_count ?? 0}회</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        {/* Monthly MVP */}
-        <div className="flex flex-col items-center">
-          <Trophy className="h-10 w-10 text-amber-500 mb-1" />
-          <span className="text-xs text-amber-600">월간 MVP</span>
-          <span className="text-base font-bold text-amber-700 mt-1">{playerStats.monthly_mvp ?? 0}회</span>
-        </div>
-        {/* Yearly MVP */}
-        <div className="flex flex-col items-center">
-          <Trophy className="h-16 w-16 text-yellow-400 mb-1" />
-          <span className="text-xs text-yellow-600">연간 MVP</span>
-          <span className="text-base font-bold text-yellow-700 mt-1">{playerStats.yearly_mvp ?? 0}회</span>
-        </div>
-      </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center text-lg">
@@ -78,7 +116,7 @@ const MyStats = () => {
                 
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium">참여 경기기</span>
+                    <span className="font-medium">참여 경기</span>
                     <span>{playerStats.games}경기</span>
                   </div>
                 </div>
@@ -178,6 +216,7 @@ const MyStats = () => {
             </CardContent>
           </Card>
         </div>
+
       </div>
     </Layout>
   );

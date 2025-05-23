@@ -5,27 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from '@/lib/supabase';
 import { Check, X, Clock } from 'lucide-react';
 import { formatKoreanDate } from '@/utils/date-helpers';
-
-interface Player {
-  id: number | string;
-  username: string;
-  name: string;
-  role: string;
-  attendance_status?: string;
-}
-
-interface MatchInfo {
-  date: string;
-  opponent: string;
-  location: string;
-}
-
-interface AttendanceListModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  matchId: number;
-  matchInfo: MatchInfo;
-}
+import { Player, MatchInfo, AttendanceListModalProps } from '@/types/dashboard';
 
 const roleOrder = {
   '회장': 1,

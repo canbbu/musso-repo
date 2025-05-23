@@ -39,7 +39,6 @@ const DuesManagementTab = ({
     e.preventDefault();
     
     // In a real app, this would add to the database
-    console.log('Adding new dues record:', newDues);
     
     toast({
       title: "회비 추가 완료",

@@ -119,7 +119,7 @@ const Login = () => {
         </CardContent>
         <CardFooter className="flex flex-col items-center gap-2">
           <p className="text-sm text-gray-500">
-            © 2024 축구회 관리 시스템
+            © 2025 무쏘 축구회 관리 시스템
           </p>
         </CardFooter>
       </Card>

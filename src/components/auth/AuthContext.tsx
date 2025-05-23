@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,9 +27,10 @@ export function RequireAuth() {
   const { isAuthenticated } = useAuthContext();
   const location = useLocation();
 
-  if (!isAuthenticated) {
+  // 이미 리다이렉션 중인 경우 루프 방지
+  if (!isAuthenticated && !location.pathname.includes('/login')) {
     // Redirect to login page but save the current location
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // If authenticated, render the child routes

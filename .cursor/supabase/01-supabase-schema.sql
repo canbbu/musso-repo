@@ -79,6 +79,21 @@ CREATE TABLE member_dues (
   paid_amount DECIMAL(10, 2)
 );
 
+-- MVP 타입 구분을 위해 ENUM 타입 생성 (PostgreSQL 기준)
+CREATE TYPE mvp_type AS ENUM ('weekly', 'monthly', 'yearly');
+
+-- MVP 테이블 생성 (주간/월간/년간 통합)
+CREATE TABLE mvp (
+  id UUID PRIMARY KEY,
+  player_id VARCHAR(64) NOT NULL,
+  reason TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  mvp_type mvp_type NOT NULL,
+  year INTEGER NOT NULL,
+  week INTEGER,   -- 주간 MVP에만 사용
+  month INTEGER   -- 월간 MVP에만 사용
+);
+
 -- 5. 샘플 데이터 추가: 플레이어 추가
 INSERT INTO players (id, name) VALUES
   ('player1', '김선수'),

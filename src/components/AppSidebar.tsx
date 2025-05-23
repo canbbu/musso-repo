@@ -11,13 +11,14 @@ import {
   SidebarHeader
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus } from 'lucide-react';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key } from 'lucide-react';
 import UserProfileButton from './profile/UserProfileButton';
 
 const AppSidebar = () => {
   const { 
     logout, 
     userName,
+    canManage, 
     canManageMatches, 
     canManageAnnouncements, 
     canManageFinance, 
@@ -33,10 +34,10 @@ const AppSidebar = () => {
       { title: '이벤트 관리', path: '/matches', icon: Calendar, show: true }, // Show to everyone
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
-      { title: '갤러리', path: '/gallery', icon: Image, show: true },
-      { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
+      // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
       { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
       { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
+      { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
     ];
     
     return baseItems.filter(item => item.alwaysShow || item.show);
@@ -80,6 +81,13 @@ const AppSidebar = () => {
               >
                 <LogOut className="h-5 w-5 mr-3" />
                 <span>로그아웃</span>
+              </SidebarMenuButton>
+              <SidebarMenuButton
+                className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                onClick={() => navigate('/change-password')}
+              >
+                <Key className="h-5 w-5 mr-3" />
+                <span>비밀번호 변경</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

@@ -32,27 +32,26 @@ const Register = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // 유효성 검사
-    if (!name || !username || !password || !birthday || !position || !bootsBrand || !favClub) {
-      toast({
-        title: "회원등록 실패",
-        description: "이름, 아이디, 비밀번호, 생년월일, 포지션, 축구화 브랜드, 선호 구단을 모두 입력해주세요.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     try {
       setLoading(true);
-      
+      // 유효성 검사
+      if (!name || !username || !password || !birthday || !position || !bootsBrand || !favClub) {
+        toast({
+          title: "회원등록 실패",
+          description: "이름, 아이디, 비밀번호, 생년월일, 포지션, 축구화 브랜드, 선호 구단을 모두 입력해주세요.",
+          variant: "destructive"
+        });
+        return;
+      }
       // 닉네임 중복 확인
       const { data: existingUser, error: checkError } = await supabase
         .from('players')
         .select('id')
         .eq('username', username)
         .single();
-        
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw new Error('사용자 확인 중 오류가 발생했습니다.');
+      }
       if (existingUser) {
         toast({
           title: "회원등록 실패",
@@ -61,14 +60,13 @@ const Register = () => {
         });
         return;
       }
-      
       // 새 사용자 등록
       const { data, error } = await supabase
         .from('players')
         .insert({
           name: name,
           username: username,
-          password: password, // 실제 구현에서는 암호화된 비밀번호 사용
+          password: password,
           role: role,
           is_deleted: false,
           birthday: birthday || null,
@@ -78,16 +76,13 @@ const Register = () => {
         })
         .select()
         .single();
-        
       if (error) {
         throw new Error('회원등록 처리 중 오류가 발생했습니다.');
       }
-      
       toast({
         title: "회원등록 성공",
         description: `${name} 회원이 축구회에 등록되었습니다.`,
       });
-      
       // 입력 필드 초기화
       setName('');
       setusername('');
@@ -98,6 +93,7 @@ const Register = () => {
       setBootsBrand('');
       setFavClub('');
     } catch (error) {
+      console.error('Registration error:', error);
       toast({
         title: "회원등록 실패",
         description: error instanceof Error ? error.message : "회원등록 중 오류가 발생했습니다.",

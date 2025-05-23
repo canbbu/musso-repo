@@ -4,26 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, Users } from 'lucide-react';
 import PlayerStatsTable from './PlayerStatsTable';
+import { PlayerStats, StatsCardProps } from '@/types/dashboard';
 
-interface PlayerStats {
-  id: string;
-  name: string;
-  matchId: number;
-  matchDate: string;
-  attended: boolean;
-  goals: number;
-  assists: number;
-  rating: number;
-}
-
-interface StatsCardProps {
-  matchDate: string;
-  opponent: string;
-  playerStats: PlayerStats[];
-  onStatChange: (playerId: string, field: keyof PlayerStats, value: any) => void;
-  onSave: () => void;
-  isLoading: boolean;
-}
 
 const StatsCard = ({ matchDate, opponent, playerStats, onStatChange, onSave, isLoading }: StatsCardProps) => {
   return (

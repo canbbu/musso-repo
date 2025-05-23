@@ -16,34 +16,26 @@ export function useUpcomingMatches() {
         // 오늘 이후의 이벤트만 가져오기
         const today = new Date().toISOString().split('T')[0];
         
-        console.log('[DB 요청] 오늘 이후 매치 조회:', today);
+        
         
         // 기본 매치 데이터 가져오기
-        const { data: matchesData, error: matchesError } = await supabase
+        const { data: allMatches, error: allMatchesError } = await supabase
         .from('matches')
-        .select(`
-          *,
-          match_attendance (
-            id,
-            match_id,
-            player_id,
-            status
-          )
-        `)
-        .gte('date', today)
+        .select('*')
         .order('date');
 
-        if (matchesError) {
-          console.error('[DB 오류] 매치 조회 실패:', matchesError);
-          throw matchesError;
-        }
+        console.log('[전체 매치 데이터]', JSON.stringify(allMatches, null, 2));
+
+        if (allMatchesError) {
+          console.error('[DB 오류] 매치 조회 실패:', allMatchesError);
+          throw allMatchesError;
+        }        
         
-        console.log('[DB 응답] 매치 조회 결과:', matchesData);
         
         // 각 매치에 대한 참석 정보 가져오기
         const matchesWithAttendance = await Promise.all(
-          (matchesData || []).map(async match => {
-            console.log(`[DB 요청] 매치 ID ${match.id}에 대한 참석 정보 조회`);
+          (allMatches || []).map(async match => {
+            
             
             // 참석 상태별 플레이어 정보 가져오기
             const { data: attendanceData, error: attendanceError } = await supabase
@@ -59,7 +51,7 @@ export function useUpcomingMatches() {
               throw attendanceError;
             }
             
-            console.log(`[DB 응답] 매치 ID ${match.id}에 대한 참석 정보:`, attendanceData);
+            
             
             // 참석 상태별 플레이어 분류
             const attending: Player[] = [];
@@ -71,10 +63,10 @@ export function useUpcomingMatches() {
             
               if (item.status === 'attending') {
                 attending.push(player);
-                console.log('attending에 추가:', player);
+                
               } else if (item.status === 'not_attending') {
                 notAttending.push(player);
-                console.log('notAttending에 추가:', player);
+                
               }
             });
             
@@ -103,6 +95,8 @@ export function useUpcomingMatches() {
           })
         );
         
+        console.log('[참석 정보가 포함된 매치 데이터]', JSON.stringify(matchesWithAttendance, null, 2));
+        
         setUpcomingMatches(matchesWithAttendance);
       } catch (err) {
         setError(err instanceof Error ? err.message : '이벤트 정보를 불러오는 중 오류가 발생했습니다');
@@ -120,7 +114,7 @@ export function useUpcomingMatches() {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'matches' }, 
         (payload) => {
-          console.log('[DB 실시간] matches 테이블 변경 감지:', payload);
+          
           fetchMatches();
         }
       )
@@ -131,16 +125,16 @@ export function useUpcomingMatches() {
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'match_attendance' }, 
         (payload) => {
-          console.log('[DB 실시간] match_attendance 테이블 변경 감지:', payload);
+          
           fetchMatches();
         }
       )
       .subscribe();
     
     return () => {
-      console.log('[DB 채널] matches_changes 채널 제거 시도');
+      
       supabase.removeChannel(matchesSubscription);
-      console.log('[DB 채널] attendance_changes 채널 제거 시도');
+      
       supabase.removeChannel(attendanceSubscription);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -149,7 +143,7 @@ export function useUpcomingMatches() {
   // 참석 상태 업데이트 함수
   const updateAttendance = async (matchId: number, playerId: string, status: 'attending' | 'not_attending' | 'pending') => {
     try {
-      console.log('[DB 요청] 참석 상태 업데이트 매개변수:', { matchId, playerId, status });
+      
       
       // 기존 참석 정보 확인
       const { data: existingData, error: checkError } = await supabase
@@ -164,10 +158,10 @@ export function useUpcomingMatches() {
         throw checkError;
       }
       
-      console.log('[DB 응답] 기존 참석 정보 확인 결과:', existingData);
+      
       
       if (existingData) {
-        console.log('[DB 요청] 기존 참석 정보 업데이트:', { id: existingData.id, status });
+        
         
         // 기존 참석 정보 업데이트
         const { error: updateError } = await supabase
@@ -180,9 +174,9 @@ export function useUpcomingMatches() {
           throw updateError;
         }
         
-        console.log('[DB 응답] 참석 정보 업데이트 성공');
+        
       } else {
-        console.log('[DB 요청] 새 참석 정보 추가:', { match_id: matchId, player_id: playerId, status });
+        
         
         // 새 참석 정보 추가
         const { error: insertError } = await supabase
@@ -198,7 +192,7 @@ export function useUpcomingMatches() {
           throw insertError;
         }
         
-        console.log('[DB 응답] 새 참석 정보 추가 성공');
+        
       }
       
       // 실시간 업데이트로 상태가 자동으로 갱신되므로 별도의 상태 업데이트는 필요 없음

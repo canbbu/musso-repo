@@ -66,15 +66,31 @@ const StatsManagement = () => {
   }, [canManagePlayerStats, navigate, toast]);
   
   const handleSaveStats = () => {
+    // 염지훈
+    for (const stat of playerStats) {
+      if(stat.attendanceStatus === "attending") {
+        if (stat.rating === 0 || stat.rating === null) {
+          
+          toast({
+            title: "저장 실패",
+            description: "모든 선수의 평점이 입력되어야 저장할 수 있습니다.",
+            style: { backgroundColor: "red" }, // 실패 색상
+          });
+          return false;
+        }
+      }
+    }
     // In a real app, we would send this data to an API
     toast({
       title: "선수 기록 저장 완료",
       description: `${playerStats.length}명의 선수 기록이 저장되었습니다.`,
     });
+    return true;
   };
 
+
   const selectedMatchData = selectedMatch ? matches.find(m => m.id === selectedMatch) : null;
-  console.log("Stats Management selectedMatchData : ", selectedMatchData);
+  
   return (
     <Layout>
       <div className="mb-6">

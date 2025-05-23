@@ -42,14 +42,12 @@ const Dashboard = () => {
     userResponse: null
   }));
   
-  // 디버깅용 로그
-  console.log('Dashboard - convertedUpcomingMatches:', convertedUpcomingMatches);
 
   return (
     <Layout>
       <div className={`mb-6 ${isMobile ? "mt-16" : ""}`}>
         <h1 className="text-3xl font-bold mb-2">대시보드</h1>
-        <p className="text-gray-600">안녕하세요, {userName}님! 축구회 관리 시스템에 오신 것을 환영합니다.</p>
+        <p className="text-gray-600">안녕하세요, {userName}님! 무쏘 홈페이지에 오신 것을 환영합니다.</p>
       </div>
       
       {/* MVP Voting Card - Show only when there's a completed match today */}

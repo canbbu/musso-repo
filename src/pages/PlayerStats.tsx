@@ -145,20 +145,6 @@ const PlayerStats = () => {
               </Button>
             )}
           </div>
-          
-          <div className="flex gap-4 mt-4">
-            <Button onClick={() => navigate('/my-stats')} className="flex items-center">
-              <User className="mr-2 h-4 w-4" />
-              내 기록 보기
-            </Button>
-            
-            {canManagePlayerStats() && (
-              <Button onClick={() => navigate('/stats-management')} className="flex items-center">
-                <Star className="mr-2 h-4 w-4" />
-                선수 기록 관리
-              </Button>
-            )}
-          </div>
         </div>
         
         {loading ? (

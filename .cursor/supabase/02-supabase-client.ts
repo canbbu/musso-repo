@@ -12,7 +12,7 @@ export async function checkSupabaseConnection() {
   try {
     const { data, error } = await supabase.from('players').select('count(*)');
     if (error) throw error;
-    console.log('Supabase 연결 성공:', data);
+    
     return true;
   } catch (error) {
     console.error('Supabase 연결 오류:', error);

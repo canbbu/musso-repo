@@ -152,7 +152,6 @@ const MatchForm = ({ editMode = false, matchId, onSubmit, onCancel }: MatchFormP
                 <FormLabel>상태</FormLabel>
                 <Select 
                   onValueChange={(value) => {
-                    console.log('상태 변경:', value);
                     field.onChange(value);
                   }}
                   defaultValue={field.value}

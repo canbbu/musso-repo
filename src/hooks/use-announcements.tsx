@@ -79,13 +79,11 @@ export function useAnnouncements(showOnlyMatches: boolean = false) {
     const subscription = supabase
       .channel('public:announcements')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, (payload) => {
-        console.log('[DB 실시간] announcements 테이블 변경 감지:', payload);
         fetchAnnouncements();
       })
       .subscribe();
 
     return () => {
-      console.log('[DB 구독] public:announcements 구독 해제');
       subscription.unsubscribe();
     };
   }, [showOnlyMatches]);
@@ -93,7 +91,6 @@ export function useAnnouncements(showOnlyMatches: boolean = false) {
   // 공지사항 추가 함수
   const addAnnouncement = async (newAnnouncement: Omit<Announcement, 'id'>) => {
     try {
-      console.log('[DB 요청] 새 공지사항 데이터:', newAnnouncement);
       
       const { data, error } = await supabase
         .from('announcements')
@@ -105,7 +102,6 @@ export function useAnnouncements(showOnlyMatches: boolean = false) {
         throw error;
       }
       
-      console.log('[DB 응답] 공지사항 추가 결과:', data);
 
       // 새로운 공지사항을 UI에 반영
       fetchAnnouncements();

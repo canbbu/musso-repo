@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase'; // 싱글톤 인스턴스 임포트
 
 interface Player {
   id: string;
@@ -10,17 +10,27 @@ interface Player {
   assists: number;
   attendance: number;
   rating: number;
-  daily_mvp: string;
-  monthly_mvp: string;
-  yearly_mvp: string;
+  boots_brand: string;
+  favorite_team: string;
+  weekly_mvp_count: number;
+  monthly_mvp_count: number;
+  yearly_mvp_count: number;
+  // 선수 능력치 필드
+  avr_stat?: number; // 평균 능력치
+  pac?: number; // 속력 (Pace)
+  sho?: number; // 슛 (Shooting)
+  pas?: number; // 패스 (Passing)
+  dri?: number; // 드리블 (Dribbling)
+  def?: number; // 수비 (Defense)
+  phy?: number; // 피지컬 (Physical)
 }
 
 type RankingTab = 'goals' | 'assists' | 'attendance' | 'rating';
 
-// Supabase 클라이언트 생성
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Supabase 클라이언트 직접 생성하는 부분 제거
+// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+// const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const usePlayerRankings = (year?: number, month?: number) => {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -35,9 +45,16 @@ export const usePlayerRankings = (year?: number, month?: number) => {
         // 선수 기본 정보 가져오기
         const { data: playersData, error: playersError } = await supabase
           .from('players')
-          .select('id, name, position, boots_brand, fav_club, birthday, daily_mvp, monthly_mvp, yearly_mvp');
+          .select('id, name, position, birthday, fav_club, boots_brand');
         
         if (playersError) throw playersError;
+        
+        // player_stats 테이블에서 능력치 정보 가져오기
+        const { data: playerStatsData, error: playerStatsError } = await supabase
+          .from('player_stats')
+          .select('id, pac, sho, pas, dri, def, phy');
+          
+        if (playerStatsError) throw playerStatsError;
         
         // 완료된 이벤트 쿼리 구성
         let matchesQuery = supabase
@@ -70,6 +87,12 @@ export const usePlayerRankings = (year?: number, month?: number) => {
         // 완료된 이벤트 id 배열 추출
         const completedMatchIds = (completedMatches ?? []).map(m => m.id);
         
+        // player_stats 데이터로 매핑 생성
+        const playerStatsMap = new Map();
+        playerStatsData?.forEach(stat => {
+          playerStatsMap.set(stat.id, stat);
+        });
+        
         // 각 선수별 참석 정보 가져오기
         const playerStats = await Promise.all(
           playersData.map(async (player) => {
@@ -98,21 +121,41 @@ export const usePlayerRankings = (year?: number, month?: number) => {
               ? Math.round((attendanceData.length / totalCompletedMatches) * 100)
               : 0;
             
+            // player_stats 데이터 가져오기
+            const playerStatData = playerStatsMap.get(player.id);
+            
+            // 평균 스탯 계산 (소수점 없음)
+            let averageStat = 0;
+            if (playerStatData) {
+              const { pac, sho, pas, dri, def, phy } = playerStatData;
+              const sum = (pac || 0) + (sho || 0) + (pas || 0) + (dri || 0) + (def || 0) + (phy || 0);
+              const count = [pac, sho, pas, dri, def, phy].filter(stat => stat !== undefined && stat !== null).length;
+              averageStat = count > 0 ? Math.round(sum / count) : 0;
+            }
+            
             return {
               id: player.id,
               name: player.name,
               position: player.position,
-              boots_brand: player.boots_brand,
-              fav_club: player.fav_club,
               birthday: player.birthday,
-              daily_mvp: player.daily_mvp,
-              monthly_mvp: player.monthly_mvp,
-              yearly_mvp: player.yearly_mvp,
+              favorite_team: player.fav_club,
+              boots_brand: player.boots_brand,
+              weekly_mvp_count: 0,
+              monthly_mvp_count: 0,
+              yearly_mvp_count: 0,
               games: attendanceData.length,
               goals: totalGoals,
               assists: totalAssists,
               attendance,
-              rating: parseFloat(averageRating.toFixed(1))
+              rating: parseFloat(averageRating.toFixed(1)),
+              // 선수 능력치 데이터
+              avr_stat: averageStat,
+              pac: playerStatData?.pac,
+              sho: playerStatData?.sho,
+              pas: playerStatData?.pas,
+              dri: playerStatData?.dri,
+              def: playerStatData?.def,
+              phy: playerStatData?.phy
             };
           })
         );

@@ -38,13 +38,12 @@ function getAttendanceDeadline(matchDate: string) {
   try {
     // 날짜가 유효한지 확인
     if (!matchDate) {
-      console.warn("유효하지 않은 이벤트 날짜:", matchDate);
       return new Date(); // 기본값으로 현재 날짜 사용
     }
     
     // YYYY-MM-DD 부분만 추출
     const cleanDateString = extractDatePart(matchDate);
-    console.log("정제된 날짜 문자열:", matchDate, "->", cleanDateString);
+    
     
     const eventDate = new Date(cleanDateString);
     
@@ -56,7 +55,6 @@ function getAttendanceDeadline(matchDate: string) {
     
     const deadline = subDays(eventDate, 4);
     deadline.setHours(23, 59, 0, 0);
-    console.log("이벤트 날짜:", cleanDateString, "계산된 마감일:", deadline);
     return deadline;
   } catch (error) {
     console.error("마감일 계산 중 오류:", error);
@@ -73,7 +71,6 @@ function formatDeadline(deadline: Date) {
     }
     
     const formatted = format(deadline, "M월 d일(E) HH:mm", { locale: ko });
-    console.log("마감일 포맷팅:", deadline, "->", formatted);
     return formatted;
   } catch (error) {
     console.error("마감일 포맷팅 중 오류:", error);
@@ -137,71 +134,86 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
       <CardContent>
         <div className="space-y-4">
           {upcomingMatches
-          .filter(match => match.status !== "cancelled")
-          .map((match) => {
-            // 날짜 유효성 검사
-            let matchDeadline: Date;
-            let isMatchDeadlinePassed = false;
-            
-            try {
-              if (match.date) {
-                matchDeadline = getAttendanceDeadline(match.date);
-                isMatchDeadlinePassed = now > matchDeadline;
-              } else {
-                console.warn("이벤트 날짜 정보 없음:", match);
+            .filter(match => {
+              // 취소된 매치 제외
+              if (match.status === "cancelled") return false;
+              
+              // 현재 날짜 기준으로 과거 매치 제외
+              const matchDate = new Date(match.date);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0); // 오늘 자정을 기준으로 비교
+              
+              console.log('[UpcomingMatches 필터링]', {
+                매치날짜: matchDate,
+                오늘날짜: today,
+                표시여부: matchDate >= today
+              });
+              
+              return matchDate >= today;
+            })
+            .map((match) => {
+              // 날짜 유효성 검사
+              let matchDeadline: Date;
+              let isMatchDeadlinePassed = false;
+              
+              try {
+                if (match.date) {
+                  matchDeadline = getAttendanceDeadline(match.date);
+                  isMatchDeadlinePassed = now > matchDeadline;
+                } else {
+                  console.warn("이벤트 날짜 정보 없음:", match);
+                  matchDeadline = new Date();
+                }
+              } catch (error) {
+                console.error("마감일 처리 중 오류:", error);
                 matchDeadline = new Date();
               }
-            } catch (error) {
-              console.error("마감일 처리 중 오류:", error);
-              matchDeadline = new Date();
-            }
-            
-            console.log("이벤트:", match.opponent, "날짜:", match.date, "마감일:", matchDeadline, "마감여부:", isMatchDeadlinePassed);
-            
-            return (
-            <div key={match.id} className="border rounded-lg p-4 bg-white">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div className="mb-4 md:mb-0">
-                  <h3 className="text-xl font-semibold mb-1"> {match.opponent}</h3>
-                  <p className="text-gray-600 mb-1">
-                    {formatMatchDate(match.date)}
-                  </p>
-                  <p className="text-gray-600 mb-3">{match.location}</p>
-                  
-                  <div className="flex gap-4 text-sm">
-                   <div className="flex items-center">
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded-full mr-1">
-                        <Check size={12} />
-                      </span>
-                      <span>참석: {match.attendance.attending}명</span>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-red-500 text-white rounded-full mr-1">
-                        <X size={12} />
-                      </span>
-                      <span>불참: {match.attendance.notAttending}명</span>
+              
+              
+              return (
+              <div key={match.id} className="border rounded-lg p-4 bg-white">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="mb-4 md:mb-0">
+                    <h3 className="text-xl font-semibold mb-1"> {match.opponent}</h3>
+                    <p className="text-gray-600 mb-1">
+                      {formatMatchDate(match.date)}
+                    </p>
+                    <p className="text-gray-600 mb-3">{match.location}</p>
+                    
+                    <div className="flex gap-4 text-sm">
+                     <div className="flex items-center">
+                        <span className="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded-full mr-1">
+                          <Check size={12} />
+                        </span>
+                        <span>참석: {match.attendance.attending}명</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="inline-flex items-center justify-center w-5 h-5 bg-red-500 text-white rounded-full mr-1">
+                          <X size={12} />
+                        </span>
+                        <span>불참: {match.attendance.notAttending}명</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex flex-col gap-2">
-                  <Button 
-                    className="w-full" 
-                    variant="outline"
-                    onClick={() => openAttendanceModal(match.id)}
-                  >
-                    <Eye size={18} className="mr-1" />
-                    참가 현황 보기
-                  </Button>
-                  <div className={`text-xs mt-2 px-2 py-1 border rounded ${isMatchDeadlinePassed ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-500 border-gray-200'}`}>
-                    참석여부 마감: {match.date ? formatDeadline(matchDeadline) : "날짜 정보 없음"}
-                    {isMatchDeadlinePassed && ' (마감됨)'}
+                  
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      className="w-full" 
+                      variant="outline"
+                      onClick={() => openAttendanceModal(match.id)}
+                    >
+                      <Eye size={18} className="mr-1" />
+                      참가 현황 보기
+                    </Button>
+                    <div className={`text-xs mt-2 px-2 py-1 border rounded ${isMatchDeadlinePassed ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-500 border-gray-200'}`}>
+                      참석여부 마감: {match.date ? formatDeadline(matchDeadline) : "날짜 정보 없음"}
+                      {isMatchDeadlinePassed && ' (마감됨)'}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            );
-          })}
+              );
+            })}
           
           {upcomingMatches.length === 0 && (
             <div className="text-center py-8">

@@ -31,12 +31,26 @@ export function useAuth() {
   useEffect(() => {
     const validateSession = async () => {
       const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-      if (!isAuthenticated) return;
+      if (!isAuthenticated) {
+        // 이미 비인증 상태라면 추가 작업 필요 없음
+        return;
+      }
       
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        // 로그인 정보가 없으면 세션 초기화
-        logout();
+        // 로그인 정보가 없으면 세션 초기화 (logout 직접 호출 대신 상태만 업데이트)
+        setUserInfo({
+          userId: null,
+          userName: null,
+          role: null,
+          isAuthenticated: false
+        });
+        
+        // 로컬 스토리지 정리
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userRole');
         return;
       }
       
@@ -50,7 +64,19 @@ export function useAuth() {
           
         if (error || (data && data.is_deleted)) {
           console.error('사용자 정보 검증 실패:', error || '계정이 비활성화되었습니다.');
-          logout();
+          // logout() 직접 호출 대신 상태만 업데이트
+          setUserInfo({
+            userId: null,
+            userName: null,
+            role: null,
+            isAuthenticated: false
+          });
+          
+          // 로컬 스토리지 정리
+          localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('userId');
+          localStorage.removeItem('userName');
+          localStorage.removeItem('userRole');
           return;
         }
         
@@ -59,13 +85,12 @@ export function useAuth() {
           const userRole = data.role || 'player'; // 기본값은 일반회원
           localStorage.setItem('userRole', userRole);
           
-          setUserInfo(prev => ({
-            ...prev,
+          setUserInfo({
             userId: data.id,
             userName: data.name || data.username,
             role: userRole,
             isAuthenticated: true
-          }));
+          });
         }
       } catch (err) {
         console.error('세션 검증 중 오류:', err);
@@ -96,9 +121,15 @@ export function useAuth() {
     return allowedRoles.includes(userInfo.role || '');
   }, [userInfo.role]);
 
-  // 이벤트관리 권한 (감독에게만 부여)
+   // 운영진 (운영진 전부에게 부여)
+   const canManage = useCallback(() => {
+    return hasPermission(['president', 'vice_president', 'coach', 'assistant_coach', 'treasurer']) 
+    // || process.env.NODE_ENV !== 'production';
+  }, [hasPermission]);
+
+  // 이벤트관리 권한 (감독,코치치에게만 부여)
   const canManageMatches = useCallback(() => {
-    return hasPermission(['coach']) 
+    return hasPermission(['coach', 'assistant_coach']) 
     // || process.env.NODE_ENV !== 'production';
   }, [hasPermission]);
 
@@ -136,6 +167,7 @@ export function useAuth() {
     ...userInfo,
     logout,
     hasPermission,
+    canManage,
     canManageMatches,
     canManageAnnouncements,
     canManageFinance,

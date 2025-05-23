@@ -15,7 +15,6 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  console.log("match 객체:", match);
   
   const handleViewResults = () => {
     navigate(`/matches?matchId=${match.id}`);

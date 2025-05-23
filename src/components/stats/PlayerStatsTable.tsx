@@ -1,6 +1,7 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { PlayerStats } from '@/types/dashboard';
 import {
   Table,
   TableBody,
@@ -10,17 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface PlayerStats {
-  id: string;
-  name: string;
-  matchId: number;
-  matchDate: string;
-  attended: boolean;
-  goals: number;
-  assists: number;
-  rating: number;
-  attendanceStatus: string;
-}
 
 interface PlayerStatsTableProps {
   playerStats: PlayerStats[];
