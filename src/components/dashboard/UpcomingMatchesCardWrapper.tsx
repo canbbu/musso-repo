@@ -143,12 +143,6 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
               const today = new Date();
               today.setHours(0, 0, 0, 0); // 오늘 자정을 기준으로 비교
               
-              console.log('[UpcomingMatches 필터링]', {
-                매치날짜: matchDate,
-                오늘날짜: today,
-                표시여부: matchDate >= today
-              });
-              
               return matchDate >= today;
             })
             .map((match) => {

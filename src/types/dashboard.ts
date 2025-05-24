@@ -130,6 +130,7 @@ export interface UpcomingMatch {
   attendingPlayers?: Player[];
   notAttendingPlayers?: Player[];
   pendingPlayers?: Player[];
+  isPast?: boolean; // 과거 이벤트 여부
 }
 
 export interface CalendarEvent {

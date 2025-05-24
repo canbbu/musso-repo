@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key } from 'lucide-react';
-import UserProfileButton from './profile/UserProfileButton';
+// import UserProfileButton from './profile/UserProfileButton';
 
 const AppSidebar = () => {
   const { 
@@ -36,7 +36,7 @@ const AppSidebar = () => {
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
       // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
       { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
-      { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
+      // { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
       { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
     ];
     
@@ -52,11 +52,8 @@ const AppSidebar = () => {
           <div className="mb-2">
             {/* Increased the size by making the parent div larger */}
             <div className="h-16 w-16">
-              <UserProfileButton large={true} />
+              {/* <UserProfileButton large={true} /> */}
             </div>
-          </div>
-          <div className="text-center">
-            <p className="text-sm font-medium">{userName}</p>
           </div>
         </div>
       </SidebarHeader>
@@ -82,12 +79,14 @@ const AppSidebar = () => {
                 <LogOut className="h-5 w-5 mr-3" />
                 <span>로그아웃</span>
               </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton
                 className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                onClick={() => navigate('/change-password')}
+                onClick={() => navigate('/change-profile')}
               >
                 <Key className="h-5 w-5 mr-3" />
-                <span>비밀번호 변경</span>
+                <span>프로필 변경</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

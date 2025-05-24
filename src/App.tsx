@@ -4,7 +4,7 @@ import { AuthProvider, RequireAuth } from '@/components/auth/AuthContext';
 import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory, MyStats, EntirePlayerStats } from './pages';
 import DataTestPage from './pages/DataTestPage';
 import Register from './pages/Register';
-import ChangePassword from './pages/ChangePassword';
+import Profile from './pages/Profile';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -28,7 +28,7 @@ function App() {
               <Route path="/stats-management" element={<StatsManagement />} />
               <Route path="/announcement-management" element={<AnnouncementManagement />} />
               <Route path="/entire-player-stats" element={<EntirePlayerStats />} />
-              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/change-profile" element={<Profile />} />
               {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}
             </Route>
             <Route path="*" element={<NotFound />} />

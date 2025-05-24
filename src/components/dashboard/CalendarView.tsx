@@ -23,12 +23,6 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
 
   // formatDateToLocalString 결과와 calendarEvents 매칭 확인
   const formattedDate = formatDateToLocalString(date);
-  console.log('[CalendarView] 날짜별 데이터:', {
-    현재날짜: date,
-    변환된날짜형식: formattedDate,
-    해당날짜이벤트: calendarEvents[formattedDate],
-    전체이벤트: calendarEvents
-  });
 
   return (
     <Card className="lg:col-span-2 bg-white flex-1 w-full min-w-0 max-w-full">
@@ -104,12 +98,6 @@ const CalendarView = ({ calendarEvents }: CalendarViewProps) => {
             {calendarEvents[formattedDate] ? (
               <ul className="space-y-2">
                 {calendarEvents[formattedDate].map((event, idx) => {
-                  console.log('[CalendarView] 이벤트 데이터:', {
-                    이벤트번호: idx,
-                    이벤트타입: event.type,
-                    이벤트상태: event.status,
-                    이벤트제목: event.title
-                  });
                   
                   return (
                     <li key={idx} className="flex items-center">

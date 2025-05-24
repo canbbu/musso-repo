@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,16 +9,15 @@ import { supabase } from '@/lib/supabase';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/hooks/use-auth';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Navigate } from 'react-router-dom';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ChevronLeft } from 'lucide-react';
 
-const Register = () => {
+const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { canManageAnnouncements } = useAuth();
+  const { userId } = useAuth();
   const [name, setName] = useState('');
-  const [username, setusername] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('player');
+  const [username, setUsername] = useState('');
   const [birthday, setBirthday] = useState('');
   const [position, setPosition] = useState('');
   const [bootsBrand, setBootsBrand] = useState('');
@@ -27,11 +26,9 @@ const Register = () => {
   const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // 회장/부회장 권한 체크
-  if (!canManageAnnouncements()) {
-    return <Navigate to="/dashboard" />;
-  }
+  const [changePassword, setChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   const leagueOptions = [
     { value: 'premier_league', label: '영국 프리미어리그' },
@@ -73,105 +70,6 @@ const Register = () => {
     ],
   };
 
-  const availableClubs = useMemo(() => {
-    return selectedLeague ? clubsByLeague[selectedLeague] : [];
-  }, [selectedLeague]);
-
-  // 리그 선택 시 클럽 초기화
-  const handleLeagueChange = (value: string) => {
-    setSelectedLeague(value);
-    setSelectedClub('');
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      // 유효성 검사
-      if (!name || !username || !password || !birthday || !position || !bootsBrand || !selectedLeague || !selectedClub || !address || !phoneNumber) {
-        toast({
-          title: "회원등록 실패",
-          description: "이름, 아이디, 비밀번호, 생년월일, 포지션, 축구화 브랜드, 선호 리그와 구단, 주소, 연락처를 모두 입력해주세요.",
-          variant: "destructive"
-        });
-        return;
-      }
-      // 닉네임 중복 확인
-      const { data: existingUser, error: checkError } = await supabase
-        .from('players')
-        .select('id')
-        .eq('username', username)
-        .single();
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw new Error('사용자 확인 중 오류가 발생했습니다.');
-      }
-      if (existingUser) {
-        toast({
-          title: "회원등록 실패",
-          description: "이미 사용 중인 닉네임입니다.",
-          variant: "destructive"
-        });
-        return;
-      }
-      // 새 사용자 등록
-      const { data, error } = await supabase
-        .from('players')
-        .insert({
-          name: name,
-          username: username,
-          password: password,
-          role: role,
-          is_deleted: false,
-          birthday: birthday || null,
-          position: position || null,
-          boots_brand: bootsBrand || null,
-          fav_club: selectedClub || null,
-          address: address || null,
-          phone_number: phoneNumber || null
-        })
-        .select()
-        .single();
-      if (error) {
-        throw new Error('회원등록 처리 중 오류가 발생했습니다.');
-      }
-      toast({
-        title: "회원등록 성공",
-        description: `${name} 회원이 축구회에 등록되었습니다.`,
-      });
-      // 입력 필드 초기화
-      setName('');
-      setusername('');
-      setPassword('');
-      setRole('player');
-      setBirthday('');
-      setPosition('');
-      setBootsBrand('');
-      setSelectedLeague('');
-      setSelectedClub('');
-      setAddress('');
-      setPhoneNumber('');
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast({
-        title: "회원등록 실패",
-        description: error instanceof Error ? error.message : "회원등록 중 오류가 발생했습니다.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 역할 옵션
-  const roleOptions = [
-    { value: 'president', label: '회장' },
-    { value: 'vice_president', label: '부회장' },
-    { value: 'coach', label: '감독' },
-    { value: 'assistant_coach', label: '코치' },
-    { value: 'treasurer', label: '회계' },
-    { value: 'player', label: '일반회원' },
-  ];
-
   const positionOptions = [
     { value: 'DF', label: 'DF' },
     { value: 'MF', label: 'MF' },
@@ -189,49 +87,188 @@ const Register = () => {
     { value: 'MIZUNO', label: 'MIZUNO' },
   ];
 
+  const availableClubs = useMemo(() => {
+    return selectedLeague ? clubsByLeague[selectedLeague] : [];
+  }, [selectedLeague]);
+
+  const handleLeagueChange = (value: string) => {
+    setSelectedLeague(value);
+    setSelectedClub('');
+  };
+
+  // 사용자 정보 불러오기
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userId) {
+        navigate('/login');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const { data: userData, error } = await supabase
+          .from('players')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error) throw error;
+
+        if (userData) {
+          setName(userData.name);
+          setUsername(userData.username);
+          setBirthday(userData.birthday || '');
+          setPosition(userData.position || '');
+          setBootsBrand(userData.boots_brand || '');
+          setSelectedClub(userData.fav_club || '');
+          setAddress(userData.address || '');
+          setPhoneNumber(userData.phone_number || '');
+
+          // 선호 구단에 맞는 리그 찾기
+          for (const [league, clubs] of Object.entries(clubsByLeague)) {
+            if (clubs.some(club => club.value === userData.fav_club)) {
+              setSelectedLeague(league);
+              break;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        toast({
+          title: '오류 발생',
+          description: '사용자 정보를 불러오는데 실패했습니다.',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [userId, navigate, toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!userId) {
+      toast({
+        title: '인증 오류',
+        description: '로그인이 필요합니다.',
+        variant: 'destructive'
+      });
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 현재 비밀번호 확인이 필요한 경우
+      if (changePassword) {
+        const { data: userData, error: userError } = await supabase
+          .from('players')
+          .select('password')
+          .eq('id', userId)
+          .single();
+
+        if (userError || !userData) {
+          throw new Error('사용자 정보를 찾을 수 없습니다.');
+        }
+
+        if (userData.password !== currentPassword) {
+          toast({
+            title: '비밀번호 오류',
+            description: '현재 비밀번호가 올바르지 않습니다.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
+
+      // 프로필 업데이트
+      const updateData: any = {
+        birthday: birthday || null,
+        position: position || null,
+        boots_brand: bootsBrand || null,
+        fav_club: selectedClub || null,
+        address: address || null,
+        phone_number: phoneNumber || null,
+      };
+
+      // 비밀번호 변경이 필요한 경우
+      if (changePassword && newPassword) {
+        updateData.password = newPassword;
+      }
+
+      const { error: updateError } = await supabase
+        .from('players')
+        .update(updateData)
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: '성공',
+        description: '프로필이 성공적으로 업데이트되었습니다.'
+      });
+
+      // 비밀번호 변경 관련 상태 초기화
+      setChangePassword(false);
+      setCurrentPassword('');
+      setNewPassword('');
+
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      toast({
+        title: '업데이트 실패',
+        description: error.message || '프로필 업데이트 중 오류가 발생했습니다.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-6">회원 등록</h1>
-        <p className="text-gray-600 mb-8">새로운 회원 정보를 입력하여 등록하세요.</p>
+        <div className="mb-4">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-500 hover:text-gray-700"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            뒤로 가기
+          </Button>
+        </div>
+
+        <h1 className="text-3xl font-bold mb-6">프로필 수정</h1>
+        <p className="text-gray-600 mb-8">회원 정보를 수정할 수 있습니다.</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <Card>
             <CardHeader>
-              <CardTitle>회원 정보 입력</CardTitle>
-              <CardDescription>새 회원의 정보를 입력하세요</CardDescription>
+              <CardTitle>회원 정보 수정</CardTitle>
+              <CardDescription>수정할 정보를 입력하세요</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleRegister} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">이름 (예시: 홍길동_91)</Label>
+                  <Label htmlFor="name">이름</Label>
                   <Input 
                     id="name" 
-                    placeholder="회원 이름을 입력하세요" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={loading}
+                    value={name}
+                    disabled={true}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="username">아이디</Label>
                   <Input 
                     id="username" 
-                    placeholder="사용할 아이디 입력하세요" 
-                    value={username} 
-                    onChange={(e) => setusername(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">비밀번호</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    placeholder="초기 비밀번호를 설정하세요" 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={loading}
+                    value={username}
+                    disabled={true}
                   />
                 </div>
                 <div className="space-y-2">
@@ -278,8 +315,8 @@ const Register = () => {
                   <Label htmlFor="address">주소</Label>
                   <Input 
                     id="address" 
-                    placeholder="주소를 입력하세요" 
-                    value={address} 
+                    placeholder="주소를 입력하세요"
+                    value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     disabled={loading}
                   />
@@ -288,8 +325,8 @@ const Register = () => {
                   <Label htmlFor="phone_number">연락처</Label>
                   <Input 
                     id="phone_number" 
-                    placeholder="연락처를 입력하세요 (예: 010-1234-5678)" 
-                    value={phoneNumber} 
+                    placeholder="연락처를 입력하세요 (예: 010-1234-5678)"
+                    value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     disabled={loading}
                   />
@@ -326,30 +363,54 @@ const Register = () => {
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">역할</Label>
-                  <Select value={role} onValueChange={setRole} disabled={loading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="회원 역할을 선택하세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roleOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    * 역할에 따라 시스템 권한이 다르게 부여됩니다.
-                  </p>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="change-password"
+                      checked={changePassword}
+                      onCheckedChange={(checked: boolean) => {
+                        setChangePassword(checked);
+                        if (!checked) {
+                          setCurrentPassword('');
+                          setNewPassword('');
+                        }
+                      }}
+                    />
+                    <Label htmlFor="change-password">비밀번호 변경</Label>
+                  </div>
+                  {changePassword && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="current-password">현재 비밀번호</Label>
+                        <Input
+                          id="current-password"
+                          type="password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          disabled={!changePassword}
+                          required={changePassword}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new-password">새 비밀번호</Label>
+                        <Input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          disabled={!changePassword}
+                          required={changePassword}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
                 <Button 
                   type="submit" 
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading ? '등록 중...' : '회원 등록'}
+                  {loading ? '업데이트 중...' : '프로필 수정'}
                 </Button>
               </form>
             </CardContent>
@@ -358,28 +419,14 @@ const Register = () => {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>회원 등록 안내</CardTitle>
+                <CardTitle>프로필 수정 안내</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p>축구회 회원 등록은 회장과 부회장만 할 수 있습니다.</p>
-                  <p>회원을 등록하면 초기 비밀번호를 반드시 알려주세요.</p>
-                  <p>회원은 첫 로그인 후 비밀번호를 변경하도록 안내해주세요.</p>
+                  <p>이름과 아이디는 변경할 수 없습니다.</p>
+                  <p>비밀번호를 변경하려면 체크박스를 선택하고 현재 비밀번호를 입력해주세요.</p>
+                  <p>모든 정보는 신중하게 입력해주세요.</p>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>역할별 권한</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li><span className="font-medium">회장/부회장:</span> 회원관리, 공지사항, 일정 관리</li>
-                  <li><span className="font-medium">감독/코치:</span> 이벤트 관리, 기록 관리</li>
-                  <li><span className="font-medium">회계:</span> 재정 관리</li>
-                  <li><span className="font-medium">일반회원:</span> 이벤트 참석 확인, 투표 참여</li>
-                </ul>
               </CardContent>
             </Card>
           </div>
@@ -389,4 +436,4 @@ const Register = () => {
   );
 };
 
-export default Register; 
+export default Profile; 

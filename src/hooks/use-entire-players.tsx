@@ -311,14 +311,6 @@ export const useEntirePlayers = () => {
       return;
     }
     try {
-      console.log('MVP 선정 시도:', {
-        타입: mvpType,
-        선수ID: selectedMvpPlayer,
-        연도: mvpYear,
-        월: mvpMonth,
-        주: mvpWeek,
-        이유: mvpReason
-      });
       
       let success = false;
       

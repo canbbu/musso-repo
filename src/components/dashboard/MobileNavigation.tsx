@@ -10,7 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useAuth } from '@/hooks/use-auth';
-import UserProfileButton from '../profile/UserProfileButton';
+// import UserProfileButton from '../profile/UserProfileButton';
 
 const MobileNavigation = () => {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ const MobileNavigation = () => {
     <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center">
       <h1 className="text-lg font-semibold">축구회 관리</h1>
       <div className="flex items-center gap-2">
-        <UserProfileButton />
+        {/* <UserProfileButton /> */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon">

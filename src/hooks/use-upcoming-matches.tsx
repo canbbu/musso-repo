@@ -13,91 +13,96 @@ export function useUpcomingMatches() {
       try {
         setLoading(true);
         
-        // 오늘 이후의 이벤트만 가져오기
-        const today = new Date().toISOString().split('T')[0];
-        
-        
-        
-        // 기본 매치 데이터 가져오기
+        // 모든 매치 데이터 가져오기 (날짜 제한 없음)
         const { data: allMatches, error: allMatchesError } = await supabase
-        .from('matches')
-        .select('*')
-        .order('date');
-
-        console.log('[전체 매치 데이터]', JSON.stringify(allMatches, null, 2));
+          .from('matches')
+          .select('*')
+          .order('date', { ascending: false }); // 최신 순으로 정렬
 
         if (allMatchesError) {
           console.error('[DB 오류] 매치 조회 실패:', allMatchesError);
           throw allMatchesError;
-        }        
-        
-        
+        }
+
         // 각 매치에 대한 참석 정보 가져오기
         const matchesWithAttendance = await Promise.all(
           (allMatches || []).map(async match => {
-            
-            
-            // 참석 상태별 플레이어 정보 가져오기
-            const { data: attendanceData, error: attendanceError } = await supabase
-              .from('match_attendance')
-              .select(`
-                status,
-                player:players(id, name)
-              `)
-              .eq('match_id', match.id);
-              
-            if (attendanceError) {
-              console.error(`[DB 오류] 매치 ID ${match.id}에 대한 참석 정보 조회 실패:`, attendanceError);
-              throw attendanceError;
-            }
-            
-            
-            
-            // 참석 상태별 플레이어 분류
-            const attending: Player[] = [];
-            const notAttending: Player[] = [];
-            const pending: Player[] = [];
-            
-            attendanceData?.forEach(item => {
-              const player = Array.isArray(item.player) ? item.player[0] as Player : item.player as Player;
-            
-              if (item.status === 'attending') {
-                attending.push(player);
-                
-              } else if (item.status === 'not_attending') {
-                notAttending.push(player);
-                
+            try {
+              // 날짜 파싱
+              const matchDate = new Date(match.date);
+              if (isNaN(matchDate.getTime())) {
+                console.error(`[날짜 오류] 유효하지 않은 날짜 형식: ${match.date}`);
+                return null;
               }
-            });
-            
-            // UpcomingMatch 형식으로 변환
-            const upcomingMatch: UpcomingMatch = {
-              id: match.id,
-              date: new Date(match.date).toLocaleString('ko-KR', {
+
+              // 참석 상태별 플레이어 정보 가져오기
+              const { data: attendanceData, error: attendanceError } = await supabase
+                .from('match_attendance')
+                .select(`
+                  status,
+                  player:players(id, name)
+                `)
+                .eq('match_id', match.id);
+                
+              if (attendanceError) {
+                console.error(`[DB 오류] 매치 ID ${match.id}에 대한 참석 정보 조회 실패:`, attendanceError);
+                throw attendanceError;
+              }
+
+              // 참석 상태별 플레이어 분류
+              const attending: Player[] = [];
+              const notAttending: Player[] = [];
+              const pending: Player[] = [];
+              
+              attendanceData?.forEach(item => {
+                const player = Array.isArray(item.player) ? item.player[0] as Player : item.player as Player;
+                if (item.status === 'attending') {
+                  attending.push(player);
+                } else if (item.status === 'not_attending') {
+                  notAttending.push(player);
+                } else {
+                  pending.push(player);
+                }
+              });
+
+              // 날짜 포맷팅
+              const formattedDate = matchDate.toLocaleString('ko-KR', {
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
                 hour: '2-digit',
-                minute: '2-digit'
-              }).replace(/\. /g, '-').replace(/\./, ''),
-              location: match.location,
-              opponent: match.opponent,
-              status: match.status as 'upcoming' | 'cancelled',
-              attending: attending.length,
-              notAttending: notAttending.length,
-              pending: pending.length,
-              attendingPlayers: attending,
-              notAttendingPlayers: notAttending,
-              pendingPlayers: pending
-            };
-            
-            return upcomingMatch;
+                minute: '2-digit',
+                hour12: false
+              });
+              
+              // UpcomingMatch 형식으로 변환
+              const upcomingMatch: UpcomingMatch = {
+                id: match.id,
+                date: formattedDate,
+                location: match.location,
+                opponent: match.opponent,
+                status: match.status as 'upcoming' | 'cancelled',
+                attending: attending.length,
+                notAttending: notAttending.length,
+                pending: pending.length,
+                attendingPlayers: attending,
+                notAttendingPlayers: notAttending,
+                pendingPlayers: pending,
+                isPast: new Date() > matchDate // 과거 이벤트 여부 추가
+              };
+              
+              return upcomingMatch;
+            } catch (err) {
+              console.error(`[매치 처리 오류] 매치 ID ${match.id}:`, err);
+              return null;
+            }
           })
         );
         
-        console.log('[참석 정보가 포함된 매치 데이터]', JSON.stringify(matchesWithAttendance, null, 2));
+        // null 값 필터링 및 유효한 매치만 설정
+        const validMatches = matchesWithAttendance.filter((match): match is UpcomingMatch => match !== null);
+        setUpcomingMatches(validMatches);
         
-        setUpcomingMatches(matchesWithAttendance);
       } catch (err) {
         setError(err instanceof Error ? err.message : '이벤트 정보를 불러오는 중 오류가 발생했습니다');
         console.error('이벤트 정보를 불러오는 중 오류 발생:', err);
@@ -108,13 +113,12 @@ export function useUpcomingMatches() {
 
     fetchMatches();
     
-    // 실시간 업데이트를 위한 구독 설정 (선택 사항)
+    // 실시간 업데이트를 위한 구독 설정
     const matchesSubscription = supabase
       .channel('matches_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'matches' }, 
-        (payload) => {
-          
+        () => {
           fetchMatches();
         }
       )
@@ -124,27 +128,21 @@ export function useUpcomingMatches() {
       .channel('attendance_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'match_attendance' }, 
-        (payload) => {
-          
+        () => {
           fetchMatches();
         }
       )
       .subscribe();
     
     return () => {
-      
       supabase.removeChannel(matchesSubscription);
-      
       supabase.removeChannel(attendanceSubscription);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 빈 의존성 배열로 컴포넌트 마운트 시에만 실행되도록 수정
+  }, []);
 
   // 참석 상태 업데이트 함수
   const updateAttendance = async (matchId: number, playerId: string, status: 'attending' | 'not_attending' | 'pending') => {
     try {
-      
-      
       // 기존 참석 정보 확인
       const { data: existingData, error: checkError } = await supabase
         .from('match_attendance')
@@ -158,11 +156,7 @@ export function useUpcomingMatches() {
         throw checkError;
       }
       
-      
-      
       if (existingData) {
-        
-        
         // 기존 참석 정보 업데이트
         const { error: updateError } = await supabase
           .from('match_attendance')
@@ -173,11 +167,7 @@ export function useUpcomingMatches() {
           console.error('[DB 오류] 참석 정보 업데이트 실패:', updateError);
           throw updateError;
         }
-        
-        
       } else {
-        
-        
         // 새 참석 정보 추가
         const { error: insertError } = await supabase
           .from('match_attendance')
@@ -191,11 +181,7 @@ export function useUpcomingMatches() {
           console.error('[DB 오류] 새 참석 정보 추가 실패:', insertError);
           throw insertError;
         }
-        
-        
       }
-      
-      // 실시간 업데이트로 상태가 자동으로 갱신되므로 별도의 상태 업데이트는 필요 없음
     } catch (err) {
       setError(err instanceof Error ? err.message : '참석 상태를 업데이트하는 중 오류가 발생했습니다');
       throw err;

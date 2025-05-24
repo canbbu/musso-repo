@@ -47,10 +47,10 @@ const MyStats = () => {
                 driStat={playerStats.dri || 0}
                 defStat={playerStats.def || 0}
                 phyStat={playerStats.phy || 0}
-                bootsBrand={`/images/${playerStats.boots_brand}.jpg`}
-                favoriteTeam={`/images/${playerStats.favorite_team}.jpg`}
+                bootsBrand={`/images/brand/${playerStats.boots_brand}.jpg`}
+                favoriteTeam={`/images/club/${playerStats.favorite_team}.jpg`}
                 teamLogo={`/images/무쏘_누끼.jpg`}
-                playerImageUrl={playerStats.name ? `/images/${playerStats.name}.jpg` : undefined}
+                playerImageUrl={playerStats.name ? `/images/member/${playerStats.name}.jpg` : undefined}
               />
             </div>
             <p className="text-center text-sm text-gray-500 mt-4">카드를 클릭하면 상세 능력치를 확인할 수 있습니다.</p>

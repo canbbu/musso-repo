@@ -22,15 +22,6 @@ const ChangePassword = () => {
   useEffect(() => {
     // 한 번만 실행되도록 설정
     const checkInitialAuth = async () => {
-      console.log('[ChangePassword] 컴포넌트 마운트 - 인증 상태:', { 
-        isAuthenticated, 
-        userId,
-        localStorage: {
-          isAuthenticated: localStorage.getItem('isAuthenticated'),
-          userId: localStorage.getItem('userId'),
-          userName: localStorage.getItem('userName')
-        }
-      });
       
       // 인증 세션 확인 (로그를 위한 확인만 수행, 자동 로그아웃 처리 안함)
       if (isAuthenticated && userId) {
@@ -46,7 +37,7 @@ const ChangePassword = () => {
         
         // 인증되지 않았을 때만 리다이렉트 - 무한 루프 방지를 위해 조건 체크
         if (!isAuthenticated && !window.location.pathname.includes('/login')) {
-          navigate('/login', { state: { returnPath: '/change-password' } });
+          navigate('/login', { state: { returnPath: '/change-profile' } });
         }
       }
     };
@@ -76,7 +67,7 @@ const ChangePassword = () => {
         description: '로그인이 필요합니다.',
         variant: 'destructive'
       });
-      navigate('/login', { state: { returnPath: '/change-password' } });
+      navigate('/login', { state: { returnPath: '/change-profile' } });
       return;
     }
 
@@ -140,12 +131,6 @@ const ChangePassword = () => {
         .eq('id', userId)
         .single();
 
-      console.log('[ChangePassword] players 테이블 쿼리 결과', { 
-        success: !playerError, 
-        playerData, 
-        error: playerError ? playerError.message : null
-      });
-
       if (playerError || !playerData) {
         
         toast({
@@ -205,7 +190,7 @@ const ChangePassword = () => {
       });
     } finally {
       setIsLoading(false);
-      console.log('[ChangePassword] 처리 완료');
+      
     }
   };
 

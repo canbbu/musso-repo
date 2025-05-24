@@ -286,11 +286,7 @@ export function useMatchData() {
       // 날짜 및 상태 정규화
       const formattedDate = normalizeDate(matchData.date);
       const formattedStatus = normalizeStatus(matchData.status);
-      
-      console.log('[DB 처리] 정규화된 데이터:', { 
-        date: formattedDate, 
-        status: formattedStatus 
-      });
+
       
       const { data, error } = await supabase
         .from('matches')
