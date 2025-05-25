@@ -35,6 +35,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useEntirePlayers } from '@/hooks/use-entire-players';
+import { Player } from '@/types/dashboard';
 
 const EntirePlayerStats = () => {
   const {
@@ -84,6 +85,7 @@ const EntirePlayerStats = () => {
 
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [showDetailInfo, setShowDetailInfo] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   
   // 컬럼 필터 변경 핸들러
   const handleColumnFilterChange = (column: string, value: string) => {
@@ -317,9 +319,75 @@ const EntirePlayerStats = () => {
     }
   };
 
-  // 실제 표시할 필터링된 선수들
-  const displayPlayers = filteredPlayers;
+  // 역할을 한국어로 변환하는 함수
+  const translateRole = (role: string): string => {
+    const roleMap: { [key: string]: string } = {
+      'president': '회장',
+      'vice_president': '부회장',
+      'player': '일반회원',
+      'coach': '감독',
+      'assistant_coach': '코치',
+      'treasurer':'회계'
+    };
+    return roleMap[role] || role;
+  };
 
+  // 정렬 핸들러
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // 정렬된 선수 목록
+  const sortedPlayers = useMemo(() => {
+    if (!sortConfig) return filteredPlayers;
+
+    return [...filteredPlayers].sort((a, b) => {
+      const aValue = a[sortConfig.key as keyof Player] || 0;
+      const bValue = b[sortConfig.key as keyof Player] || 0;
+      
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aValue.localeCompare(bValue, 'ko') 
+          : bValue.localeCompare(aValue, 'ko');
+      }
+      
+      if (sortConfig.direction === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      }
+      return aValue < bValue ? 1 : -1;
+    });
+  }, [filteredPlayers, sortConfig]);
+
+  // 정렬 아이콘 렌더링
+  const renderSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return '↕';
+    }
+    return sortConfig.direction === 'asc' ? '↑' : '↓';
+  };
+
+  // 정렬 가능한 컬럼 헤더 렌더링
+  const renderSortableHeader = (title: string, key: string, width: string = 'w-[120px]') => {
+    return (
+      <div 
+        className={`p-3 ${width} font-medium border-r cursor-pointer hover:bg-gray-50`}
+        onClick={() => handleSort(key)}
+      >
+        <div className="flex items-center justify-center gap-1">
+          {title} <span className="text-gray-400">{renderSortIcon(key)}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // 실제 표시할 필터링된 선수들
+  const displayPlayers = useMemo(() => {
+    return sortedPlayers;
+  }, [sortedPlayers]);
 
   return (
     <Layout>
@@ -417,25 +485,30 @@ const EntirePlayerStats = () => {
                     {/* 고정 헤더 - 세로 스크롤에만 고정, 가로 스크롤에는 함께 이동 */}
                     <div className="sticky top-0 z-20 bg-white border-b" style={{ position: 'sticky', top: 0 }}>
                       <div className="flex">
-                        <div className="sticky left-0 bg-white z-30 w-[120px] p-3 font-medium border-r" style={{ position: 'sticky', left: 0 }}>
+                        {/* <div className="sticky left-0 bg-white z-30 w-[120px] p-3 font-medium border-r" style={{ position: 'sticky', left: 0 }}>
                           이름
-                        </div>
-                        <div className="p-3 w-[120px] font-medium border-r">포지션</div>
-                        <div className="p-3 w-[120px] font-medium border-r">역할</div>
-                        <div className="p-3 w-[80px] font-medium border-r text-center">경기수</div>
+                        </div> */}
+                        {renderSortableHeader('이름', 'name')}
+                        {renderSortableHeader('포지션', 'position')}
+                        {renderSortableHeader('경기수', 'games')}
+                        {renderSortableHeader('골', 'goals')}
+                        {renderSortableHeader('어시스트', 'assists')}
+                        {renderSortableHeader('출석률(%)', 'attendance_rate')}
+                        {renderSortableHeader('평균 평점', 'average_rating')}
+                        {/* <div className="p-3 w-[80px] font-medium border-r text-center">경기수</div>
                         <div className="p-3 w-[80px] font-medium border-r text-center">골</div>
                         <div className="p-3 w-[80px] font-medium border-r text-center">어시스트</div>
                         <div className="p-3 w-[100px] font-medium border-r text-center">출석률(%)</div>
-                        <div className="p-3 w-[100px] font-medium border-r text-center">평균 평점</div>
+                        <div className="p-3 w-[100px] font-medium border-r text-center">평균 평점</div> */}
                         
                         {showDetailInfo && (
                           <>
-                            <div className="p-3 w-[120px] font-medium border-r">생년월일</div>
-                            <div className="p-3 w-[120px] font-medium border-r">신발 브랜드</div>
-                            <div className="p-3 w-[120px] font-medium border-r">선호 구단</div>
-                            <div className="p-3 w-[100px] font-medium border-r text-center">주간 MVP 수</div>
-                            <div className="p-3 w-[100px] font-medium border-r text-center">월간 MVP 수</div>
-                            <div className="p-3 w-[100px] font-medium border-r text-center">연간 MVP 수</div>
+                            {renderSortableHeader('생년월일', 'birthday')}
+                            {renderSortableHeader('신발 브랜드', 'boots_brand')}
+                            {renderSortableHeader('선호 구단', 'fav_club')}
+                            {renderSortableHeader('주간 MVP 수', 'weekly_mvp_count', 'w-[100px]')}
+                            {renderSortableHeader('월간 MVP 수', 'monthly_mvp_count', 'w-[100px]')}
+                            {renderSortableHeader('연간 MVP 수', 'yearly_mvp_count', 'w-[100px]')}
                           </>
                         )}
                         
@@ -454,13 +527,12 @@ const EntirePlayerStats = () => {
                               {player.name || '-'}
                             </div>
                             <div className="p-3 w-[120px] border-r">{player.position || '-'}</div>
-                            <div className="p-3 w-[120px] border-r">{player.role}</div>
-                            <div className="p-3 w-[80px] border-r text-center">{player.games || 0}</div>
-                            <div className="p-3 w-[80px] border-r text-center">{player.goals || 0}</div>
-                            <div className="p-3 w-[80px] border-r text-center">{player.assists || 0}</div>
-                            <div className="p-3 w-[100px] border-r text-center">{player.attendance_rate || 0}%</div>
-                            <div className="p-3 w-[100px] border-r text-center">{player.rating || 0}</div>
-                            
+                            <div className="p-3 w-[120px] border-r">{translateRole(player.role)}</div>
+                            <div className="p-3 w-[120px] border-r text-center">{player.games || 0}</div>
+                            <div className="p-3 w-[120px] border-r text-center">{player.goals || 0}</div>
+                            <div className="p-3 w-[120px] border-r text-center">{player.assists || 0}</div>
+                            <div className="p-3 w-[120px] border-r text-center">{player.attendance_rate || 0}%</div>
+                            <div className="p-3 w-[120px] border-r text-center">{player.rating || 0}</div>
                             {showDetailInfo && (
                               <>
                                 <div className="p-3 w-[120px] border-r">{player.birthday || '-'}</div>
@@ -471,7 +543,6 @@ const EntirePlayerStats = () => {
                                 <div className="p-3 w-[100px] border-r text-center">{player.yearly_mvp_count || 0}</div>
                               </>
                             )}
-                            
                             <div className="sticky right-0 bg-white z-10 p-3 w-[80px] flex justify-center" style={{ position: 'sticky', right: 0 }}>
                               <Button
                                 variant="ghost"

@@ -152,10 +152,16 @@ export const useEntirePlayers = () => {
           })
         );
         
+        // 이름순으로 정렬
+        const sortedPlayers = playersWithStats.sort((a, b) => {
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return nameA.localeCompare(nameB, 'ko');
+        });
         
-        setPlayers(playersWithStats || []);
+        setPlayers(sortedPlayers || []);
         // 초기 필터링된 데이터 설정 (전체 데이터)
-        setFilteredPlayers(playersWithStats || []);
+        setFilteredPlayers(sortedPlayers || []);
       } catch (error) {
         console.error('[에러] 선수 데이터 로드 실패:', error);
         toast({

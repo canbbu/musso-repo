@@ -16,6 +16,8 @@ export interface Player {
   attendance_rate?: number;
   rating?: number;
   attendances?: any[]; // 참석 기록 데이터
+  address?: string;
+  phone_number?: string;
 }
 
 // MVP 타입 (주간/월간/년간)

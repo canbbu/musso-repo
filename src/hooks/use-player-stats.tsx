@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase'; // 경로는 실제 위치에 맞게 수정
 
@@ -110,7 +109,6 @@ export const usePlayerStats = () => {
 
       // 선수별 playerStats 생성
       const selectedMatchData = matches.find(m => m.id === selectedMatch);
-      // 선수별 playerStats 생성
       const stats: PlayerStats[] = players.map(player => ({
         id: player.id,
         name: player.name,
@@ -122,10 +120,17 @@ export const usePlayerStats = () => {
         rating: attendanceMap[player.id]?.rating || 0,
       }));
 
-      // 출석 상태별로 정렬
+      // 먼저 이름순으로 정렬 후, 출석 상태별로 정렬
       stats.sort((a, b) => {
+        // 1차: 출석 상태로 정렬
         const order = { attending: 0, not_attending: 1, pending: 2 };
-        return order[a.attendanceStatus] - order[b.attendanceStatus];
+        const statusDiff = order[a.attendanceStatus] - order[b.attendanceStatus];
+        
+        // 같은 출석 상태인 경우 이름순으로 정렬
+        if (statusDiff === 0) {
+          return a.name.localeCompare(b.name, 'ko');
+        }
+        return statusDiff;
       });
 
       setPlayerStats(stats);
