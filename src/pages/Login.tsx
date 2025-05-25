@@ -18,7 +18,7 @@ const Login = () => {
     // Check if already logged in
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     if (isAuthenticated === 'true') {
-      navigate('/dashboard');
+      navigate('/');
     }
   }, [navigate]);
 
@@ -66,7 +66,7 @@ const Login = () => {
         description: `${data.name || data.username}님, 환영합니다!`,
       });
       
-      navigate('/dashboard');
+      navigate('/');
     } catch (error) {
       toast({
         title: "로그인 실패",
