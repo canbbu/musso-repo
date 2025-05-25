@@ -18,7 +18,7 @@ const Login = () => {
     // Check if already logged in
     const isAuthenticated = localStorage.getItem('isAuthenticated');
     if (isAuthenticated === 'true') {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [navigate]);
 
@@ -55,18 +55,25 @@ const Login = () => {
         throw new Error('비밀번호가 일치하지 않습니다.');
       }
       
-      // 로그인 성공
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userId', data.id);
-      localStorage.setItem('userName', data.name || data.username);
-      localStorage.setItem('userRole', data.role || 'player'); // 역할 저장
-      
+      // 로그인 성공 시 로컬 스토리지 업데이트
+      await Promise.all([
+        localStorage.setItem('isAuthenticated', 'true'),
+        localStorage.setItem('userId', data.id),
+        localStorage.setItem('userName', data.name || data.username),
+        localStorage.setItem('userRole', data.role || 'player')
+      ]);
+
+      // 토스트 메시지 표시
       toast({
         title: "로그인 성공",
         description: `${data.name || data.username}님, 환영합니다!`,
       });
       
-      navigate('/');
+      // 모든 작업이 완료된 후 페이지 이동
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 500);
+      
     } catch (error) {
       toast({
         title: "로그인 실패",
