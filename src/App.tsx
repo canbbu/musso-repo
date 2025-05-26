@@ -14,12 +14,12 @@ function App() {
       <Router>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            {/* <Route path="/" element={<Navigate to="/login" replace />} /> */}
             <Route path="/login" element={<Login />} />
             <Route element={<RequireAuth />}>
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/register" element={<Register />} />
               <Route path="/data-test" element={<DataTestPage />} />
-              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/matches" element={<MatchManagement />} />
               <Route path="/match-history" element={<MatchHistory />} />
               <Route path="/finance" element={<Finance />} />
