@@ -278,7 +278,7 @@ const Register = () => {
                   <Label htmlFor="address">주소</Label>
                   <Input 
                     id="address" 
-                    placeholder="주소를 입력하세요" 
+                    placeholder="예) 사이타마현 카와구치시 와라비역" 
                     value={address} 
                     onChange={(e) => setAddress(e.target.value)}
                     disabled={loading}
