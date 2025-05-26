@@ -490,6 +490,7 @@ const EntirePlayerStats = () => {
                         </div> */}
                         {renderSortableHeader('이름', 'name')}
                         {renderSortableHeader('포지션', 'position')}
+                        {renderSortableHeader('역할할', 'role')}
                         {renderSortableHeader('경기수', 'games')}
                         {renderSortableHeader('골', 'goals')}
                         {renderSortableHeader('어시스트', 'assists')}

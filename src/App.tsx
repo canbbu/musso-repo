@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider, RequireAuth } from '@/components/auth/AuthContext';
 import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory, MyStats, EntirePlayerStats } from './pages';
 import DataTestPage from './pages/DataTestPage';
@@ -14,7 +14,7 @@ function App() {
       <Router>
         <AuthProvider>
           <Routes>
-            {/* <Route path="/" element={<Index />} /> */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route element={<RequireAuth />}>
               <Route path="/register" element={<Register />} />
