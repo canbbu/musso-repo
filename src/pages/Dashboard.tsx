@@ -11,16 +11,30 @@ import UpcomingMatchesCardWrapper from '@/components/dashboard/UpcomingMatchesCa
 import MvpVotingCard from '@/components/dashboard/MvpVotingCard';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useMatchData, Match } from '@/hooks/use-match-data';
+import { useActivityLogs } from '@/hooks/use-activity-logs';
+import ActivityStatsModal from '@/components/admin/ActivityStatsModal';
 import { supabase } from '@/lib/supabase';
 
 const Dashboard = () => {
-  const { userName, canManageAnnouncements } = useAuth();
+  const { userName, canManageAnnouncements, canManageSystem, isSystemManager, role } = useAuth();
   const isMobile = useIsMobile();
   const { announcements, matchAnnouncements, upcomingMatches, calendarEvents, loading, error } = useDashboardData();
   const { checkForTodaysMatch, handleAttendanceChange } = useMatchData();
+  const { logUserLogin, logUserLogout, currentSession, updatePageView } = useActivityLogs();
   const [todaysCompletedMatch, setTodaysCompletedMatch] = useState<Match | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+  const [showActivityStats, setShowActivityStats] = useState(false);
   
+  // 권한 디버깅 로그 추가
+  useEffect(() => {
+    console.log('[권한 디버깅]', {
+      userName,
+      role,
+      canManageSystem: canManageSystem(),
+      isSystemManager: isSystemManager()
+    });
+  }, [userName, role, canManageSystem, isSystemManager]);
+
   // Supabase 연결 상태 확인
   useEffect(() => {
     const checkConnection = async () => {
@@ -66,6 +80,37 @@ const Dashboard = () => {
     },
     userResponse: null
   }));
+  
+  // 사용자 접속 로그 기록
+  useEffect(() => {
+    const recordUserLogin = async () => {
+      if (userName && !currentSession) {
+        console.log('[Dashboard] 사용자 로그인 시도:', userName);
+        await logUserLogin({
+          user_name: userName
+        });
+      }
+    };
+
+    recordUserLogin();
+  }, [userName]); // logUserLogin과 currentSession을 의존성에서 제거
+
+  // 페이지 이동 시 페이지 뷰 업데이트 (초기 접속 제외)
+  useEffect(() => {
+    // 세션이 있고, 이미 1회 이상 페이지뷰가 있는 경우만 업데이트
+    if (currentSession && currentSession.page_views > 1) {
+      updatePageView();
+    }
+  }, []); // 빈 의존성 배열로 한 번만 실행
+
+  // 컴포넌트 언마운트 시 로그아웃 기록
+  useEffect(() => {
+    return () => {
+      if (currentSession) {
+        logUserLogout();
+      }
+    };
+  }, []); // 빈 의존성 배열로 cleanup 함수만 설정
   
   // 로딩 상태 처리
   if (loading) {
@@ -137,7 +182,26 @@ const Dashboard = () => {
     <Layout>
       <div className={`mb-6 ${isMobile ? "mt-16" : ""}`}>
         <h1 className="text-3xl font-bold mb-2">대시보드</h1>
-        <p className="text-gray-600">안녕하세요, {userName}님! 무쏘 홈페이지에 오신 것을 환영합니다.</p>
+        <div className="flex items-center gap-2">
+          <p className="text-gray-600">안녕하세요, {userName}님! 무쏘 홈페이지에 오신 것을 환영합니다.</p>
+          {isSystemManager && (
+            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full border border-red-200">
+              🔧 시스템관리자
+            </span>
+          )}
+        </div>
+        
+        {/* 시스템 관리자 전용 - 사용자 활동 통계 */}
+        {canManageSystem() && (
+          <div className="mt-4">
+            <button
+              onClick={() => setShowActivityStats(true)}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-md"
+            >
+              🔧 시스템 관리 - 사용자 활동 통계
+            </button>
+          </div>
+        )}
       </div>
       
       {/* 데이터 상태 디버깅 정보 (개발용) */}
@@ -177,6 +241,12 @@ const Dashboard = () => {
           upcomingMatches={convertedUpcomingMatches || []} 
         />
       </div>
+
+      {/* 활동 통계 모달 */}
+      <ActivityStatsModal 
+        isOpen={showActivityStats}
+        onClose={() => setShowActivityStats(false)}
+      />
     </Layout>
   );
 };

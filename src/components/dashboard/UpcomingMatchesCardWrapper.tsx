@@ -145,6 +145,12 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
               
               return matchDate >= today;
             })
+            .sort((a, b) => {
+              // 날짜순으로 정렬 (가까운 날짜가 먼저)
+              const dateA = new Date(a.date);
+              const dateB = new Date(b.date);
+              return dateA.getTime() - dateB.getTime();
+            })
             .map((match) => {
               // 날짜 유효성 검사
               let matchDeadline: Date;

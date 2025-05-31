@@ -121,33 +121,33 @@ export function useAuth() {
     return allowedRoles.includes(userInfo.role || '');
   }, [userInfo.role]);
 
-   // 운영진 (운영진 전부에게 부여)
+   // 운영진 (운영진 전부에게 부여 + 시스템관리자)
    const canManage = useCallback(() => {
-    return hasPermission(['president', 'vice_president', 'coach', 'assistant_coach', 'treasurer']) 
+    return hasPermission(['president', 'vice_president', 'coach', 'assistant_coach', 'treasurer', 'system-manager']) 
     // || process.env.NODE_ENV !== 'production';
   }, [hasPermission]);
 
-  // 이벤트관리 권한 (감독,코치치에게만 부여)
+  // 이벤트관리 권한 (감독,코치에게만 부여 + 시스템관리자)
   const canManageMatches = useCallback(() => {
-    return hasPermission(['coach', 'assistant_coach']) 
+    return hasPermission(['coach', 'assistant_coach', 'system-manager']) 
     // || process.env.NODE_ENV !== 'production';
   }, [hasPermission]);
 
-  // 공지사항 및 일정 관리 권한 (회장, 부회장에게만 부여)
+  // 공지사항 및 일정 관리 권한 (회장, 부회장에게만 부여 + 시스템관리자)
   const canManageAnnouncements = useCallback(() => {
-    return hasPermission(['president', 'vice_president']) 
+    return hasPermission(['president', 'vice_president', 'system-manager']) 
     // || process.env.NODE_ENV !== 'production';
   }, [hasPermission]);
 
-  // 재정 관리 권한 (회계에게만 부여)
+  // 재정 관리 권한 (회계에게만 부여 + 시스템관리자)
   const canManageFinance = useCallback(() => {
-    return hasPermission(['treasurer']) 
+    return hasPermission(['treasurer', 'system-manager']) 
     // || process.env.NODE_ENV !== 'production';
   }, [hasPermission]);
 
-  // 선수 기록 관리 권한 (감독, 코치에게만 부여)
+  // 선수 기록 관리 권한 (감독, 코치에게만 부여 + 시스템관리자)
   const canManagePlayerStats = useCallback(() => {
-    return hasPermission(['coach', 'assistant_coach']) 
+    return hasPermission(['coach', 'assistant_coach', 'system-manager']) 
     // || process.env.NODE_ENV !== 'production';
   }, [hasPermission]);
 
@@ -157,10 +157,49 @@ export function useAuth() {
     // || process.env.NODE_ENV !== 'production';
   }, [userInfo.isAuthenticated]);
 
-  // 관리자 여부 체크
+  // 관리자 여부 체크 (+ 시스템관리자)
   const isAdmin = useCallback(() => {
-    return hasPermission(['president', 'vice_president', 'coach']) 
+    return hasPermission(['president', 'vice_president', 'coach', 'system-manager']) 
     // || process.env.NODE_ENV !== 'production';
+  }, [hasPermission]);
+
+  // 시스템관리자 권한 (system-manager에게만 부여 - 모든 권한 포함)
+  const isSystemManager = useCallback(() => {
+    const result = hasPermission(['system-manager']);
+    console.log('[권한체크] isSystemManager:', { userRole: userInfo.role, result });
+    return result;
+  }, [hasPermission, userInfo.role]);
+
+  // 시스템 관리 권한 (사용자 활동 통계, 시스템 설정 등)
+  const canManageSystem = useCallback(() => {
+    const result = hasPermission(['system-manager']);
+    console.log('[권한체크] canManageSystem:', { userRole: userInfo.role, result });
+    return result;
+  }, [hasPermission, userInfo.role]);
+
+  // 모든 권한 함수에 시스템관리자 권한 추가
+  const canManageWithSystemAdmin = useCallback(() => {
+    return hasPermission(['president', 'vice_president', 'coach', 'assistant_coach', 'treasurer', 'system-manager']);
+  }, [hasPermission]);
+
+  const canManageMatchesWithSystemAdmin = useCallback(() => {
+    return hasPermission(['coach', 'assistant_coach', 'system-manager']);
+  }, [hasPermission]);
+
+  const canManageAnnouncementsWithSystemAdmin = useCallback(() => {
+    return hasPermission(['president', 'vice_president', 'system-manager']);
+  }, [hasPermission]);
+
+  const canManageFinanceWithSystemAdmin = useCallback(() => {
+    return hasPermission(['treasurer', 'system-manager']);
+  }, [hasPermission]);
+
+  const canManagePlayerStatsWithSystemAdmin = useCallback(() => {
+    return hasPermission(['coach', 'assistant_coach', 'system-manager']);
+  }, [hasPermission]);
+
+  const isAdminWithSystemAdmin = useCallback(() => {
+    return hasPermission(['president', 'vice_president', 'coach', 'system-manager']);
   }, [hasPermission]);
 
   return {
@@ -173,6 +212,14 @@ export function useAuth() {
     canManageFinance,
     canManagePlayerStats,
     canAccessBasicFeatures,
-    isAdmin
+    isAdmin,
+    isSystemManager,
+    canManageSystem,
+    canManageWithSystemAdmin,
+    canManageMatchesWithSystemAdmin,
+    canManageAnnouncementsWithSystemAdmin,
+    canManageFinanceWithSystemAdmin,
+    canManagePlayerStatsWithSystemAdmin,
+    isAdminWithSystemAdmin
   };
 }
