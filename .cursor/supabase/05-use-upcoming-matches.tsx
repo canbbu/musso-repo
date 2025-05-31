@@ -84,7 +84,6 @@ export function useUpcomingMatches() {
         setUpcomingMatches(matchesWithAttendance);
       } catch (err) {
         setError(err instanceof Error ? err.message : '이벤트 정보를 불러오는 중 오류가 발생했습니다');
-        console.error('이벤트 정보를 불러오는 중 오류 발생:', err);
       } finally {
         setLoading(false);
       }

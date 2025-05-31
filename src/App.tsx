@@ -14,9 +14,12 @@ function App() {
       <Router>
         <AuthProvider>
           <Routes>
-            {/* <Route path="/" element={<Navigate to="/login" replace />} /> */}
+            {/* 인증이 필요하지 않은 페이지들 */}
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
+            <Route path="*" element={<NotFound />} />
+            
+            {/* 인증이 필요한 페이지들 */}
             <Route element={<RequireAuth />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/register" element={<Register />} />
@@ -32,7 +35,6 @@ function App() {
               <Route path="/change-profile" element={<Profile />} />
               {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}
             </Route>
-            <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
         </AuthProvider>

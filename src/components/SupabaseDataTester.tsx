@@ -159,7 +159,6 @@ export function SupabaseDataTester() {
         if (error) throw error;
         setTableData(data || []);
       } catch (err) {
-        console.error(`Error fetching ${activeTable} data:`, err);
         setError(err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다');
         setTableData([]);
       } finally {

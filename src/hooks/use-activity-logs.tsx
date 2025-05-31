@@ -90,7 +90,7 @@ export function useActivityLogs() {
         page_views: 1
       };
 
-      console.log('[활동로그] 새 세션 생성 시도:', { sessionId, userName: userData.user_name });
+      
 
       const { data, error } = await supabase
         .from('user_activity_logs')
@@ -117,7 +117,7 @@ export function useActivityLogs() {
 
       setCurrentSession(session);
       setHasLoggedIn(true);
-      console.log('[활동로그] 접속 로그 기록 성공:', session);
+      
       
       return session;
     } catch (err) {
@@ -177,7 +177,7 @@ export function useActivityLogs() {
       if (error) {
         console.error('[활동로그] 접속 종료 로그 기록 실패:', error);
       } else {
-        console.log('[활동로그] 접속 종료 로그 기록 성공:', { sessionId: currentSession.session_id, durationMinutes });
+        
       }
     } catch (err) {
       console.error('[활동로그] 접속 종료 로그 기록 중 오류:', err);
@@ -218,7 +218,7 @@ export function useActivityLogs() {
   // 중복 로그 정리 (관리자용)
   const cleanupDuplicateLogs = useCallback(async () => {
     try {
-      console.log('[활동로그] 중복 로그 정리 시작...');
+      
       
       // 같은 시간(분 단위)에 생성된 중복 로그들을 찾아서 정리
       const { data: duplicateLogs, error: selectError } = await supabase
@@ -233,7 +233,7 @@ export function useActivityLogs() {
       }
 
       if (!duplicateLogs || duplicateLogs.length === 0) {
-        console.log('[활동로그] 정리할 중복 로그가 없습니다.');
+        
         return true;
       }
 
@@ -265,7 +265,7 @@ export function useActivityLogs() {
           return false;
         }
 
-        console.log(`[활동로그] ${logsToDelete.length}개의 중복 로그를 정리했습니다.`);
+        
       }
 
       return true;

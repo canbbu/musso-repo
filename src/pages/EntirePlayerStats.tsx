@@ -138,6 +138,7 @@ const EntirePlayerStats = () => {
       boots_brand: new Set(),
       fav_club: new Set(),
       role: new Set(),
+      address: new Set(),
     };
     
     players.forEach(player => {
@@ -146,6 +147,7 @@ const EntirePlayerStats = () => {
       if (player.boots_brand) uniqueValues.boots_brand.add(player.boots_brand);
       if (player.fav_club) uniqueValues.fav_club.add(player.fav_club);
       if (player.role) uniqueValues.role.add(player.role);
+      if (player.address) uniqueValues.address.add(player.address);
     });
     
     // Set을 정렬된 배열로 변환
@@ -155,6 +157,7 @@ const EntirePlayerStats = () => {
       boots_brand: Array.from(uniqueValues.boots_brand).sort().filter(value => value !== ""),
       fav_club: Array.from(uniqueValues.fav_club).sort().filter(value => value !== ""),
       role: Array.from(uniqueValues.role).sort().filter(value => value !== ""),
+      address: Array.from(uniqueValues.address).sort().filter(value => value !== ""),
     };
   }, [players]);
 
@@ -249,7 +252,7 @@ const EntirePlayerStats = () => {
   const renderColumnFilterHeader = (title: string, column: keyof typeof players[0]) => {
     // 필터가 필요하지 않은 컬럼들
     if (column === 'name' || column === 'weekly_mvp_count' || column === 'monthly_mvp_count' || column === 'yearly_mvp_count'
-        || column === 'goals' || column === 'assists' || column === 'games' || column === 'attendance_rate' || column === 'rating') {
+        || column === 'goals' || column === 'assists' || column === 'games' || column === 'attendance_rate' || column === 'rating' || column === 'average_rating') {
       return <TableHead>{title}</TableHead>;
     }
     
@@ -348,6 +351,17 @@ const EntirePlayerStats = () => {
     return [...filteredPlayers].sort((a, b) => {
       const aValue = a[sortConfig.key as keyof Player] || 0;
       const bValue = b[sortConfig.key as keyof Player] || 0;
+      
+      // 평점 필드는 숫자로 처리
+      if (sortConfig.key === 'rating' || sortConfig.key === 'average_rating') {
+        const aNum = typeof aValue === 'number' ? aValue : parseFloat(aValue.toString()) || 0;
+        const bNum = typeof bValue === 'number' ? bValue : parseFloat(bValue.toString()) || 0;
+        
+        if (sortConfig.direction === 'asc') {
+          return aNum - bNum;
+        }
+        return bNum - aNum;
+      }
       
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         return sortConfig.direction === 'asc' 
@@ -507,6 +521,7 @@ const EntirePlayerStats = () => {
                             {renderSortableHeader('생년월일', 'birthday')}
                             {renderSortableHeader('신발 브랜드', 'boots_brand')}
                             {renderSortableHeader('선호 구단', 'fav_club')}
+                            {renderSortableHeader('주소', 'address')}
                             {renderSortableHeader('주간 MVP 수', 'weekly_mvp_count', 'w-[100px]')}
                             {renderSortableHeader('월간 MVP 수', 'monthly_mvp_count', 'w-[100px]')}
                             {renderSortableHeader('연간 MVP 수', 'yearly_mvp_count', 'w-[100px]')}
@@ -539,6 +554,7 @@ const EntirePlayerStats = () => {
                                 <div className="p-3 w-[120px] border-r">{player.birthday || '-'}</div>
                                 <div className="p-3 w-[120px] border-r">{player.boots_brand || '-'}</div>
                                 <div className="p-3 w-[120px] border-r">{player.fav_club || '-'}</div>
+                                <div className="p-3 w-[120px] border-r">{player.address || '-'}</div>
                                 <div className="p-3 w-[100px] border-r text-center">{player.weekly_mvp_count || 0}</div>
                                 <div className="p-3 w-[100px] border-r text-center">{player.monthly_mvp_count || 0}</div>
                                 <div className="p-3 w-[100px] border-r text-center">{player.yearly_mvp_count || 0}</div>

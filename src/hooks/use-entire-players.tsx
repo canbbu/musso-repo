@@ -125,6 +125,19 @@ export const useEntirePlayers = () => {
             
             if (attendanceError) throw attendanceError;
             
+            // MVP 횟수 가져오기
+            const { data: mvpData, error: mvpError } = await supabase
+              .from('mvp')
+              .select('mvp_type')
+              .eq('player_id', player.id);
+            
+            if (mvpError) throw mvpError;
+            
+            // MVP 타입별 횟수 계산
+            const weeklyMvpCount = mvpData.filter(mvp => mvp.mvp_type === 'weekly').length;
+            const monthlyMvpCount = mvpData.filter(mvp => mvp.mvp_type === 'monthly').length;
+            const yearlyMvpCount = mvpData.filter(mvp => mvp.mvp_type === 'yearly').length;
+            
             // 골, 어시스트 합계 계산
             const totalGoals = attendanceData.reduce((sum, match) => sum + (match.goals || 0), 0);
             const totalAssists = attendanceData.reduce((sum, match) => sum + (match.assists || 0), 0);
@@ -147,6 +160,9 @@ export const useEntirePlayers = () => {
               assists: totalAssists,
               attendance_rate: attendance,
               rating: parseFloat(averageRating.toFixed(1)),
+              weekly_mvp_count: weeklyMvpCount,
+              monthly_mvp_count: monthlyMvpCount,
+              yearly_mvp_count: yearlyMvpCount,
               attendances: attendanceData // 원본 참석 데이터도 저장
             };
           })

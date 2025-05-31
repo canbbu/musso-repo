@@ -39,7 +39,6 @@ export function useAnnouncementData() {
 
       setAnnouncements(formattedData);
     } catch (error) {
-      console.error('공지사항 불러오기 오류:', error);
       toast({
         title: "오류 발생",
         description: "공지사항을 불러오는 중 오류가 발생했습니다.",
@@ -98,7 +97,6 @@ export function useAnnouncementData() {
       
       return createdItem;
     } catch (error) {
-      console.error('공지사항 생성 오류:', error);
       toast({
         title: "오류 발생",
         description: "공지사항 등록 중 오류가 발생했습니다.",

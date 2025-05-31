@@ -27,12 +27,18 @@ export function RequireAuth() {
   const { isAuthenticated } = useAuthContext();
   const location = useLocation();
 
-  // 이미 리다이렉션 중인 경우 루프 방지
-  if (!isAuthenticated && !location.pathname.includes('/login')) {
-    // Redirect to login page but save the current location
+  console.log('[DEBUG] RequireAuth 체크:', {
+    isAuthenticated,
+    currentPath: location.pathname
+  });
+
+  // 인증되지 않은 경우 로그인 페이지로 리다이렉트
+  if (!isAuthenticated) {
+    
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // If authenticated, render the child routes
+  // 인증된 경우 자식 라우트 렌더링
+  
   return <Outlet />;
 }

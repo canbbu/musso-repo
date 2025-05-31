@@ -33,7 +33,6 @@ export function useAnnouncements() {
         setAnnouncements(formattedAnnouncements);
       } catch (err) {
         setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
-        console.error('공지사항을 불러오는 중 오류 발생:', err);
       } finally {
         setLoading(false);
       }

@@ -22,42 +22,12 @@ const Dashboard = () => {
   const { checkForTodaysMatch, handleAttendanceChange } = useMatchData();
   const { logUserLogin, logUserLogout, currentSession, updatePageView } = useActivityLogs();
   const [todaysCompletedMatch, setTodaysCompletedMatch] = useState<Match | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking');
   const [showActivityStats, setShowActivityStats] = useState(false);
   
   // 권한 디버깅 로그 추가
   useEffect(() => {
-    console.log('[권한 디버깅]', {
-      userName,
-      role,
-      canManageSystem: canManageSystem(),
-      isSystemManager: isSystemManager()
-    });
   }, [userName, role, canManageSystem, isSystemManager]);
 
-  // Supabase 연결 상태 확인
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        console.log('[DEBUG] Supabase 연결 상태 확인 중...');
-        const { data, error } = await supabase.from('players').select('count(*)', { count: 'exact' }).limit(1);
-        
-        if (error) {
-          console.error('[ERROR] Supabase 연결 실패:', error);
-          setConnectionStatus('error');
-        } else {
-          console.log('[DEBUG] Supabase 연결 성공');
-          setConnectionStatus('connected');
-        }
-      } catch (err) {
-        console.error('[ERROR] Supabase 연결 테스트 중 오류:', err);
-        setConnectionStatus('error');
-      }
-    };
-
-    checkConnection();
-  }, []);
-  
   useEffect(() => {
     const match = checkForTodaysMatch();
     if (match) {
@@ -85,7 +55,7 @@ const Dashboard = () => {
   useEffect(() => {
     const recordUserLogin = async () => {
       if (userName && !currentSession) {
-        console.log('[Dashboard] 사용자 로그인 시도:', userName);
+        
         await logUserLogin({
           user_name: userName
         });
@@ -150,14 +120,6 @@ const Dashboard = () => {
             <p className="text-red-500 font-medium mb-2">데이터 로딩 중 오류가 발생했습니다</p>
             <p className="text-gray-600 text-sm mb-4">{error}</p>
             
-            {/* 디버깅 정보 */}
-            <div className="bg-gray-100 p-4 rounded-lg text-left text-sm mb-4">
-              <p><strong>연결 상태:</strong> {connectionStatus === 'connected' ? '✅ 연결됨' : connectionStatus === 'error' ? '❌ 연결 실패' : '🔄 확인 중'}</p>
-              <p><strong>사용자:</strong> {userName || '미인증'}</p>
-              <p><strong>모바일:</strong> {isMobile ? '예' : '아니오'}</p>
-              <p><strong>시간:</strong> {new Date().toLocaleString('ko-KR')}</p>
-            </div>
-            
             <div className="space-y-2">
               <button 
                 onClick={() => window.location.reload()} 
@@ -166,7 +128,7 @@ const Dashboard = () => {
                 새로고침
               </button>
               <button 
-                onClick={() => console.log('Dashboard debug info:', { announcements, upcomingMatches, connectionStatus, error })} 
+                onClick={() => console.log('[디버깅] 에러 정보:', { error, userName, isMobile })} 
                 className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
               >
                 콘솔 로그 출력
@@ -207,7 +169,7 @@ const Dashboard = () => {
       {/* 데이터 상태 디버깅 정보 (개발용) */}
       {process.env.NODE_ENV === 'development' && (
         <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded text-sm">
-          <p><strong>DEBUG:</strong> 공지사항: {announcements.length}개, 이벤트: {upcomingMatches.length}개, 연결: {connectionStatus}</p>
+          <p><strong>DEBUG:</strong> 공지사항: {announcements.length}개, 이벤트: {upcomingMatches.length}개</p>
         </div>
       )}
       
