@@ -11,6 +11,7 @@ export function useUpcomingMatches() {
   useEffect(() => {
     async function fetchMatches() {
       try {
+        console.log('[DEBUG] 이벤트 데이터 fetch 시작');
         setLoading(true);
         
         // 모든 매치 데이터 가져오기 (날짜 제한 없음)
@@ -24,10 +25,14 @@ export function useUpcomingMatches() {
           throw allMatchesError;
         }
 
+        console.log('[DEBUG] 조회된 매치 수:', allMatches?.length || 0);
+
         // 각 매치에 대한 참석 정보 가져오기
         const matchesWithAttendance = await Promise.all(
           (allMatches || []).map(async match => {
             try {
+              console.log(`[DEBUG] 매치 ${match.id} 처리 중...`);
+              
               // 날짜 파싱
               const matchDate = new Date(match.date);
               if (isNaN(matchDate.getTime())) {
@@ -48,6 +53,8 @@ export function useUpcomingMatches() {
                 console.error(`[DB 오류] 매치 ID ${match.id}에 대한 참석 정보 조회 실패:`, attendanceError);
                 throw attendanceError;
               }
+
+              console.log(`[DEBUG] 매치 ${match.id} 참석 정보:`, attendanceData?.length || 0, '개');
 
               // 참석 상태별 플레이어 분류
               const attending: Player[] = [];
@@ -91,6 +98,7 @@ export function useUpcomingMatches() {
                 isPast: new Date() > matchDate // 과거 이벤트 여부 추가
               };
               
+              console.log(`[DEBUG] 매치 ${match.id} 변환 완료:`, upcomingMatch);
               return upcomingMatch;
             } catch (err) {
               console.error(`[매치 처리 오류] 매치 ID ${match.id}:`, err);
@@ -101,12 +109,14 @@ export function useUpcomingMatches() {
         
         // null 값 필터링 및 유효한 매치만 설정
         const validMatches = matchesWithAttendance.filter((match): match is UpcomingMatch => match !== null);
+        console.log('[DEBUG] 최종 유효한 매치 수:', validMatches.length);
         setUpcomingMatches(validMatches);
         
       } catch (err) {
+        console.error('[ERROR] 이벤트 정보를 불러오는 중 오류 발생:', err);
         setError(err instanceof Error ? err.message : '이벤트 정보를 불러오는 중 오류가 발생했습니다');
-        console.error('이벤트 정보를 불러오는 중 오류 발생:', err);
       } finally {
+        console.log('[DEBUG] 이벤트 데이터 fetch 완료');
         setLoading(false);
       }
     }

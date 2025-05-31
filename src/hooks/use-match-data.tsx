@@ -14,7 +14,7 @@ export interface Match {
   date: string;
   location: string;
   opponent: string;
-  status: 'upcoming' | 'ongoing' | 'completed' | 'upcoming' | 'cancelled';
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   attendance: Attendance;
   userResponse?: 'attending' | 'notAttending' | 'pending' | null;
   score?: string;
@@ -118,10 +118,15 @@ export function useMatchData() {
           // 기본 상태는 DB에 저장된 상태 사용
           let status = match.status as Match['status'];
           
-          // DB에 취소로 저장된 경우가 아니면서, 날짜가 지난 경우 'completed'로 변경
-          if (matchDate < today) {
+          // cancelled 상태가 아니면서, 날짜가 지난 경우에만 'completed'로 변경
+          // cancelled 상태는 날짜와 관계없이 유지
+          if (status !== 'cancelled' && matchDate < today) {
             status = 'completed';
-          } 
+          } else if (status !== 'cancelled' && matchDate >= today) {
+            // cancelled가 아니고 미래 날짜면 upcoming으로 설정
+            status = 'upcoming';
+          }
+          // cancelled 상태는 그대로 유지
           return {
             id: match.id,
             date: match.date,
@@ -277,6 +282,8 @@ export function useMatchData() {
     if (['upcoming', 'completed', 'cancelled'].includes(status)) {
       return status; // 허용된 상태는 그대로 유지
     }
+    // 허용되지 않는 상태는 기본값 'upcoming'으로 설정
+    return 'upcoming';
   };
 
   const createMatch = async (matchData: MatchFormData, created_by: string) => {

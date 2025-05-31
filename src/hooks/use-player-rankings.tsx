@@ -172,10 +172,41 @@ export const usePlayerRankings = (year?: number, month?: number) => {
   }, [year, month]); // 연도나 월이 변경되면 데이터 다시 불러오기
   
   // Get the top players in each category
-  const goalRanking = [...players].sort((a, b) => b.goals - a.goals);
-  const assistRanking = [...players].sort((a, b) => b.assists - a.assists);
-  const attendanceRanking = [...players].sort((a, b) => b.attendance - a.attendance);
-  const ratingRanking = [...players].sort((a, b) => b.rating - a.rating);
+  const goalRanking = [...players].sort((a, b) => {
+    // 1차 정렬: 득점 수 (높은 순)
+    if (b.goals !== a.goals) {
+      return b.goals - a.goals;
+    }
+    // 2차 정렬: 경기 수 (적은 순)
+    return a.games - b.games;
+  });
+  
+  const assistRanking = [...players].sort((a, b) => {
+    // 1차 정렬: 어시스트 수 (높은 순)
+    if (b.assists !== a.assists) {
+      return b.assists - a.assists;
+    }
+    // 2차 정렬: 경기 수 (적은 순)
+    return a.games - b.games;
+  });
+  
+  const attendanceRanking = [...players].sort((a, b) => {
+    // 1차 정렬: 출석률 (높은 순)
+    if (b.attendance !== a.attendance) {
+      return b.attendance - a.attendance;
+    }
+    // 2차 정렬: 경기 수 (많은 순)
+    return b.games - a.games;
+  });
+  
+  const ratingRanking = [...players].sort((a, b) => {
+    // 1차 정렬: 평점 (높은 순)
+    if (b.rating !== a.rating) {
+      return b.rating - a.rating;
+    }
+    // 2차 정렬: 경기 수 (많은 순)
+    return b.games - a.games;
+  });
   
   const getCurrentRanking = () => {
     switch (activeTab) {
