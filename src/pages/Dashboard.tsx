@@ -20,9 +20,10 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const { announcements, matchAnnouncements, upcomingMatches, calendarEvents, loading, error } = useDashboardData();
   const { checkForTodaysMatch, handleAttendanceChange } = useMatchData();
-  const { logUserLogin, logUserLogout, currentSession, updatePageView } = useActivityLogs();
+  const { logUserLogin, logUserLogout, currentSession, updatePageView, cleanupStaleSessions, cleanupDuplicateLogs } = useActivityLogs();
   const [todaysCompletedMatch, setTodaysCompletedMatch] = useState<Match | null>(null);
   const [showActivityStats, setShowActivityStats] = useState(false);
+  const [isCleaningLogs, setIsCleaningLogs] = useState(false);
   
   // 권한 디버깅 로그 추가
   useEffect(() => {
@@ -81,6 +82,46 @@ const Dashboard = () => {
       }
     };
   }, []); // 빈 의존성 배열로 cleanup 함수만 설정
+
+  // 세션 정리 함수
+  const handleCleanupSessions = async () => {
+    if (!canManageSystem()) return;
+    
+    setIsCleaningLogs(true);
+    try {
+      
+      // 오래된 세션 정리
+      const staleResult = await cleanupStaleSessions();
+      
+      // 잠시 대기 (서버 부하 방지)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 중복 로그 정리
+      const duplicateResult = await cleanupDuplicateLogs();
+      
+      // 결과 종합
+      const totalProcessed = (staleResult?.processed || 0) + (duplicateResult?.deleted || 0);
+      
+      if (staleResult?.success && duplicateResult?.success) {
+        if (totalProcessed > 0) {
+          alert(`✅ 세션 정리가 완료되었습니다!\n\n📊 정리된 항목:\n• 오래된 세션: ${staleResult.processed}개\n• 중복 로그: ${duplicateResult.deleted}개\n• 총 ${totalProcessed}개 정리`);
+        } else {
+          alert('✅ 세션 정리가 완료되었습니다!\n\n정리할 항목이 없었습니다.');
+        }
+      } else {
+        const errorMessages = [];
+        if (!staleResult?.success) errorMessages.push('오래된 세션 정리 실패');
+        if (!duplicateResult?.success) errorMessages.push('중복 로그 정리 실패');
+        
+        alert(`⚠️ 세션 정리 중 일부 오류가 발생했습니다:\n\n${errorMessages.join('\n')}\n\n콘솔을 확인해주세요.`);
+      }
+    } catch (error) {
+      console.error('🚨 세션 정리 중 전체 오류:', error);
+      alert(`❌ 세션 정리 중 오류가 발생했습니다.\n\n오류: ${error instanceof Error ? error.message : '알 수 없는 오류'}\n\n콘솔을 확인해주세요.`);
+    } finally {
+      setIsCleaningLogs(false);
+    }
+  };
   
   // 로딩 상태 처리
   if (loading) {
@@ -128,7 +169,7 @@ const Dashboard = () => {
                 새로고침
               </button>
               <button 
-                onClick={() => console.log('[디버깅] 에러 정보:', { error, userName, isMobile })} 
+                onClick={() => console.log(error)} 
                 className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
               >
                 콘솔 로그 출력
@@ -153,14 +194,21 @@ const Dashboard = () => {
           )}
         </div>
         
-        {/* 시스템 관리자 전용 - 사용자 활동 통계 */}
+        {/* 시스템 관리자 전용 - 사용자 활동 통계 및 세션 관리 */}
         {canManageSystem() && (
-          <div className="mt-4">
+          <div className="mt-4 flex gap-2 flex-wrap">
             <button
               onClick={() => setShowActivityStats(true)}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-md"
             >
-              🔧 시스템 관리 - 사용자 활동 통계
+              📊 사용자 활동 통계
+            </button>
+            <button
+              onClick={handleCleanupSessions}
+              disabled={isCleaningLogs}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCleaningLogs ? '🔄 정리 중...' : '🧹 세션 정리'}
             </button>
           </div>
         )}
@@ -170,6 +218,9 @@ const Dashboard = () => {
       {process.env.NODE_ENV === 'development' && (
         <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded text-sm">
           <p><strong>DEBUG:</strong> 공지사항: {announcements.length}개, 이벤트: {upcomingMatches.length}개</p>
+          {currentSession && (
+            <p><strong>세션:</strong> ID {currentSession.id}, 페이지뷰: {currentSession.page_views}회</p>
+          )}
         </div>
       )}
       
