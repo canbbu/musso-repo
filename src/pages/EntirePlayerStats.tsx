@@ -252,7 +252,7 @@ const EntirePlayerStats = () => {
   const renderColumnFilterHeader = (title: string, column: keyof typeof players[0]) => {
     // 필터가 필요하지 않은 컬럼들
     if (column === 'name' || column === 'weekly_mvp_count' || column === 'monthly_mvp_count' || column === 'yearly_mvp_count'
-        || column === 'goals' || column === 'assists' || column === 'games' || column === 'attendance_rate' || column === 'rating' || column === 'average_rating') {
+        || column === 'goals' || column === 'assists' || column === 'games' || column === 'attendance_rate' || column === 'rating') {
       return <TableHead>{title}</TableHead>;
     }
     
@@ -353,7 +353,7 @@ const EntirePlayerStats = () => {
       const bValue = b[sortConfig.key as keyof Player] || 0;
       
       // 평점 필드는 숫자로 처리
-      if (sortConfig.key === 'rating' || sortConfig.key === 'average_rating') {
+      if (sortConfig.key === 'rating') {
         const aNum = typeof aValue === 'number' ? aValue : parseFloat(aValue.toString()) || 0;
         const bNum = typeof bValue === 'number' ? bValue : parseFloat(bValue.toString()) || 0;
         
@@ -509,7 +509,7 @@ const EntirePlayerStats = () => {
                         {renderSortableHeader('골', 'goals')}
                         {renderSortableHeader('어시스트', 'assists')}
                         {renderSortableHeader('출석률(%)', 'attendance_rate')}
-                        {renderSortableHeader('평균 평점', 'average_rating')}
+                        {renderSortableHeader('평균 평점', 'rating')}
                         {/* <div className="p-3 w-[80px] font-medium border-r text-center">경기수</div>
                         <div className="p-3 w-[80px] font-medium border-r text-center">골</div>
                         <div className="p-3 w-[80px] font-medium border-r text-center">어시스트</div>
