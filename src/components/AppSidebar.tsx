@@ -8,10 +8,11 @@ import {
   SidebarMenuItem, 
   SidebarMenuButton,
   SidebarFooter,
-  SidebarHeader
+  SidebarHeader,
+  SidebarSeparator
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key } from 'lucide-react';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users } from 'lucide-react';
 // import UserProfileButton from './profile/UserProfileButton';
 
 const AppSidebar = () => {
@@ -35,9 +36,9 @@ const AppSidebar = () => {
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
       // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
-      { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
+      // { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
       // { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
-      { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
+      // { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
     ];
     
     return baseItems.filter(item => item.alwaysShow || item.show);
@@ -89,6 +90,40 @@ const AppSidebar = () => {
                 <span>프로필 변경</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarSeparator />
+            {canManage() && (
+              <>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="text-green-500 hover:text-green-600 hover:bg-green-50"
+                    onClick={() => navigate('/attendance-status')}
+                  >
+                    <Users className="h-5 w-5 mr-3" />
+                    <span>출석현황</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className="text-purple-500 hover:text-purple-600 hover:bg-purple-50"
+                    onClick={() => navigate('/entire-player-stats')}
+                  >
+                    <Database className="h-5 w-5 mr-3" />
+                    <span>선수 전체 통계</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </>
+            )}
+            {canManageAnnouncements() && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className="text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                  onClick={() => navigate('/register')}
+                >
+                  <UserPlus className="h-5 w-5 mr-3" />
+                  <span>회원 등록</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

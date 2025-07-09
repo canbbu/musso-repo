@@ -17,7 +17,6 @@ const MyStats = () => {
   
   // Find player stats based on username (in a real app, this would be more robust)
   const playerStats = players.find(p => p.name === userName) || players[0];
-
   
   const attendanceRate = playerStats.attendance;
   const goalEfficiency = Math.round((playerStats.goals / playerStats.games) * 100);
@@ -40,7 +39,7 @@ const MyStats = () => {
               <FlipPlayerCard
                 name={playerStats.name}
                 position={playerStats.position}
-                rating={playerStats.avr_stat || 0}
+                rating={playerStats.rating || 0}
                 pacStat={playerStats.pac || 0}
                 shoStat={playerStats.sho || 0}
                 pasStat={playerStats.pas || 0}

@@ -39,7 +39,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       {/* 왼쪽 세로 배너 */}
       <div className="absolute left-0 top-0 h-full w-20 bg-red-600 flex flex-col items-center">
         {/* 등급 */}
-        <span className="text-5xl font-bold text-white mt-4">{rating}</span>
+        <span className="text-5xl font-bold text-white mt-4">{rating * 10}</span>
         
         {/* 포지션 */}
         <span className="text-xl font-bold text-white mt-1">{position}</span>

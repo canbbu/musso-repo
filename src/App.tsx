@@ -5,6 +5,7 @@ import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Login, M
 import DataTestPage from './pages/DataTestPage';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import AttendanceStatus from './pages/AttendanceStatus';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -33,6 +34,7 @@ function App() {
               <Route path="/announcement-management" element={<AnnouncementManagement />} />
               <Route path="/entire-player-stats" element={<EntirePlayerStats />} />
               <Route path="/change-profile" element={<Profile />} />
+              <Route path="/attendance-status" element={<AttendanceStatus />} />
               {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}
             </Route>
           </Routes>
