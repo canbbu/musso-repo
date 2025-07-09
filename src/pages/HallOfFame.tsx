@@ -205,29 +205,32 @@ const HallOfFame = () => {
     const isMonthly = type === 'monthly';
     
     return (
-      <div className="relative group">
-        {/* MVP 배지 */}
-        <div className="absolute -top-2 -right-2 z-30">
-          <Badge 
-            className={`${
-              isMonthly 
-                ? 'bg-gradient-to-r from-yellow-500 to-amber-500 border-yellow-300 text-white shadow-lg' 
-                : 'bg-gradient-to-r from-blue-500 to-indigo-500 border-blue-300 text-white shadow-lg'
-            } ${isMonthly ? 'px-3 py-1 text-xs' : 'px-2 py-0.5 text-xs'} font-bold`}
-          >
-            {isMonthly ? (
-              <Crown className={`${isMonthly ? 'w-3 h-3' : 'w-2.5 h-2.5'} mr-1`} />
-            ) : (
-              <Star className={`${isMonthly ? 'w-3 h-3' : 'w-2.5 h-2.5'} mr-1`} />
-            )}
-            {isMonthly ? '월간 MVP' : `${getWeekText(mvp.week)} MVP`}
-          </Badge>
-        </div>
-        
+      <div className="relative">
         {/* 선수 카드 */}
-        <div className={`transform transition-all duration-300 group-hover:scale-110 group-hover:z-50 relative ${
-          !isMonthly ? 'scale-90' : ''
-        }`}>
+        <div 
+          className={`transform transition-transform duration-300 ease-in-out hover:scale-125 hover:z-50 relative ${
+            !isMonthly ? 'scale-50 sm:scale-60 md:scale-75' : 'scale-75 sm:scale-90 md:scale-100'
+          }`}
+        >
+          {/* MVP 배지 */}
+          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 z-30">
+            <Badge 
+              className={`${
+                isMonthly 
+                  ? 'bg-gradient-to-r from-yellow-500 to-amber-500 border-yellow-300 text-white shadow-lg' 
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-500 border-blue-300 text-white shadow-lg'
+              } px-1.5 py-0.5 text-xs font-bold whitespace-nowrap`}
+            >
+              {isMonthly ? (
+                <Crown className="w-2.5 h-2.5 mr-1" />
+              ) : (
+                <Star className="w-2.5 h-2.5 mr-1" />
+              )}
+              <span className="hidden sm:inline">{isMonthly ? '월간 MVP' : `${getWeekText(mvp.week)} MVP`}</span>
+              <span className="sm:hidden">{isMonthly ? '월간' : `${mvp.week}주`}</span>
+            </Badge>
+          </div>
+          
           <FlipPlayerCard
             name={player.name}
             position={player.position || 'MID'}
@@ -244,32 +247,6 @@ const HallOfFame = () => {
             playerImageUrl={player.name ? `/images/member/${player.name}.jpg` : undefined}
           />
         </div>
-        
-        {/* MVP 정보 카드 */}
-        <Card className={`mt-4 transition-all duration-300 group-hover:shadow-lg ${
-          isMonthly 
-            ? 'bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200' 
-            : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
-        }`}>
-          <CardContent className={`${isMonthly ? 'p-4' : 'p-3'}`}>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className={`${isMonthly ? 'text-sm' : 'text-xs'} font-medium text-gray-600`}>수상일</span>
-                <span className={`${isMonthly ? 'text-sm' : 'text-xs'} text-gray-700`}>
-                  {new Date(mvp.created_at).toLocaleDateString('ko-KR')}
-                </span>
-              </div>
-              {mvp.reason && (
-                <div>
-                  <span className={`${isMonthly ? 'text-sm' : 'text-xs'} font-medium text-gray-600 block mb-1`}>수상 사유</span>
-                  <p className={`${isMonthly ? 'text-sm' : 'text-xs'} text-gray-700 leading-relaxed`}>
-                    {mvp.reason}
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   };
@@ -286,20 +263,20 @@ const HallOfFame = () => {
 
   return (
     <Layout>
-      <div className="space-y-8 p-1">
+      <div className="space-y-6 sm:space-y-8 p-1">
         {/* 헤더 섹션 */}
-        <div className="bg-gradient-to-r from-yellow-50 via-amber-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-r from-yellow-50 via-amber-50 to-orange-50 rounded-xl p-4 sm:p-6 border border-yellow-200">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-                <Crown className="w-8 h-8 text-yellow-600" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+                <Crown className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600" />
                 명예의 전당
               </h1>
-              <p className="text-gray-600">우수한 활동으로 인정받은 선수들의 영예로운 기록들을 만나보세요</p>
+              <p className="text-sm sm:text-base text-gray-600">우수한 활동으로 인정받은 선수들의 영예로운 기록들을 만나보세요</p>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant="outline" className="text-sm bg-white/80 backdrop-blur-sm border-yellow-300 text-yellow-700">
-                <Trophy className="w-4 h-4 mr-1" />
+              <Badge variant="outline" className="text-xs sm:text-sm bg-white/80 backdrop-blur-sm border-yellow-300 text-yellow-700">
+                <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 MVP 기록
               </Badge>
             </div>
@@ -308,21 +285,21 @@ const HallOfFame = () => {
 
         {/* 필터 섹션 */}
         <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-t-lg">
-            <CardTitle className="flex items-center gap-2 text-lg">
+          <CardHeader className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-t-lg p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
               필터 설정
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   연도
                 </label>
                 <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
-                  <SelectTrigger className="h-11 border-gray-200 focus:border-yellow-400 focus:ring-yellow-100">
+                  <SelectTrigger className="h-10 sm:h-11 border-gray-200 focus:border-yellow-400 focus:ring-yellow-100">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -344,7 +321,7 @@ const HallOfFame = () => {
                   value={selectedMonth?.toString() || "all"} 
                   onValueChange={(value) => setSelectedMonth(value === "all" ? undefined : parseInt(value))}
                 >
-                  <SelectTrigger className="h-11 border-gray-200 focus:border-yellow-400 focus:ring-yellow-100">
+                  <SelectTrigger className="h-10 sm:h-11 border-gray-200 focus:border-yellow-400 focus:ring-yellow-100">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -364,10 +341,10 @@ const HallOfFame = () => {
         {/* MVP 목록 */}
         {Object.keys(groupedMVPs).length === 0 ? (
           <Card className="shadow-xl border-0 bg-white">
-            <CardContent className="p-16 text-center">
-              <Crown className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">MVP 기록이 없습니다</h3>
-              <p className="text-gray-500">
+            <CardContent className="p-8 sm:p-16 text-center">
+              <Crown className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">MVP 기록이 없습니다</h3>
+              <p className="text-sm sm:text-base text-gray-500">
                 {selectedMonth 
                   ? `${selectedYear}년 ${getMonthName(selectedMonth)}에 선정된 MVP가 없습니다.`
                   : `${selectedYear}년에 선정된 MVP가 없습니다.`
@@ -376,7 +353,7 @@ const HallOfFame = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {Object.entries(groupedMVPs)
               .sort(([a], [b]) => parseInt(b) - parseInt(a)) // 최신 월부터 표시
               .map(([month, mvps]) => (
@@ -391,15 +368,15 @@ const HallOfFame = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                       {/* 월간 MVP */}
                       {mvps.monthly.length > 0 && (
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-4 sm:mb-6 flex items-center justify-center lg:justify-start gap-2">
                             <Crown className="w-5 h-5 text-yellow-600" />
                             월간 MVP
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
                             {mvps.monthly.map(mvp => (
                               <MVPPlayerCard key={mvp.id} mvp={mvp} type="monthly" />
                             ))}
@@ -410,15 +387,24 @@ const HallOfFame = () => {
                       {/* 주간 MVP */}
                       {mvps.weekly.length > 0 && (
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-4 sm:mb-6 flex items-center justify-center lg:justify-start gap-2">
                             <Star className="w-5 h-5 text-blue-600" />
                             주간 MVP
                           </h3>
-                          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="flex justify-center items-center overflow-visible px-16">
                             {mvps.weekly
                               .sort((a, b) => (b.week || 0) - (a.week || 0)) // 최신 주차부터
-                              .map(mvp => (
-                                <MVPPlayerCard key={mvp.id} mvp={mvp} type="weekly" />
+                              .map((mvp, index) => (
+                                <div 
+                                  key={mvp.id} 
+                                  className={`relative ${index > 0 ? '-ml-40 sm:-ml-48 md:-ml-56' : ''}`}
+                                  style={{ 
+                                    zIndex: mvps.weekly.length - index,
+                                    transition: 'transform 0.3s ease-in-out'
+                                  }}
+                                >
+                                  <MVPPlayerCard mvp={mvp} type="weekly" />
+                                </div>
                               ))}
                           </div>
                         </div>

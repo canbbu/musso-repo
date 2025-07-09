@@ -57,15 +57,15 @@ const MobileNavigation = () => {
               <span className="sr-only">Menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[240px] sm:w-[300px]">
-            <SheetHeader className="pb-4">
+          <SheetContent side="right" className="w-[240px] sm:w-[300px] flex flex-col">
+            <SheetHeader className="pb-4 flex-shrink-0">
               <SheetTitle>메뉴</SheetTitle>
             </SheetHeader>
-            <div className="border-b pb-4 mb-4">
+            <div className="border-b pb-4 mb-4 flex-shrink-0">
               <p className="text-sm text-gray-500">안녕하세요, {userName}님</p>
             </div>
-            <nav>
-              <ul className="space-y-2">
+            <nav className="flex-1 overflow-y-auto">
+              <ul className="space-y-2 pb-4">
                 {navItems.map((item) => (
                   <li key={item.path}>
                     <Button
