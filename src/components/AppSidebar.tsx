@@ -12,7 +12,7 @@ import {
   SidebarSeparator
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users } from 'lucide-react';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown } from 'lucide-react';
 // import UserProfileButton from './profile/UserProfileButton';
 
 const AppSidebar = () => {
@@ -35,6 +35,7 @@ const AppSidebar = () => {
       { title: '이벤트 관리', path: '/matches', icon: Calendar, show: true }, // Show to everyone
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
+      { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: true, color: 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' },
       // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
       // { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
       // { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
@@ -64,10 +65,10 @@ const AppSidebar = () => {
             {navItems.map((item) => (
               <SidebarMenuItem key={item.path}>
                 <SidebarMenuButton
-                  className={location.pathname === item.path ? "bg-primary/10" : ""}
+                  className={`${location.pathname === item.path ? "bg-primary/10" : ""} ${item.color || ""}`}
                   onClick={() => navigate(item.path)}
                 >
-                  <item.icon className="h-5 w-5 mr-3 text-primary" />
+                  <item.icon className={`h-5 w-5 mr-3 ${item.color ? item.color.split(' ')[0] : 'text-primary'}`} />
                   <span>{item.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>

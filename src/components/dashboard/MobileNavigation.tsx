@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database,UserPlus } from 'lucide-react';
+import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Crown, Key, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -33,10 +33,11 @@ const MobileNavigation = () => {
       { title: '이벤트 관리', path: '/matches', icon: Calendar, show: true }, // Show to everyone
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
+      { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: true },
       // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
-      { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
+      // { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
       // { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
-      { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
+      // { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
     ];
     
     return baseItems.filter(item => item.alwaysShow || item.show);
@@ -69,13 +70,19 @@ const MobileNavigation = () => {
                   <li key={item.path}>
                     <Button
                       variant={location.pathname === item.path ? "default" : "ghost"}
-                      className="w-full justify-start text-left"
+                      className={`w-full justify-start text-left ${
+                        item.path === '/hall-of-fame' 
+                          ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
+                          : ''
+                      }`}
                       onClick={() => {
                         navigate(item.path);
                         setMobileMenuOpen(false);
                       }}
                     >
-                      <item.icon className="h-4 w-4 mr-2" />
+                      <item.icon className={`h-4 w-4 mr-2 ${
+                        item.path === '/hall-of-fame' ? 'text-yellow-600' : ''
+                      }`} />
                       {item.title}
                     </Button>
                   </li>
@@ -93,6 +100,67 @@ const MobileNavigation = () => {
                     로그아웃
                   </Button>
                 </li>
+                <li>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-left text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                    onClick={() => {
+                      navigate('/change-profile');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <Key className="h-4 w-4 mr-2" />
+                    프로필 변경
+                  </Button>
+                </li>
+                <li className="pt-2 border-t mt-2">
+                  {/* Separator line */}
+                </li>
+                {canManage() && (
+                  <>
+                    <li>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left text-green-500 hover:text-green-600 hover:bg-green-50"
+                        onClick={() => {
+                          navigate('/attendance-status');
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        출석현황
+                      </Button>
+                    </li>
+                    <li>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left text-purple-500 hover:text-purple-600 hover:bg-purple-50"
+                        onClick={() => {
+                          navigate('/entire-player-stats');
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <Database className="h-4 w-4 mr-2" />
+                        선수 전체 통계
+                      </Button>
+                    </li>
+                  </>
+                )}
+                {canManageAnnouncements() && (
+                  <li>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-left text-orange-500 hover:text-orange-600 hover:bg-orange-50"
+                      onClick={() => {
+                        navigate('/register');
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      회원 등록
+                    </Button>
+                  </li>
+                )}
               </ul>
             </nav>
           </SheetContent>

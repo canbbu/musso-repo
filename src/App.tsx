@@ -6,6 +6,7 @@ import DataTestPage from './pages/DataTestPage';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import AttendanceStatus from './pages/AttendanceStatus';
+import HallOfFame from './pages/HallOfFame';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -30,6 +31,7 @@ function App() {
               <Route path="/finance" element={<Finance />} />
               <Route path="/stats" element={<PlayerStats />} />
               <Route path="/my-stats" element={<MyStats />} />
+              <Route path="/hall-of-fame" element={<HallOfFame />} />
               <Route path="/stats-management" element={<StatsManagement />} />
               <Route path="/announcement-management" element={<AnnouncementManagement />} />
               <Route path="/entire-player-stats" element={<EntirePlayerStats />} />
