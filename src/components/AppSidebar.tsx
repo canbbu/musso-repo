@@ -12,7 +12,7 @@ import {
   SidebarSeparator
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown } from 'lucide-react';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard } from 'lucide-react';
 // import UserProfileButton from './profile/UserProfileButton';
 
 const AppSidebar = () => {
@@ -36,6 +36,7 @@ const AppSidebar = () => {
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
       { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: true, color: 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' },
+      { title: '작전판', path: '/tactics', icon: Clipboard, show: true, color: 'text-green-600 hover:text-green-700 hover:bg-green-50' },
       // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
       // { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
       // { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },

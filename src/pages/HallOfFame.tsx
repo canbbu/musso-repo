@@ -397,7 +397,7 @@ const HallOfFame = () => {
                               .map((mvp, index) => (
                                 <div 
                                   key={mvp.id} 
-                                  className={`relative ${index > 0 ? '-ml-40 sm:-ml-48 md:-ml-56' : ''}`}
+                                  className={`relative ${index > 0 ? '-ml-40 sm:-ml-48 md:-ml-44 lg:-ml-40' : ''}`}
                                   style={{ 
                                     zIndex: mvps.weekly.length - index,
                                     transition: 'transform 0.3s ease-in-out'
