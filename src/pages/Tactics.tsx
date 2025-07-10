@@ -6,7 +6,7 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clipboard, Save, RotateCcw, Users, Edit3, Calendar, Shield, Target } from 'lucide-react';
+import { Clipboard, Save, RotateCcw, Users, Edit3, Calendar, Shield, Target, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface PlayerPosition {
@@ -25,6 +25,14 @@ interface Formation {
   created_by: string;
   created_at?: string;
   updated_at?: string;
+  teamA_strategy?: string; // A팀 전략
+  teamB_strategy?: string; // B팀 전략
+}
+
+interface TacticsSessionData {
+  formations: Record<number, Formation>;
+  savedAt: number; // 저장 시간 (타임스탬프)
+  expiresAt: number; // 만료 시간 (타임스탬프)
 }
 
 const Tactics = () => {
@@ -33,10 +41,11 @@ const Tactics = () => {
   const [selectedMatch, setSelectedMatch] = useState<number>(1);
   const [selectedTeam, setSelectedTeam] = useState<'A' | 'B'>('A'); // 선택된 팀
   const [formations, setFormations] = useState<Record<number, Formation>>({
-    1: { name: '1경기 포메이션', positions: [], created_by: userId || '' },
-    2: { name: '2경기 포메이션', positions: [], created_by: userId || '' },
-    3: { name: '3경기 포메이션', positions: [], created_by: userId || '' }
+    1: { name: '1경기 포메이션', positions: [], created_by: userId || '', teamA_strategy: '', teamB_strategy: '' },
+    2: { name: '2경기 포메이션', positions: [], created_by: userId || '', teamA_strategy: '', teamB_strategy: '' },
+    3: { name: '3경기 포메이션', positions: [], created_by: userId || '', teamA_strategy: '', teamB_strategy: '' }
   });
+  const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
   const [availablePlayers, setAvailablePlayers] = useState(players);
   const [pickedPlayer, setPickedPlayer] = useState<any>(null); // 픽업된 선수
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -44,11 +53,120 @@ const Tactics = () => {
   const playerListInnerRef = useRef<HTMLDivElement>(null);
   const mainContainerRef = useRef<HTMLDivElement>(null);
 
+  // 세션 스토리지 키
+  const SESSION_STORAGE_KEY = 'musso-tactics-data';
+  const EXPIRY_DURATION = 2 * 24 * 60 * 60 * 1000; // 2일 (밀리초)
+
+  // 세션 데이터 저장
+  const saveTacticsToSession = (formationsData: Record<number, Formation>) => {
+    const now = Date.now();
+    const sessionData: TacticsSessionData = {
+      formations: formationsData,
+      savedAt: now,
+      expiresAt: now + EXPIRY_DURATION
+    };
+    
+    try {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+      setSessionExpiresAt(sessionData.expiresAt);
+      toast.success('작전판이 세션에 저장되었습니다 (2일간 유효)');
+    } catch (error) {
+      console.error('Failed to save to session storage:', error);
+      toast.error('세션 저장에 실패했습니다');
+    }
+  };
+
+  // 세션 데이터 로드
+  const loadTacticsFromSession = (): Record<number, Formation> | null => {
+    try {
+      const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      if (!stored) return null;
+
+      const sessionData: TacticsSessionData = JSON.parse(stored);
+      const now = Date.now();
+
+      // 만료 확인
+      if (now > sessionData.expiresAt) {
+        // 만료된 데이터 삭제
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+        setSessionExpiresAt(null);
+        toast.info('저장된 작전판 데이터가 만료되어 삭제되었습니다');
+        return null;
+      }
+
+      setSessionExpiresAt(sessionData.expiresAt);
+      return sessionData.formations;
+    } catch (error) {
+      console.error('Failed to load from session storage:', error);
+      return null;
+    }
+  };
+
+  // 남은 시간 계산
+  const getRemainingTime = (): string => {
+    if (!sessionExpiresAt) return '';
+    
+    const now = Date.now();
+    const remaining = sessionExpiresAt - now;
+    
+    if (remaining <= 0) return '만료됨';
+    
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours >= 24) {
+      const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      return `${days}일 ${remainingHours}시간 남음`;
+    }
+    
+    return `${hours}시간 ${minutes}분 남음`;
+  };
+
+  // 컴포넌트 마운트 시 세션에서 데이터 로드
+  useEffect(() => {
+    const savedData = loadTacticsFromSession();
+    if (savedData) {
+      setFormations(savedData);
+    }
+  }, []);
+
+  // formations 변경 시 자동 저장 제거 - 수동 저장만 허용
+
   // 수정 권한 확인
   const canEdit = canManage() || canManageMatches() || canManageSystem();
 
   // 현재 선택된 경기의 포메이션
   const currentFormation = formations[selectedMatch];
+
+  // 골키퍼 위치 판별 함수 (페널티 박스 내부)
+  const isInPenaltyBox = (x: number, y: number, team: 'A' | 'B') => {
+    // A팀 페널티 박스 (좌측): x: 0-18%, y: 25-75%
+    // B팀 페널티 박스 (우측): x: 82-100%, y: 25-75%
+    if (team === 'A') {
+      return x >= 0 && x <= 10 && y >= 45 && y <= 55;
+    } else {
+      return x >= 90 && x <= 100 && y >= 45 && y <= 55;
+    }
+  };
+
+  // 현재 사용자인지 확인하는 함수
+  const isCurrentUser = (playerName: string) => {
+    return userName && playerName.includes(userName);
+  };
+
+  // 전략 업데이트 함수
+  const updateStrategy = (team: 'A' | 'B', strategy: string) => {
+    if (!canEdit) return;
+    
+    setFormations(prev => ({
+      ...prev,
+      [selectedMatch]: {
+        ...prev[selectedMatch],
+        [team === 'A' ? 'teamA_strategy' : 'teamB_strategy']: strategy
+      }
+    }));
+  };
 
   // 선택 해제를 위한 전역 클릭 이벤트
   useEffect(() => {
@@ -106,7 +224,7 @@ const Tactics = () => {
 
   // 선수 간 최소 거리 확인 함수
   const checkMinDistance = (newX: number, newY: number, excludePlayerId?: string) => {
-    const minDistance = 12; // 최소 거리 (%)
+    const minDistance = 6; // 최소 거리 (%) - 12%에서 6%로 축소
     
     return !currentFormation.positions.some(pos => {
       if (excludePlayerId && pos.playerId === excludePlayerId) return false;
@@ -123,9 +241,9 @@ const Tactics = () => {
     }
 
     // 원하는 위치 주변에서 나선형으로 빈 공간 탐색
-    const step = 3;
-    for (let radius = step; radius <= 25; radius += step) {
-      for (let angle = 0; angle < 360; angle += 30) {
+    const step = 2; // 3에서 2로 더 세밀하게
+    for (let radius = step; radius <= 20; radius += step) { // 25에서 20으로 축소
+      for (let angle = 0; angle < 360; angle += 20) { // 30도에서 20도로 더 세밀하게
         const radian = (angle * Math.PI) / 180;
         const x = Math.min(95, Math.max(5, targetX + radius * Math.cos(radian)));
         const y = Math.min(95, Math.max(5, targetY + radius * Math.sin(radian)));
@@ -172,25 +290,39 @@ const Tactics = () => {
 
     // 경기장 경계 내에서만 배치
     if (targetX >= 5 && targetX <= 95 && targetY >= 5 && targetY <= 95) {
-      // 팀 영역 확인 (모바일과 PC 모두 적용)
-      if (!isInTeamArea(targetX, targetY, selectedTeam)) {
-        toast.error(`${selectedTeam}팀 영역에만 배치할 수 있습니다`);
-        return;
+      // 위치에 따라 자동으로 팀 결정
+      let targetTeam: 'A' | 'B';
+      if (targetX <= 50) {
+        targetTeam = 'A';
+      } else {
+        targetTeam = 'B';
       }
 
       // 경기장에 이미 있는 선수를 이동하는 경우
       if (pickedPlayer.isOnField) {
         const validPosition = findNearestValidPosition(targetX, targetY, pickedPlayer.id);
-        updatePlayerPosition(pickedPlayer.id, validPosition.x, validPosition.y, selectedTeam);
+        const currentPlayer = currentFormation.positions.find(p => p.playerId === pickedPlayer.id);
+        
+        // 팀이 변경되는 경우 알림
+        if (currentPlayer && currentPlayer.team !== targetTeam) {
+          toast.success(`${pickedPlayer.name}이(가) ${targetTeam}팀으로 이동했습니다`);
+        }
+        
+        updatePlayerPosition(pickedPlayer.id, validPosition.x, validPosition.y, targetTeam);
       } else {
         // 벤치에서 경기장으로 새로 배치하는 경우
+        // 선택된 팀과 배치 위치가 다르면 경고하고 위치에 따라 팀 결정
+        if (selectedTeam !== targetTeam) {
+          toast.info(`위치에 따라 ${targetTeam}팀으로 배치됩니다`);
+        }
+        
         const validPosition = findNearestValidPosition(targetX, targetY);
         const newPosition: PlayerPosition = {
           playerId: pickedPlayer.id,
           playerName: pickedPlayer.name,
           x: validPosition.x,
           y: validPosition.y,
-          team: selectedTeam,
+          team: targetTeam,
           jerseyNumber: 0
         };
 
@@ -243,36 +375,15 @@ const Tactics = () => {
     return currentFormation.positions.filter(pos => pos.team === team).length;
   };
 
-  // 포메이션 저장
-  const saveFormation = async () => {
+  // 포메이션 저장 (세션 스토리지로 변경)
+  const saveFormation = () => {
     try {
       if (!currentFormation.name || currentFormation.positions.length === 0) {
         toast.error('포메이션 이름과 선수 배치가 필요합니다');
         return;
       }
 
-      const formationData = {
-        name: currentFormation.name,
-        positions: currentFormation.positions,
-        created_by: userId,
-        match_number: selectedMatch
-      };
-
-      const { error } = await supabase
-        .from('formations')
-        .insert([formationData]);
-
-      if (error) {
-        // 테이블이 없는 경우 알림만 표시
-        if (error.code === 'PGRST116') {
-          toast.error('formations 테이블이 아직 생성되지 않았습니다. 관리자에게 문의하세요.');
-        } else {
-          throw error;
-        }
-        return;
-      }
-
-      toast.success('포메이션이 저장되었습니다');
+      saveTacticsToSession(formations);
     } catch (error) {
       console.error('Error saving formation:', error);
       toast.error('포메이션 저장에 실패했습니다');
@@ -287,9 +398,37 @@ const Tactics = () => {
       ...prev,
       [selectedMatch]: {
         ...prev[selectedMatch],
-        positions: []
+        positions: [],
+        teamA_strategy: '',
+        teamB_strategy: ''
       }
     }));
+
+    // 세션 스토리지에서도 해당 경기 데이터 삭제
+    try {
+      const stored = sessionStorage.getItem(SESSION_STORAGE_KEY);
+      if (stored) {
+        const sessionData: TacticsSessionData = JSON.parse(stored);
+        
+        // 해당 경기의 데이터를 초기화
+        sessionData.formations[selectedMatch] = {
+          name: `${selectedMatch}경기 포메이션`,
+          positions: [],
+          created_by: userId || '',
+          teamA_strategy: '',
+          teamB_strategy: ''
+        };
+        
+        // 업데이트된 데이터를 다시 저장
+        sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+        toast.success(`${selectedMatch}경기 포메이션이 초기화되고 세션에서도 삭제되었습니다`);
+      } else {
+        toast.success(`${selectedMatch}경기 포메이션이 초기화되었습니다`);
+      }
+    } catch (error) {
+      console.error('Failed to clear session data:', error);
+      toast.success(`${selectedMatch}경기 포메이션이 초기화되었습니다`);
+    }
   };
 
   // 경기 추가
@@ -300,7 +439,9 @@ const Tactics = () => {
       [newMatchNumber]: {
         name: `${newMatchNumber}경기 포메이션`,
         positions: [],
-        created_by: userId || ''
+        created_by: userId || '',
+        teamA_strategy: '',
+        teamB_strategy: ''
       }
     }));
     setSelectedMatch(newMatchNumber);
@@ -334,7 +475,13 @@ const Tactics = () => {
                 </h1>
                 <p className="text-xs sm:text-base text-gray-600">경기별로 선수들을 배치하고 포메이션을 만들어보세요</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                {sessionExpiresAt && (
+                  <Badge variant="outline" className="bg-yellow-50 border-yellow-300 text-yellow-700">
+                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    {getRemainingTime()}
+                  </Badge>
+                )}
                 {!canEdit && (
                   <Badge variant="outline" className="bg-orange-50 border-orange-300 text-orange-700">
                     <Edit3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
@@ -480,7 +627,7 @@ const Tactics = () => {
                             className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
                           >
                             <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                            저장
+                            세션 저장
                           </Button>
                         </div>
                       )}
@@ -531,8 +678,20 @@ const Tactics = () => {
 
                     {/* 배치된 선수들 */}
                     {currentFormation.positions.map((position, index) => {
-                      // 팀에 따른 색상 구분
-                      const circleColor = position.team === 'A' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
+                      // 골키퍼 여부 확인 (페널티 박스 내부)
+                      const isGoalkeeper = isInPenaltyBox(position.x, position.y, position.team);
+                      // 현재 사용자 여부 확인
+                      const isMyPlayer = isCurrentUser(position.playerName);
+                      
+                      // 색상 결정: 골키퍼 > 현재 사용자 > 팀 색상
+                      let circleColor;
+                      if (isGoalkeeper) {
+                        circleColor = 'bg-yellow-500 hover:bg-yellow-600';
+                      } else if (isMyPlayer) {
+                        circleColor = position.team === 'A' ? 'bg-blue-800 hover:bg-blue-900 ring-2 ring-yellow-400' : 'bg-red-800 hover:bg-red-900 ring-2 ring-yellow-400';
+                      } else {
+                        circleColor = position.team === 'A' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
+                      }
                       
                       return (
                         <div
@@ -549,8 +708,18 @@ const Tactics = () => {
                           }}
                           onClick={(e) => {
                             e.stopPropagation(); // 경기장 클릭 이벤트 방지
-                            if (canEdit && !pickedPlayer) {
-                              pickupPlayer({ id: position.playerId, name: position.playerName, isOnField: true, team: position.team });
+                            if (canEdit) {
+                              // 이미 픽업된 선수가 있고 그 선수가 현재 클릭한 선수와 다르면 기존 픽업 해제
+                              if (pickedPlayer && pickedPlayer.id !== position.playerId) {
+                                setPickedPlayer(null);
+                              }
+                              // 현재 선수를 픽업 (이동 가능하도록)
+                              pickupPlayer({ 
+                                id: position.playerId, 
+                                name: position.playerName, 
+                                isOnField: true, 
+                                team: position.team 
+                              });
                             }
                           }}
                         >
@@ -572,16 +741,13 @@ const Tactics = () => {
                           </div>
                           {/* 선수 이름 표시 */}
                           <div className="absolute top-6 sm:top-12 md:top-14 left-1/2 transform -translate-x-1/2 text-center">
-                            <div className="bg-white/90 text-gray-800 text-[7px] sm:text-xs px-0.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium shadow-sm border min-w-max max-w-10 sm:max-w-20 md:max-w-24 truncate">
+                            <div className={`text-gray-800 text-[7px] sm:text-xs px-0.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium shadow-sm border min-w-max max-w-10 sm:max-w-20 md:max-w-24 truncate ${
+                              isMyPlayer ? 'bg-yellow-200 border-yellow-400 font-bold' : 'bg-white/90'
+                            }`}>
                               {/* 모바일에서는 성만 표시, 데스크톱에서는 전체 이름 */}
                               <span className="sm:hidden">{position.playerName.split('_')[0]}</span>
                               <span className="hidden sm:inline">{position.playerName}</span>
                             </div>
-                            {canEdit && (
-                              <div className="text-[6px] sm:text-[10px] text-white/80 mt-0.5 sm:mt-1 bg-black/60 px-0.5 sm:px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                더블클릭으로 제거
-                              </div>
-                            )}
                           </div>
                         </div>
                       );
@@ -589,8 +755,8 @@ const Tactics = () => {
 
                     {/* 픽업된 선수가 있을 때 안내 메시지 */}
                     {pickedPlayer && (
-                      <div className="absolute inset-0 bg-blue-200/20 border-2 border-dashed border-blue-400 rounded-lg flex items-center justify-center pointer-events-none">
-                        <div className="text-blue-800 text-xs sm:text-lg font-semibold bg-white/90 px-2 sm:px-4 py-1 sm:py-2 rounded-lg shadow">
+                      <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
+                        <div className="text-blue-800 text-xs sm:text-sm font-semibold bg-white/95 backdrop-blur-sm px-2 sm:px-4 py-1 sm:py-2 rounded-lg shadow-lg border border-blue-200">
                           {pickedPlayer.name}을(를) {selectedTeam}팀 영역에 배치할 위치를 클릭하세요
                         </div>
                       </div>
@@ -609,48 +775,6 @@ const Tactics = () => {
                       <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                       선수 명단
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (playerListContainerRef.current && playerListInnerRef.current) {
-                          const container = playerListContainerRef.current;
-                          const inner = playerListInnerRef.current;
-                          
-                          console.log('\n🔍 실시간 스크롤 상태 체크');
-                          console.log('컨테이너 크기:', {
-                            width: container.clientWidth,
-                            height: container.clientHeight,
-                            scrollWidth: container.scrollWidth,
-                            scrollHeight: container.scrollHeight
-                          });
-                          console.log('내부 콘텐츠 크기:', {
-                            width: inner.offsetWidth,
-                            scrollWidth: inner.scrollWidth
-                          });
-                          console.log('스크롤 정보:', {
-                            scrollLeft: container.scrollLeft,
-                            maxScrollLeft: container.scrollWidth - container.clientWidth,
-                            canScroll: container.scrollWidth > container.clientWidth
-                          });
-                          console.log('선수 정보:', {
-                            count: availablePlayers.length,
-                            calculatedWidth: availablePlayers.length * 80 + 32
-                          });
-                          
-                          // 스크롤 테스트
-                          if (container.scrollWidth > container.clientWidth) {
-                            console.log('✅ 스크롤 가능 - 50px 이동 테스트');
-                            container.scrollLeft += 50;
-                          } else {
-                            console.log('❌ 스크롤 불가능');
-                          }
-                        }
-                      }}
-                      className="text-xs lg:hidden"
-                    >
-                      스크롤 체크
-                    </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-1 sm:p-3">
@@ -792,17 +916,71 @@ const Tactics = () => {
             </div>
           </div>
 
+          {/* 전략 섹션 */}
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* A팀 전략 */}
+            <Card className="shadow-lg border-blue-200">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-lg p-2 sm:p-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-blue-900">
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+                  A팀 전술 지시
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 sm:p-4">
+                {canEdit ? (
+                  <textarea
+                    value={currentFormation.teamA_strategy || ''}
+                    onChange={(e) => updateStrategy('A', e.target.value)}
+                    placeholder="A팀의 전술과 전략을 입력하세요..."
+                    className="w-full h-20 sm:h-24 p-2 sm:p-3 border border-blue-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
+                  />
+                ) : (
+                  <div className="w-full h-20 sm:h-24 p-2 sm:p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700">
+                    {currentFormation.teamA_strategy || '전략이 입력되지 않았습니다.'}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* B팀 전략 */}
+            <Card className="shadow-lg border-red-200">
+              <CardHeader className="bg-gradient-to-r from-red-50 to-red-100 rounded-t-lg p-2 sm:p-4">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-red-900">
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+                  B팀 전술 지시
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 sm:p-4">
+                {canEdit ? (
+                  <textarea
+                    value={currentFormation.teamB_strategy || ''}
+                    onChange={(e) => updateStrategy('B', e.target.value)}
+                    placeholder="B팀의 전술과 전략을 입력하세요..."
+                    className="w-full h-20 sm:h-24 p-2 sm:p-3 border border-red-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-xs sm:text-sm"
+                  />
+                ) : (
+                  <div className="w-full h-20 sm:h-24 p-2 sm:p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm text-gray-700">
+                    {currentFormation.teamB_strategy || '전략이 입력되지 않았습니다.'}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           {/* 도움말 */}
           <Card className="shadow-lg bg-blue-50 border-blue-200">
             <CardContent className="p-2 sm:p-4">
               <h3 className="font-semibold text-blue-900 mb-1 sm:mb-2 text-sm sm:text-base">사용법</h3>
               <ul className="text-xs sm:text-sm text-blue-800 space-y-0.5 sm:space-y-1">
                 <li>• 상단에서 경기를 선택하거나 새로운 경기를 추가하세요</li>
-                <li className="lg:hidden">• 모바일에서는 A팀/B팀을 선택하여 각 팀 영역에 선수를 배치하세요</li>
                 <li>• 선수 명단의 선수를 클릭하여 선택한 후, 경기장의 원하는 위치를 클릭하여 배치하세요</li>
                 <li>• 경기장의 선수를 클릭하여 선택한 후, 다른 위치를 클릭하여 이동할 수 있습니다</li>
+                <li>• <span className="font-semibold text-green-700">경기장 위치에 따라 자동으로 팀이 결정됩니다 (좌측: A팀, 우측: B팀)</span></li>
                 <li>• 경기장의 선수를 더블클릭하거나 X 버튼을 클릭하면 벤치로 돌아갑니다</li>
-                <li>• 포메이션을 완성하면 저장 버튼을 눌러 저장하세요</li>
+                <li>• <span className="font-semibold text-yellow-700">페널티 박스에 배치된 선수는 노란색으로 표시됩니다 (골키퍼)</span></li>
+                <li>• <span className="font-semibold text-purple-700">본인의 이름이 포함된 선수는 진한 색상과 노란 테두리로 강조됩니다</span></li>
+                <li>• 감독/코치는 각 팀의 전술 지시란에 전술을 입력할 수 있습니다</li>
+                <li>• <span className="font-semibold text-orange-700">"세션 저장" 버튼을 눌러야 작전판이 세션에 저장되며, 저장 시점부터 2일간 유효합니다</span></li>
                 <li>• 각 경기별로 독립적인 포메이션을 관리할 수 있습니다</li>
                 {!canEdit && <li>• 현재 읽기 전용 모드입니다. 수정하려면 감독/코치 권한이 필요합니다</li>}
               </ul>
