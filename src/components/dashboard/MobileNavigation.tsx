@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Crown, Key, Users } from 'lucide-react';
+import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Crown, Key, Users, Clipboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -31,6 +31,7 @@ const MobileNavigation = () => {
     const baseItems = [
       { title: '대시보드', path: '/dashboard', icon: Home, alwaysShow: true },
       { title: '이벤트 관리', path: '/matches', icon: Calendar, show: true }, // Show to everyone
+      { title: '작전판', path: '/tactics', icon: Clipboard, show: true },
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true },
       { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: true },
@@ -73,6 +74,8 @@ const MobileNavigation = () => {
                       className={`w-full justify-start text-left ${
                         item.path === '/hall-of-fame' 
                           ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
+                          : item.path === '/tactics'
+                          ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
                           : ''
                       }`}
                       onClick={() => {
@@ -81,7 +84,11 @@ const MobileNavigation = () => {
                       }}
                     >
                       <item.icon className={`h-4 w-4 mr-2 ${
-                        item.path === '/hall-of-fame' ? 'text-yellow-600' : ''
+                        item.path === '/hall-of-fame' 
+                          ? 'text-yellow-600' 
+                          : item.path === '/tactics'
+                          ? 'text-green-600'
+                          : ''
                       }`} />
                       {item.title}
                     </Button>
