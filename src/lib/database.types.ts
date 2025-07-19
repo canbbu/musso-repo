@@ -95,24 +95,98 @@ export interface Database {
         Row: {
           id: number
           match_id: number
+          match_number: number
           player_id: string
           status: string
+          goals: number | null
+          assists: number | null
+          goal_timestamp: string | null
+          assist_timestamp: string | null
+          rating: number | null
+          substitutions: number | null
+          is_substituted: boolean | null
+          tactics_position_x: number | null
+          tactics_position_y: number | null
+          tactics_team: string | null
+          is_opponent_team: boolean | null
+          opponent_team_name: string | null
+          created_at: string
+          modified_at: string
+        }
+        Insert: {
+          id?: number
+          match_id: number
+          match_number?: number
+          player_id: string
+          status: string
+          goals?: number | null
+          assists?: number | null
+          goal_timestamp?: string | null
+          assist_timestamp?: string | null
+          rating?: number | null
+          substitutions?: number | null
+          is_substituted?: boolean | null
+          tactics_position_x?: number | null
+          tactics_position_y?: number | null
+          tactics_team?: string | null
+          is_opponent_team?: boolean | null
+          opponent_team_name?: string | null
+          created_at?: string
+          modified_at?: string
+        }
+        Update: {
+          id?: number
+          match_id?: number
+          match_number?: number
+          player_id?: string
+          status?: string
+          goals?: number | null
+          assists?: number | null
+          goal_timestamp?: string | null
+          assist_timestamp?: string | null
+          rating?: number | null
+          substitutions?: number | null
+          is_substituted?: boolean | null
+          tactics_position_x?: number | null
+          tactics_position_y?: number | null
+          tactics_team?: string | null
+          is_opponent_team?: boolean | null
+          opponent_team_name?: string | null
+          created_at?: string
+          modified_at?: string
+        }
+      }
+      tactics: {
+        Row: {
+          id: number
+          match_id: number
+          match_number: number
+          name: string
+          team_a_strategy: string | null
+          team_b_strategy: string | null
+          created_by: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: number
           match_id: number
-          player_id: string
-          status: string
+          match_number?: number
+          name: string
+          team_a_strategy?: string | null
+          team_b_strategy?: string | null
+          created_by?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: number
           match_id?: number
-          player_id?: string
-          status?: string
+          match_number?: number
+          name?: string
+          team_a_strategy?: string | null
+          team_b_strategy?: string | null
+          created_by?: string | null
           created_at?: string
           updated_at?: string
         }

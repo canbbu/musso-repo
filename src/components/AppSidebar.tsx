@@ -9,7 +9,9 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarHeader,
-  SidebarSeparator
+  SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubItem
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
 import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard } from 'lucide-react';

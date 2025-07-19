@@ -96,15 +96,26 @@ export const usePlayerRankings = (year?: number, month?: number) => {
         // 각 선수별 참석 정보 가져오기
         const playerStats = await Promise.all(
           playersData.map(async (player) => {
-            // 필터링된 이벤트에 대한 참석 기록만 가져오기
+            // 출석 기록 가져오기 (1경기만 - 중복 방지)
             const { data: attendanceData, error: attendanceError } = await supabase
               .from('match_attendance')
               .select('*')
               .eq('player_id', player.id)
               .eq('status', 'attending')
+              .eq('match_number', 1) // 1경기만 조회하여 중복 방지
               .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]); // 빈 배열 대신 [0] 사용하여 쿼리 오류 방지
             
             if (attendanceError) throw attendanceError;
+            
+            // 득점/어시스트 기록 가져오기 (모든 경기 수에서 합산)
+            const { data: statsData, error: statsError } = await supabase
+              .from('match_attendance')
+              .select('goals, assists')
+              .eq('player_id', player.id)
+              .not('is_opponent_team', 'eq', true) // 상대팀 제외
+              .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]);
+            
+            if (statsError) throw statsError;
             
             // MVP 횟수 가져오기
             const { data: mvpData, error: mvpError } = await supabase
@@ -119,11 +130,11 @@ export const usePlayerRankings = (year?: number, month?: number) => {
             const monthlyMvpCount = mvpData.filter(mvp => mvp.mvp_type === 'monthly').length;
             const yearlyMvpCount = mvpData.filter(mvp => mvp.mvp_type === 'yearly').length;
             
-            // 골, 어시스트, 평점 합계 계산
-            const totalGoals = attendanceData.reduce((sum, match) => sum + (match.goals || 0), 0);
-            const totalAssists = attendanceData.reduce((sum, match) => sum + (match.assists || 0), 0);
+            // 골, 어시스트 합계 계산 (모든 경기 수에서)
+            const totalGoals = statsData.reduce((sum, match) => sum + (match.goals || 0), 0);
+            const totalAssists = statsData.reduce((sum, match) => sum + (match.assists || 0), 0);
             
-            // 평균 평점 계산 (평점이 있는 이벤트만 계산)
+            // 평균 평점 계산 (1경기 데이터만 사용)
             const matchesWithRating = attendanceData.filter(match => match.rating > 0);
             const averageRating = matchesWithRating.length > 0
               ? matchesWithRating.reduce((sum, match) => sum + match.rating, 0) / matchesWithRating.length

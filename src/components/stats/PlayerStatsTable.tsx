@@ -16,9 +16,23 @@ interface PlayerStatsTableProps {
   playerStats: PlayerStats[];
   onStatChange: (playerId: string, field: keyof PlayerStats, value: any) => void;
   isLoading: boolean;
+  isFromTactics?: boolean;
+  canEditStats?: boolean;
+  isEditPeriodExpired?: boolean;
+  isReadOnly?: boolean;
+  isPasswordUnlocked?: boolean;
 }
 
-const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsTableProps) => {
+const PlayerStatsTable = ({ 
+  playerStats, 
+  onStatChange, 
+  isLoading,
+  isFromTactics = false,
+  canEditStats = true,
+  isEditPeriodExpired = false,
+  isReadOnly = false,
+  isPasswordUnlocked = false
+}: PlayerStatsTableProps) => {
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -33,8 +47,8 @@ const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsT
         <TableRow>
           <TableHead>선수명</TableHead>
           <TableHead>출석</TableHead>
-          <TableHead>득점</TableHead>
-          <TableHead>어시스트</TableHead>
+          <TableHead>경기 득점</TableHead>
+          <TableHead>경기 어시스트</TableHead>
           <TableHead>평점</TableHead>
         </TableRow>
       </TableHeader>
@@ -56,6 +70,7 @@ const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsT
                     <Checkbox 
                       checked={stat.attended}
                       onCheckedChange={(checked) => onStatChange(stat.id, 'attended', checked)}
+                      disabled={isEditPeriodExpired || isReadOnly || isFromTactics}
                     />
                   </TableCell>
                   <TableCell>
@@ -66,12 +81,20 @@ const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsT
                       maxLength={2}
                       value={stat.goals === 0 ? "" : stat.goals} 
                       onChange={(e) => {
+                        // 작전판에서 온 경우 득점 입력 불가
+                        if (isFromTactics) return;
+                        // 수정 기한이 지난 경우 (비밀번호로 해제 가능)
+                        if (isEditPeriodExpired && !isPasswordUnlocked) return;
+                        // 읽기 전용인 경우
+                        if (isReadOnly) return;
+                        
                         // 최대 2자리까지만 허용
                         let value = e.target.value;
                         if (value.length > 2) value = value.slice(0, 2);
                         onStatChange(stat.id, 'goals', value === "" ? 0 : Number(value));
                       }}
-                      className="w-16 h-8"
+                      className={`w-16 h-8 ${isFromTactics || (isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                      disabled={isFromTactics || (isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly}
                     />
                   </TableCell>
                   <TableCell>
@@ -82,11 +105,19 @@ const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsT
                       maxLength={2}
                       value={stat.assists === 0 ? "" : stat.assists} 
                       onChange={(e) => {
+                        // 작전판에서 온 경우 어시스트 입력 불가
+                        if (isFromTactics) return;
+                        // 수정 기한이 지난 경우 (비밀번호로 해제 가능)
+                        if (isEditPeriodExpired && !isPasswordUnlocked) return;
+                        // 읽기 전용인 경우
+                        if (isReadOnly) return;
+                        
                         let value = e.target.value;
                         if (value.length > 2) value = value.slice(0, 2);
                         onStatChange(stat.id, 'assists', value === "" ? 0 : Number(value));
                       }}
-                      className="w-16 h-8"
+                      className={`w-16 h-8 ${isFromTactics || (isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                      disabled={isFromTactics || (isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly}
                     />
                   </TableCell>
                   <TableCell>
@@ -98,6 +129,9 @@ const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsT
                       maxLength={3}
                       value={stat.rating === 0 ? "" : stat.rating} 
                       onChange={(e) => {
+                        // 수정 기한이 지난 경우 (비밀번호로 해제 가능)
+                        if (isEditPeriodExpired && !isPasswordUnlocked) return;
+                        
                         // 입력값 제한 적용
                         let value = parseFloat(e.target.value);
                         
@@ -112,7 +146,8 @@ const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsT
                         
                         onStatChange(stat.id, 'rating', value);
                       }}
-                      className="w-20 h-8"
+                      className={`w-20 h-8 ${(isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                      disabled={(isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly}
                     />
                   </TableCell>
                 </TableRow>
@@ -137,6 +172,7 @@ const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsT
                     <Checkbox 
                       checked={stat.attended}
                       onCheckedChange={(checked) => onStatChange(stat.id, 'attended', checked)}
+                      disabled={isEditPeriodExpired || isReadOnly || isFromTactics}
                     />
                   </TableCell>
                   <TableCell>-</TableCell>
@@ -164,6 +200,7 @@ const PlayerStatsTable = ({ playerStats, onStatChange, isLoading }: PlayerStatsT
                     <Checkbox 
                       checked={stat.attended}
                       onCheckedChange={(checked) => onStatChange(stat.id, 'attended', checked)}
+                      disabled={isEditPeriodExpired || isReadOnly || isFromTactics}
                     />
                   </TableCell>
                   <TableCell>-</TableCell>

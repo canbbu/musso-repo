@@ -10,6 +10,7 @@ export { default as PlayerStats } from './PlayerStats';
 export { default as MyStats } from './MyStats';
 export { default as StatsManagement } from './StatsManagement';
 export { default as NotFound } from './NotFound';
-export { default as Index } from './Index';
 export { default as MatchHistory } from './MatchHistory';
 export { default as EntirePlayerStats } from './EntirePlayerStats';
+export { default as TacticsList } from './TacticsList';
+export { default as AttendanceCheck } from './AttendanceCheck';

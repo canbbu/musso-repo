@@ -82,13 +82,37 @@ export const usePlayerStats = () => {
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('match_attendance')
         .select('*')
-        .eq('match_id', selectedMatch);
+        .eq('match_id', selectedMatch)
+        .eq('match_number', 1); // 기본값으로 1경기 설정
 
       if (attendanceError) {
         console.error('출석 현황을 불러오는 중 오류 발생:', attendanceError);
         setIsLoading(false);
         return;
       }
+
+      // 해당 경기의 모든 경기 수에서의 득점/어시스트 합계 불러오기
+      const { data: matchStatsData, error: matchStatsError } = await supabase
+        .from('match_attendance')
+        .select('player_id, goals, assists')
+        .eq('match_id', selectedMatch)
+        .not('is_opponent_team', 'eq', true); // 상대팀 제외
+
+      if (matchStatsError) {
+        console.error('경기 통계를 불러오는 중 오류 발생:', matchStatsError);
+        setIsLoading(false);
+        return;
+      }
+
+      // 선수별 해당 경기의 모든 경기 수 득점/어시스트 합계 계산
+      const matchStatsMap: Record<string, { totalGoals: number; totalAssists: number }> = {};
+      matchStatsData?.forEach((row: any) => {
+        if (!matchStatsMap[row.player_id]) {
+          matchStatsMap[row.player_id] = { totalGoals: 0, totalAssists: 0 };
+        }
+        matchStatsMap[row.player_id].totalGoals += row.goals || 0;
+        matchStatsMap[row.player_id].totalAssists += row.assists || 0;
+      });
 
       // 선수별 출석 상태 매핑
       const attendanceMap: Record<string, {
@@ -115,9 +139,9 @@ export const usePlayerStats = () => {
         matchId: selectedMatch,
         matchDate: selectedMatchData?.date || '',
         attendanceStatus: attendanceMap[player.id]?.status || 'pending',
-        goals: attendanceMap[player.id]?.goals || 0,
-        assists: attendanceMap[player.id]?.assists || 0,
-        rating: attendanceMap[player.id]?.rating || 0,
+        goals: matchStatsMap[player.id]?.totalGoals || 0, // 해당 경기 득점 합계
+        assists: matchStatsMap[player.id]?.totalAssists || 0, // 해당 경기 어시스트 합계
+        rating: attendanceMap[player.id]?.rating || 0, // 평점은 현재 경기만
       }));
 
       // 먼저 이름순으로 정렬 후, 출석 상태별로 정렬
@@ -164,10 +188,11 @@ export const usePlayerStats = () => {
         .from('match_attendance')
         .upsert({
           match_id: selectedMatch,
+          match_number: 1, // 기본값으로 1경기 설정
           player_id: playerId, 
           status: newStatus
         }, { 
-          onConflict: 'match_id,player_id' // 복합 유니크 키
+          onConflict: 'match_id,match_number,player_id' // 올바른 복합 유니크 키
         });
         
       if (error) {
@@ -199,6 +224,7 @@ export const usePlayerStats = () => {
           .update({ [field]: value })
           .match({ 
             match_id: selectedMatch,
+            match_number: 1, // 기본값으로 1경기 설정
             player_id: playerId
           });
           

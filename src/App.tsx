@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider, RequireAuth } from '@/components/auth/AuthContext';
-import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, Index, MatchHistory, MyStats, EntirePlayerStats } from './pages';
+import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, MatchHistory, MyStats, EntirePlayerStats, TacticsList, AttendanceCheck } from './pages';
 import DataTestPage from './pages/DataTestPage';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
@@ -33,12 +33,14 @@ function App() {
               <Route path="/stats" element={<PlayerStats />} />
               <Route path="/my-stats" element={<MyStats />} />
               <Route path="/hall-of-fame" element={<HallOfFame />} />
-              <Route path="/tactics" element={<Tactics />} />
+              <Route path="/tactics" element={<TacticsList />} />
+              <Route path="/tactics/:matchId/:matchNumber" element={<Tactics />} />
               <Route path="/stats-management" element={<StatsManagement />} />
               <Route path="/announcement-management" element={<AnnouncementManagement />} />
               <Route path="/entire-player-stats" element={<EntirePlayerStats />} />
               <Route path="/change-profile" element={<Profile />} />
               <Route path="/attendance-status" element={<AttendanceStatus />} />
+              <Route path="/attendance/:matchId" element={<AttendanceCheck />} />
               {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}
             </Route>
           </Routes>

@@ -183,6 +183,12 @@ export interface StatsCardProps {
   onStatChange: (playerId: string, field: keyof PlayerStats, value: any) => void;
   onSave: () => void;
   isLoading: boolean;
+  isFromTactics?: boolean;
+  canEditStats?: boolean;
+  isEditPeriodExpired?: boolean;
+  onToggleStatsEditing?: () => void;
+  isReadOnly?: boolean;
+  isPasswordUnlocked?: boolean;
 }
 
 export interface AttendanceListModalProps {
