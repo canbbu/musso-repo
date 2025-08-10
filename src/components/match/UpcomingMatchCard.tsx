@@ -74,6 +74,8 @@ interface UpcomingMatchCardProps {
   onViewMatch: (matchId: number) => void;
   onEditClick?: (matchId: number) => void;
   onDeleteClick?: (matchId: number) => void;
+  disableVoting?: boolean;
+  showOnlyVoting?: boolean;
 }
 
 const UpcomingMatchCard = ({ 
@@ -82,7 +84,9 @@ const UpcomingMatchCard = ({
   canManageAnnouncements, 
   onViewMatch,
   onEditClick,
-  onDeleteClick
+  onDeleteClick,
+  disableVoting = false,
+  showOnlyVoting = false
 }: UpcomingMatchCardProps) => {
   const { toast } = useToast();
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
@@ -142,50 +146,54 @@ const UpcomingMatchCard = ({
             </div>
           </div>
           <div className="match-actions flex flex-col gap-2">
-            <div className="flex gap-2">
-              <Button 
-                variant={match.userResponse === 'attending' ? 'default' : 'secondary'} 
-                className={`flex-1 flex items-center justify-center ${
-                  match.userResponse === 'attending' 
-                    ? 'bg-green-500 hover:bg-green-600' 
-                    : ''
-                }`}
-                onClick={() => onAttendanceChange(match.id, 'attending')}
-                disabled={isDeadlinePassed}
-              >
-                <Check size={18} className="mr-1" />
-                참석
-              </Button>
-              <Button 
-                variant={match.userResponse === 'notAttending' ? 'destructive' : 'secondary'} 
-                className="flex-1 flex items-center justify-center"
-                onClick={() => onAttendanceChange(match.id, 'notAttending')}
-                disabled={isDeadlinePassed}
-              >
-                <X size={18} className="mr-1" />
-                불참
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                className="flex-1 flex items-center justify-center" 
-                variant="outline"
-                onClick={() => setShowAttendanceModal(true)}
-              >
-                <Eye size={18} className="mr-1" />
-                참석 현황
-              </Button>
-              {/* Show management button only to coaches */}
-              <Button 
-                className="flex-1 flex items-center justify-center" 
-                variant="outline"
-                onClick={() => handleManageMatch(match.id)}
-              >
-                <Clipboard size={18} className="mr-1" />
-                이벤트 관리
-              </Button>
-            </div>
-            {canManageAnnouncements && (
+            {!disableVoting && (
+              <div className="flex gap-2">
+                <Button 
+                  variant={match.userResponse === 'attending' ? 'default' : 'secondary'} 
+                  className={`flex-1 flex items-center justify-center ${
+                    match.userResponse === 'attending' 
+                      ? 'bg-green-500 hover:bg-green-600' 
+                      : ''
+                  }`}
+                  onClick={() => onAttendanceChange(match.id, 'attending')}
+                  disabled={isDeadlinePassed}
+                >
+                  <Check size={18} className="mr-1" />
+                  참석
+                </Button>
+                <Button 
+                  variant={match.userResponse === 'notAttending' ? 'destructive' : 'secondary'} 
+                  className="flex-1 flex items-center justify-center"
+                  onClick={() => onAttendanceChange(match.id, 'notAttending')}
+                  disabled={isDeadlinePassed}
+                >
+                  <X size={18} className="mr-1" />
+                  불참
+                </Button>
+              </div>
+            )}
+            {!showOnlyVoting && (
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1 flex items-center justify-center" 
+                  variant="outline"
+                  onClick={() => setShowAttendanceModal(true)}
+                >
+                  <Eye size={18} className="mr-1" />
+                  참석 현황
+                </Button>
+                {/* Show management button only to coaches */}
+                <Button 
+                  className="flex-1 flex items-center justify-center" 
+                  variant="outline"
+                  onClick={() => handleManageMatch(match.id)}
+                >
+                  <Clipboard size={18} className="mr-1" />
+                  이벤트 관리
+                </Button>
+              </div>
+            )}
+            {canManageAnnouncements && !showOnlyVoting && (
               <div className="flex gap-2">
                 {onEditClick && (
                   <Button 
@@ -209,7 +217,6 @@ const UpcomingMatchCard = ({
                 )}
               </div>
             )}
-
             {/* 참석여부 마감일 표시 */}
             <div className={`text-xs mt-2 px-2 py-1 border rounded ${isDeadlinePassed ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-500 border-gray-200'}`}>
               참석여부 마감: {match.date ? formatDeadline(matchDeadline) : "날짜 정보 없음"}

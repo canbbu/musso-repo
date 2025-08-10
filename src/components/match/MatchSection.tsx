@@ -18,6 +18,8 @@ interface MatchSectionProps {
   onViewMatch: (matchId: number) => void;
   onEditClick?: (matchId: number) => void;
   onDeleteClick?: (matchId: number) => void;
+  disableVoting?: boolean;
+  showOnlyVoting?: boolean;
 }
 
 const MatchSection = ({
@@ -30,7 +32,9 @@ const MatchSection = ({
   onAddClick,
   onViewMatch,
   onEditClick,
-  onDeleteClick
+  onDeleteClick,
+  disableVoting = false,
+  showOnlyVoting = false
 }: MatchSectionProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -85,6 +89,8 @@ const MatchSection = ({
               onViewMatch={onViewMatch}
               onEditClick={onEditClick}
               onDeleteClick={onDeleteClick}
+              disableVoting={disableVoting}
+              showOnlyVoting={showOnlyVoting}
             />
           ))
         ) : (

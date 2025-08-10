@@ -890,20 +890,6 @@ const Tactics = () => {
               id: matchingAssistant.id,
               name: matchingAssistant.name
             };
-          } else {
-            // 같은 팀의 어시스트 중에서 찾기
-            const potentialAssistants = records.filter(record => 
-              record.assists > 0 && 
-              record.id !== scorer.id &&
-              record.team === scorer.team
-            );
-            
-            if (potentialAssistants.length > 0) {
-              assistant = {
-                id: potentialAssistants[0].id,
-                name: potentialAssistants[0].name
-              };
-            }
           }
           
           const goalGroup = {

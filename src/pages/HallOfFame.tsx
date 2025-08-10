@@ -42,6 +42,7 @@ const HallOfFame = () => {
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
   const [mvpData, setMvpData] = useState<MVPData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredMvpId, setHoveredMvpId] = useState<string | null>(null);
 
   // 선수 데이터 가져오기
   const { players } = usePlayerRankings();
@@ -398,8 +399,10 @@ const HallOfFame = () => {
                                 <div 
                                   key={mvp.id} 
                                   className={`relative ${index > 0 ? '-ml-40 sm:-ml-48 md:-ml-44 lg:-ml-40' : ''}`}
+                                  onMouseEnter={() => setHoveredMvpId(mvp.id)}
+                                  onMouseLeave={() => setHoveredMvpId((prev) => (prev === mvp.id ? null : prev))}
                                   style={{ 
-                                    zIndex: mvps.weekly.length - index,
+                                    zIndex: hoveredMvpId === mvp.id ? 999 : mvps.weekly.length - index,
                                     transition: 'transform 0.3s ease-in-out'
                                   }}
                                 >

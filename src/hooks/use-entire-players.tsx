@@ -148,14 +148,18 @@ export const useEntirePlayers = () => {
               ? matchesWithRating.reduce((sum, match) => sum + match.rating, 0) / matchesWithRating.length
               : 0;
             
+            // 고유 match_id 기준으로 출석/경기수 계산
+            const uniqueMatchIds = Array.from(new Set(attendanceData.map(m => m.match_id)));
+            const gamesCount = uniqueMatchIds.length;
+
             // 출석률 계산 (완료된 이벤트 대비 참석 이벤트 비율)
             const attendance = totalCompletedMatches > 0
-              ? Math.round((attendanceData.length / totalCompletedMatches) * 100)
+              ? Math.round((gamesCount / totalCompletedMatches) * 100)
               : 0;
             
             return {
               ...player,
-              games: attendanceData.length,
+              games: gamesCount,
               goals: totalGoals,
               assists: totalAssists,
               attendance_rate: attendance,
@@ -650,13 +654,18 @@ export const useEntirePlayers = () => {
             const averageRating = matchesWithRating.length > 0
               ? matchesWithRating.reduce((sum, match) => sum + match.rating, 0) / matchesWithRating.length
               : 0;
+            
+            // 고유 match_id 기준으로 출석/경기수 계산
+            const uniqueMatchIds = Array.from(new Set(attendanceData.map(m => m.match_id)));
+            const gamesCount = uniqueMatchIds.length;
+
             const attendance = filteredTotalMatches > 0
-              ? Math.round((attendanceData.length / filteredTotalMatches) * 100)
+              ? Math.round((gamesCount / filteredTotalMatches) * 100)
               : 0;
             
             return {
               ...player,
-              games: attendanceData.length,
+              games: gamesCount,
               goals: totalGoals,
               assists: totalAssists,
               attendance_rate: attendance,

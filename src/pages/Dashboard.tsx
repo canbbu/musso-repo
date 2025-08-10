@@ -6,8 +6,9 @@ import Layout from '@/components/Layout';
 
 import MobileNavigation from '@/components/dashboard/MobileNavigation';
 import CalendarView from '@/components/dashboard/CalendarView';
-import AnnouncementsCard from '@/components/dashboard/AnnouncementsCard';
-import UpcomingMatchesCardWrapper from '@/components/dashboard/UpcomingMatchesCardWrapper';
+// import AnnouncementsCard from '@/components/dashboard/AnnouncementsCard';
+import MatchSection from '@/components/match/MatchSection';
+// import UpcomingMatchesCardWrapper from '@/components/dashboard/UpcomingMatchesCardWrapper';
 import MvpVotingCard from '@/components/dashboard/MvpVotingCard';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import { useMatchData, Match } from '@/hooks/use-match-data';
@@ -16,10 +17,10 @@ import ActivityStatsModal from '@/components/admin/ActivityStatsModal';
 import { supabase } from '@/lib/supabase';
 
 const Dashboard = () => {
-  const { userName, canManageAnnouncements, canManageSystem, isSystemManager, role } = useAuth();
+  const { userName, canManageAnnouncements, canManageSystem, isSystemManager, role, userId } = useAuth();
   const isMobile = useIsMobile();
   const { announcements, matchAnnouncements, upcomingMatches, calendarEvents, loading, error } = useDashboardData();
-  const { checkForTodaysMatch, handleAttendanceChange } = useMatchData();
+  const { checkForTodaysMatch, handleAttendanceChange, matches } = useMatchData();
   const { logUserLogin, logUserLogout, currentSession, updatePageView, cleanupStaleSessions, cleanupDuplicateLogs } = useActivityLogs();
   const [todaysCompletedMatch, setTodaysCompletedMatch] = useState<Match | null>(null);
   const [showActivityStats, setShowActivityStats] = useState(false);
@@ -37,20 +38,7 @@ const Dashboard = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 의존성 배열을 비워서 컴포넌트 마운트 시에만 실행되도록 수정
 
-  // Convert UpcomingMatch[] to Match[] by adding required properties
-  const convertedUpcomingMatches: Match[] = upcomingMatches.map(match => ({
-    id: match.id,
-    date: match.date,
-    location: match.location,
-    opponent: match.opponent || '',
-    status: match.status,
-    attendance: {
-      attending: match.attending,
-      notAttending: match.notAttending,
-      pending: match.pending
-    },
-    userResponse: null
-  }));
+
   
   // 사용자 접속 로그 기록
   useEffect(() => {
@@ -237,23 +225,31 @@ const Dashboard = () => {
         </div>
       )}
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
-        <CalendarView calendarEvents={calendarEvents || {}} />
+      {/* PC: 팀 일정과 다가오는 이벤트 반반, 모바일: 순서대로 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <CalendarView calendarEvents={calendarEvents || {}} />
+        </div>
+        <div>
+          <MatchSection 
+            title="다가오는 이벤트"
+            matches={matches.filter(m => m.status === 'upcoming')}
+            onAttendanceChange={(matchId, status) => handleAttendanceChange(matchId, status, userId as string)}
+            canManageAnnouncements={false}
+            emptyMessage="예정된 이벤트가 없습니다."
+            onViewMatch={() => {}}
+            disableVoting={false}
+            showOnlyVoting={true}
+          />
+        </div>
+      </div>
 
-        {/* Announcements */}
-        <AnnouncementsCard 
-          announcements={announcements || []} 
-          canManageAnnouncements={canManageAnnouncements} 
-        />
-      </div>
-      
-      {/* Upcoming Match Card */}
-      <div className="mt-6">
-        <UpcomingMatchesCardWrapper 
-          upcomingMatches={convertedUpcomingMatches || []} 
-        />
-      </div>
+      {/* 공지사항은 임시 비표시 (요청사항) */}
+      {false && (
+        <div className="mt-6">
+          {/* <AnnouncementsCard announcements={announcements || []} canManageAnnouncements={canManageAnnouncements} /> */}
+        </div>
+      )}
 
       {/* 활동 통계 모달 */}
       <ActivityStatsModal 
