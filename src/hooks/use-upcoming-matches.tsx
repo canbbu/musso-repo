@@ -61,11 +61,32 @@ export function useUpcomingMatches() {
               const notAttending: Player[] = [];
               const pending: Player[] = [];
               
+              // player_id 기준으로 상태를 통합하기 위한 맵
+              type StatusType = 'attending' | 'not_attending' | 'pending';
+              const playerStatusMap = new Map<string, { status: StatusType; player: Player }>();
+              
               attendanceData?.forEach(item => {
-                const player = Array.isArray(item.player) ? item.player[0] as Player : item.player as Player;
-                if (item.status === 'attending') {
+                const player = Array.isArray(item.player) ? (item.player[0] as Player) : (item.player as Player);
+                const playerId = player.id;
+                const newStatus = (item.status as StatusType) || 'pending';
+                const existing = playerStatusMap.get(playerId);
+                
+                if (!existing) {
+                  playerStatusMap.set(playerId, { status: newStatus, player });
+                } else {
+                  // 상태 우선순위: attending > not_attending > pending
+                  const priority = (s: StatusType) => (s === 'attending' ? 3 : s === 'not_attending' ? 2 : 1);
+                  if (priority(newStatus) > priority(existing.status)) {
+                    playerStatusMap.set(playerId, { status: newStatus, player });
+                  }
+                }
+              });
+              
+              // 통합된 상태 맵을 기반으로 최종 배열 구성
+              playerStatusMap.forEach(({ status, player }) => {
+                if (status === 'attending') {
                   attending.push(player);
-                } else if (item.status === 'not_attending') {
+                } else if (status === 'not_attending') {
                   notAttending.push(player);
                 } else {
                   pending.push(player);

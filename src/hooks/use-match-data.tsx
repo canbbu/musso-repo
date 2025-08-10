@@ -88,25 +88,36 @@ export function useMatchData() {
           // 사용자 본인의 응답 상태
           let userResponse: 'attending' | 'notAttending' | 'pending' | undefined = undefined;
 
+          // 같은 match_id에 대해 match_number가 여러 개여도 player_id별로 1회만 반영되도록 통합
+          type StatusType = 'attending' | 'not_attending' | 'pending';
+          const playerStatusMap = new Map<string, StatusType>();
+
           attendanceData?.forEach(item => {
-            // 출석 상태에 따라 카운트 증가
-            if (item.status === 'attending') {
+            const playerId = item.player_id;
+            const newStatus = (item.status as StatusType) || 'pending';
+            const existing = playerStatusMap.get(playerId);
+            if (!existing) {
+              playerStatusMap.set(playerId, newStatus);
+            } else {
+              // 상태 우선순위: attending > not_attending > pending
+              const priority = (s: StatusType) => (s === 'attending' ? 3 : s === 'not_attending' ? 2 : 1);
+              if (priority(newStatus) > priority(existing)) {
+                playerStatusMap.set(playerId, newStatus);
+              }
+            }
+          });
+
+          // 통합된 상태로 최종 카운트 및 사용자 응답 결정
+          playerStatusMap.forEach((status, playerId) => {
+            if (status === 'attending') {
               attendance.attending++;
-            } else if (item.status === 'not_attending') {
+            } else if (status === 'not_attending') {
               attendance.notAttending++;
             } else {
               attendance.pending++;
             }
-            
-            // 현재 사용자의 응답 확인
-            if (userId && item.player_id === userId) {
-              if (item.status === 'attending') {
-                userResponse = 'attending';
-              } else if (item.status === 'not_attending') {
-                userResponse = 'notAttending';
-              } else {
-                userResponse = 'pending';
-              }
+            if (userId && playerId === userId) {
+              userResponse = status === 'attending' ? 'attending' : status === 'not_attending' ? 'notAttending' : 'pending';
             }
           });
 
