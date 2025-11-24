@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import AttendanceStatus from './pages/AttendanceStatus';
 import HallOfFame from './pages/HallOfFame';
 import Tactics from './pages/Tactics';
+import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -15,6 +16,7 @@ function App() {
   return (
     <React.StrictMode>
       <Router>
+        <GoogleAnalytics />
         <AuthProvider>
           <Routes>
             {/* 인증이 필요하지 않은 페이지들 */}
