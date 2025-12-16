@@ -116,6 +116,32 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
     return '';
   };
 
+  // 메달 표시 컴포넌트
+  const MedalBadge = ({ rank }: { rank: number }) => {
+    if (rank === 1) {
+      return (
+        <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-full shadow-lg border-2 border-yellow-300">
+          <span className="font-bold text-lg">🥇</span>
+        </div>
+      );
+    } else if (rank === 2) {
+      return (
+        <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-gray-300 to-gray-500 text-white rounded-full shadow-lg border-2 border-gray-200">
+          <span className="font-bold text-lg">🥈</span>
+        </div>
+      );
+    } else if (rank === 3) {
+      return (
+        <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-800 text-white rounded-full shadow-lg border-2 border-amber-400">
+          <span className="font-bold text-lg">🥉</span>
+        </div>
+      );
+    }
+    return (
+      <span className="text-gray-600 font-semibold">{rank}</span>
+    );
+  };
+
   return (
     <Card className="shadow">
       <CardHeader className="pb-0">
@@ -145,22 +171,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
               const rank = calculateRank(index);
               return (
                 <TableRow key={player.id} className={getRankBackground(rank)}>
-                  <TableCell className="text-center font-semibold">
-                    {rank === 1 ? (
-                      <div className="inline-flex items-center justify-center w-8 h-8 bg-yellow-500 text-white rounded-full">
-                        1
-                      </div>
-                    ) : rank === 2 ? (
-                      <div className="inline-flex items-center justify-center w-8 h-8 bg-gray-400 text-white rounded-full">
-                        2
-                      </div>
-                    ) : rank === 3 ? (
-                      <div className="inline-flex items-center justify-center w-8 h-8 bg-amber-700 text-white rounded-full">
-                        3
-                      </div>
-                    ) : (
-                      rank
-                    )}
+                  <TableCell className="text-center">
+                    <MedalBadge rank={rank} />
                   </TableCell>
                   <TableCell className="font-medium">{player.name}</TableCell>
                   <TableCell>{player.position}</TableCell>

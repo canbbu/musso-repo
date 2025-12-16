@@ -14,7 +14,7 @@ import {
   SidebarMenuSubItem
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard } from 'lucide-react';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard, Award } from 'lucide-react';
 // import UserProfileButton from './profile/UserProfileButton';
 
 const AppSidebar = () => {
@@ -37,6 +37,7 @@ const AppSidebar = () => {
     
     const baseItems = [
       // 일반 회원과 관리자 모두에게 보이는 메뉴
+      { title: '시즌 종료 랭킹', path: '/season-rankings', icon: Award, show: true, color: 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50' },
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       
       // 관리자만 보이는 메뉴들

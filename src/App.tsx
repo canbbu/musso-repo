@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider, RequireAuth, RequireAdmin } from '@/components/auth/AuthContext';
-import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, MatchHistory, MyStats, EntirePlayerStats, TacticsList, AttendanceCheck } from './pages';
+import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, Login, MatchManagement, PlayerStats, StatsManagement, NotFound, MatchHistory, MyStats, EntirePlayerStats, TacticsList, AttendanceCheck, SeasonRankings } from './pages';
 import DataTestPage from './pages/DataTestPage';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
@@ -29,6 +29,7 @@ function App() {
               {/* 일반 회원과 관리자 모두 접근 가능한 페이지 (시즌 종료) */}
               <Route path="/stats" element={<PlayerStats />} />
               <Route path="/attendance-status" element={<AttendanceStatus />} />
+              <Route path="/season-rankings" element={<SeasonRankings />} />
               
               {/* 관리자만 접근 가능한 페이지 (시즌 종료) */}
               <Route element={<RequireAdmin />}>

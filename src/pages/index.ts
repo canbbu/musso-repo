@@ -14,3 +14,4 @@ export { default as MatchHistory } from './MatchHistory';
 export { default as EntirePlayerStats } from './EntirePlayerStats';
 export { default as TacticsList } from './TacticsList';
 export { default as AttendanceCheck } from './AttendanceCheck';
+export { default as SeasonRankings } from './SeasonRankings';
