@@ -26,7 +26,7 @@ const AttendanceStatus = () => {
   const { canManage } = useAuth();
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
+  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(1);
   const [selectedPlayer, setSelectedPlayer] = useState<string>('all');
   const [matches, setMatches] = useState<MatchData[]>([]);
   const [attendanceData, setAttendanceData] = useState<AttendanceData[]>([]);
@@ -35,18 +35,19 @@ const AttendanceStatus = () => {
   // 선수 데이터 가져오기
   const { players } = usePlayerRankings();
 
-  // 권한 체크
-  if (!canManage()) {
-    return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center h-64">
-          <Shield className="h-16 w-16 text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-600">접근 권한이 없습니다</h2>
-          <p className="text-gray-500">운영진만 출석현황을 확인할 수 있습니다.</p>
-        </div>
-      </Layout>
-    );
-  }
+  // 권한 체크 (일시적으로 모든 사용자 접근 허용)
+  // TODO: 시즌 시작 시 아래 주석 해제하여 관리자만 접근하도록 변경
+  // if (!canManage()) {
+  //   return (
+  //     <Layout>
+  //       <div className="flex flex-col items-center justify-center h-64">
+  //         <Shield className="h-16 w-16 text-gray-400 mb-4" />
+  //         <h2 className="text-xl font-semibold text-gray-600">접근 권한이 없습니다</h2>
+  //         <p className="text-gray-500">운영진만 출석현황을 확인할 수 있습니다.</p>
+  //       </div>
+  //     </Layout>
+  //   );
+  // }
 
   // 매치 데이터와 출석 데이터 가져오기
   useEffect(() => {
@@ -54,45 +55,93 @@ const AttendanceStatus = () => {
       try {
         setLoading(true);
 
-        // 날짜 범위 설정
-        let startDate: string;
-        let endDate: string;
+        // 월별로 나누어서 처리 (연도 전체도 각 월별로 처리하여 일관성 유지)
+        const monthsToProcess = selectedMonth 
+          ? [selectedMonth] 
+          : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
-        if (selectedMonth) {
-          startDate = new Date(selectedYear, selectedMonth - 1, 1).toISOString();
-          endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59).toISOString();
-        } else {
-          startDate = new Date(selectedYear, 0, 1).toISOString();
-          endDate = new Date(selectedYear, 11, 31, 23, 59, 59).toISOString();
-        }
+        const matchesMap = new Map<number, MatchData>();
+        const attendanceMap = new Map<string, AttendanceData>();
 
-        // 매치 데이터 가져오기
-        const { data: matchesData, error: matchesError } = await supabase
-          .from('matches')
-          .select('id, date, location, opponent, status')
-          .gte('date', startDate)
-          .lte('date', endDate)
-          .order('date', { ascending: true });
-
-        if (matchesError) throw matchesError;
-
-        setMatches(matchesData || []);
-
-        // 해당 기간의 매치들에 대한 출석 데이터 가져오기
-        if (matchesData && matchesData.length > 0) {
-          const matchIds = matchesData.map(match => match.id);
+        // 각 월별로 처리
+        for (const month of monthsToProcess) {
+          // 월의 첫 날: YYYY-MM-01T00:00:00.000Z
+          const monthStr = month.toString().padStart(2, '0');
+          const startDate = `${selectedYear}-${monthStr}-01T00:00:00.000Z`;
           
-          const { data: attendanceData, error: attendanceError } = await supabase
-            .from('match_attendance')
-            .select('match_id, player_id, status')
-            .in('match_id', matchIds);
+          // 월의 마지막 날 계산
+          const lastDay = new Date(selectedYear, month, 0).getDate();
+          const endDate = `${selectedYear}-${monthStr}-${lastDay.toString().padStart(2, '0')}T23:59:59.999Z`;
 
-          if (attendanceError) throw attendanceError;
+          // 해당 월의 매치 데이터 가져오기
+          const { data: matchesData, error: matchesError } = await supabase
+            .from('matches')
+            .select('id, date, location, opponent, status')
+            .gte('date', startDate)
+            .lte('date', endDate)
+            .order('date', { ascending: true });
 
-          setAttendanceData(attendanceData || []);
-        } else {
-          setAttendanceData([]);
+          if (matchesError) throw matchesError;
+
+          if (matchesData && matchesData.length > 0) {
+            // 매치 데이터 추가 (중복 제거)
+            matchesData.forEach(match => {
+              if (!matchesMap.has(match.id)) {
+                matchesMap.set(match.id, match);
+              }
+            });
+
+            const matchIds = matchesData.map(match => match.id);
+            
+            // match_number를 포함해서 조회 (1, 2 모두)
+            const { data: attendanceData, error: attendanceError } = await supabase
+              .from('match_attendance')
+              .select('match_id, player_id, status, match_number')
+              .in('match_id', matchIds)
+              .in('match_number', [1, 2]);
+
+            if (attendanceError) throw attendanceError;
+
+            // match_id와 player_id 조합이 있으면 참석으로 판단
+            // 중복 제거: 같은 match_id와 player_id 조합은 match_number = 1을 우선으로 선택
+            if (attendanceData) {
+              // match_number = 1 데이터를 먼저 추가
+              attendanceData
+                .filter(att => att.match_number === 1)
+                .forEach(att => {
+                  const key = `${att.match_id}_${att.player_id}`;
+                  if (!attendanceMap.has(key)) {
+                    attendanceMap.set(key, {
+                      match_id: att.match_id,
+                      player_id: att.player_id,
+                      status: 'attending' // match_id와 player_id가 있으면 참석으로 판단
+                    });
+                  }
+                });
+              
+              // match_number = 2 데이터를 추가 (match_number = 1이 없는 경우만)
+              attendanceData
+                .filter(att => att.match_number === 2)
+                .forEach(att => {
+                  const key = `${att.match_id}_${att.player_id}`;
+                  if (!attendanceMap.has(key)) {
+                    attendanceMap.set(key, {
+                      match_id: att.match_id,
+                      player_id: att.player_id,
+                      status: 'attending' // match_id와 player_id가 있으면 참석으로 판단
+                    });
+                  }
+                });
+            }
+          }
         }
+
+        // 매치 데이터 정렬
+        const uniqueMatches = Array.from(matchesMap.values())
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        setMatches(uniqueMatches);
+        setAttendanceData(Array.from(attendanceMap.values()));
 
       } catch (error) {
         console.error('Error fetching attendance data:', error);
@@ -218,7 +267,7 @@ const AttendanceStatus = () => {
             <div className="flex items-center gap-3">
               <Badge variant="outline" className="text-sm bg-white/80 backdrop-blur-sm border-green-200">
                 <Users className="w-4 h-4 mr-1" />
-                운영진 전용
+                전체 회원
               </Badge>
             </div>
           </div>

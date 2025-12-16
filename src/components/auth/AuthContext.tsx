@@ -42,3 +42,21 @@ export function RequireAuth() {
   
   return <Outlet />;
 }
+
+// 시즌 종료: 관리자만 접근 가능한 라우트 보호
+export function RequireAdmin() {
+  const { isAuthenticated, canManage } = useAuthContext();
+  const location = useLocation();
+
+  // 인증되지 않은 경우 로그인 페이지로 리다이렉트
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  // 관리자가 아닌 경우 선수 통계 페이지로 리다이렉트
+  if (!canManage()) {
+    return <Navigate to="/stats" replace />;
+  }
+
+  return <Outlet />;
+}

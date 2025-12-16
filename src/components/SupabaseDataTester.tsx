@@ -541,7 +541,7 @@ export function SupabaseDataTester() {
           <div className="p-6 text-center text-gray-500">
             <p>데이터가 없습니다</p>
           </div>
-        ) : (
+        ) : tableData[0] ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -578,6 +578,10 @@ export function SupabaseDataTester() {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : (
+          <div className="p-6 text-center text-gray-500">
+            <p>데이터가 없습니다</p>
           </div>
         )}
       </div>

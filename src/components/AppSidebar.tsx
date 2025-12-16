@@ -31,21 +31,27 @@ const AppSidebar = () => {
   const location = useLocation();
 
   // Define navigation items with permission checks
+  // 시즌 종료: 일반 회원은 선수 통계와 출석현황만, 관리자는 모든 메뉴 접근 가능
   const getNavItems = () => {
+    const isAdmin = canManage();
+    
     const baseItems = [
-      { title: '대시보드', path: '/dashboard', icon: Home, alwaysShow: true },
-      { title: '이벤트 관리', path: '/matches', icon: Calendar, show: true }, // Show to everyone
+      // 일반 회원과 관리자 모두에게 보이는 메뉴
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
-      { title: '내 기록', path: '/my-stats', icon: User, show: true },
-      { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: true, color: 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' },
-      { title: '작전판', path: '/tactics', icon: Clipboard, show: true, color: 'text-green-600 hover:text-green-700 hover:bg-green-50' },
+      
+      // 관리자만 보이는 메뉴들
+      { title: '대시보드', path: '/dashboard', icon: Home, show: isAdmin },
+      { title: '이벤트 관리', path: '/matches', icon: Calendar, show: isAdmin },
+      { title: '내 기록', path: '/my-stats', icon: User, show: isAdmin },
+      { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: isAdmin, color: 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' },
+      { title: '작전판', path: '/tactics', icon: Clipboard, show: isAdmin, color: 'text-green-600 hover:text-green-700 hover:bg-green-50' },
       // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
       // { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
       // { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
       // { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
     ];
     
-    return baseItems.filter(item => item.alwaysShow || item.show);
+    return baseItems.filter(item => item.show);
   };
 
   const navItems = getNavItems();
@@ -95,17 +101,19 @@ const AppSidebar = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarSeparator />
+            {/* 출석현황: 일반 회원과 관리자 모두에게 표시 */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="text-green-500 hover:text-green-600 hover:bg-green-50"
+                onClick={() => navigate('/attendance-status')}
+              >
+                <Users className="h-5 w-5 mr-3" />
+                <span>출석현황</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            {/* 관리자 전용 메뉴들 */}
             {canManage() && (
               <>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="text-green-500 hover:text-green-600 hover:bg-green-50"
-                    onClick={() => navigate('/attendance-status')}
-                  >
-                    <Users className="h-5 w-5 mr-3" />
-                    <span>출석현황</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     className="text-purple-500 hover:text-purple-600 hover:bg-purple-50"

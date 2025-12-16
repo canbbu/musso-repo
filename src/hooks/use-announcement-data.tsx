@@ -73,6 +73,11 @@ export function useAnnouncementData() {
 
       if (error) throw error;
 
+      // 데이터가 없으면 에러 발생
+      if (!data || data.length === 0) {
+        throw new Error('데이터가 반환되지 않았습니다');
+      }
+
       // 추가된 항목 반영
       const createdItem: Announcement = {
         id: data[0].id,
