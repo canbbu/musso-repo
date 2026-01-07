@@ -1,11 +1,16 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth, RequireAdmin } from '@/features/auth/components/AuthContext';
-import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, MatchManagement, PlayerStats, StatsManagement, NotFound, MatchHistory, MyStats, EntirePlayerStats, TacticsList, AttendanceCheck, SeasonRankings } from '@/pages';
+import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, PlayerStats, StatsManagement, NotFound, MyStats, EntirePlayerStats, SeasonRankings } from '@/pages';
 import DataTestPage from '@/pages/DataTestPage';
 import AttendanceStatus from '@/pages/AttendanceStatus';
 import HallOfFame from '@/pages/HallOfFame';
-import Tactics from '@/pages/Tactics';
+// Matches pages
+import MatchManagementPage from '@/pages/matches/MatchManagementPage';
+import MatchHistoryPage from '@/pages/matches/MatchHistoryPage';
+import TacticsPage from '@/pages/matches/TacticsPage';
+import TacticsListPage from '@/pages/matches/TacticsListPage';
+import AttendanceCheckPage from '@/pages/matches/AttendanceCheckPage';
 // Auth pages
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
@@ -31,17 +36,17 @@ export function AppRoutes() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/data-test" element={<DataTestPage />} />
-          <Route path="/matches" element={<MatchManagement />} />
-          <Route path="/match-history" element={<MatchHistory />} />
+          <Route path="/matches" element={<MatchManagementPage />} />
+          <Route path="/match-history" element={<MatchHistoryPage />} />
           <Route path="/finance" element={<Finance />} />
           <Route path="/my-stats" element={<MyStats />} />
           <Route path="/hall-of-fame" element={<HallOfFame />} />
-          <Route path="/tactics" element={<TacticsList />} />
-          <Route path="/tactics/:matchId/:matchNumber" element={<Tactics />} />
+          <Route path="/tactics" element={<TacticsListPage />} />
+          <Route path="/tactics/:matchId/:matchNumber" element={<TacticsPage />} />
           <Route path="/stats-management" element={<StatsManagement />} />
           <Route path="/announcement-management" element={<AnnouncementManagement />} />
           <Route path="/entire-player-stats" element={<EntirePlayerStats />} />
-          <Route path="/attendance/:matchId" element={<AttendanceCheck />} />
+          <Route path="/attendance/:matchId" element={<AttendanceCheckPage />} />
           {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}
         </Route>
         
