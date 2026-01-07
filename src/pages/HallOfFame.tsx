@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
-import { usePlayerRankings } from '@/hooks/use-player-rankings';
-import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/shared/lib/supabase/client';
+import { usePlayerRankings } from '@/features/stats/hooks/use-player-rankings';
+import Layout from '@/shared/components/layout/Layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
+import { Badge } from '@/shared/components/ui/badge';
 import { Crown, Calendar, Trophy, Award, Star } from 'lucide-react';
-import FlipPlayerCard from '@/components/FlipPlayerCard';
+import FlipPlayerCard from '@/shared/components/cards/FlipPlayerCard';
 
 interface MVPData {
   id: string;

@@ -3,7 +3,7 @@ import React from 'react';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { SidebarProvider } from '@/shared/components/ui/sidebar';
 import AppSidebar from './AppSidebar';
-import MobileNavigation from '@/components/dashboard/MobileNavigation';
+import MobileNavigation from '@/features/dashboard/components/dashboard/MobileNavigation';
 import { useLocation } from 'react-router-dom';
 
 interface LayoutProps {

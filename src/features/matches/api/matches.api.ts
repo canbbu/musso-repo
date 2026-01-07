@@ -327,3 +327,4 @@ export async function getUpcomingMatches() {
   return matchesWithAttendance.filter((match): match is NonNullable<typeof match> => match !== null);
 }
 
+

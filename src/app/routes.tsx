@@ -1,7 +1,14 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth, RequireAdmin } from '@/features/auth/components/AuthContext';
-import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, NotFound } from '@/pages';
+import { NotFound } from '@/pages';
+// Finance pages
+import FinancePage from '@/pages/finance/FinancePage';
+import FinanceManagementPage from '@/pages/finance/FinanceManagementPage';
+// Dashboard pages
+import DashboardPage from '@/pages/dashboard/DashboardPage';
+// Announcements pages
+import AnnouncementManagementPage from '@/pages/announcements/AnnouncementManagementPage';
 // Stats pages
 import PlayerStatsPage from '@/pages/stats/PlayerStatsPage';
 import MyStatsPage from '@/pages/stats/MyStatsPage';
@@ -9,7 +16,8 @@ import EntirePlayerStatsPage from '@/pages/stats/EntirePlayerStatsPage';
 import SeasonRankingsPage from '@/pages/stats/SeasonRankingsPage';
 import StatsManagementPage from '@/pages/stats/StatsManagementPage';
 import DataTestPage from '@/pages/DataTestPage';
-import AttendanceStatus from '@/pages/AttendanceStatus';
+// Attendance pages
+import AttendanceStatusPage from '@/pages/attendance/AttendanceStatusPage';
 import HallOfFame from '@/pages/HallOfFame';
 // Matches pages
 import MatchManagementPage from '@/pages/matches/MatchManagementPage';
@@ -34,23 +42,23 @@ export function AppRoutes() {
       <Route element={<RequireAuth />}>
         {/* 일반 회원과 관리자 모두 접근 가능한 페이지 (시즌 종료) */}
         <Route path="/stats" element={<PlayerStatsPage />} />
-        <Route path="/attendance-status" element={<AttendanceStatus />} />
+        <Route path="/attendance-status" element={<AttendanceStatusPage />} />
         <Route path="/season-rankings" element={<SeasonRankingsPage />} />
         
         {/* 관리자만 접근 가능한 페이지 (시즌 종료) */}
         <Route element={<RequireAdmin />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/data-test" element={<DataTestPage />} />
           <Route path="/matches" element={<MatchManagementPage />} />
           <Route path="/match-history" element={<MatchHistoryPage />} />
-          <Route path="/finance" element={<Finance />} />
+          <Route path="/finance" element={<FinancePage />} />
           <Route path="/my-stats" element={<MyStatsPage />} />
           <Route path="/hall-of-fame" element={<HallOfFame />} />
           <Route path="/tactics" element={<TacticsListPage />} />
           <Route path="/tactics/:matchId/:matchNumber" element={<TacticsPage />} />
           <Route path="/stats-management" element={<StatsManagementPage />} />
-          <Route path="/announcement-management" element={<AnnouncementManagement />} />
+          <Route path="/announcement-management" element={<AnnouncementManagementPage />} />
           <Route path="/entire-player-stats" element={<EntirePlayerStatsPage />} />
           <Route path="/attendance/:matchId" element={<AttendanceCheckPage />} />
           {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}

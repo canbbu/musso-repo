@@ -12,8 +12,8 @@ import {
   SidebarSeparator,
   SidebarMenuSub,
   SidebarMenuSubItem
-} from '@/components/ui/sidebar';
-import { useAuth } from '@/hooks/use-auth';
+} from '@/shared/components/ui/sidebar';
+import { useAuth } from '@/features/auth/hooks/use-auth';
 import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard, Award } from 'lucide-react';
 // import UserProfileButton from './profile/UserProfileButton';
 
