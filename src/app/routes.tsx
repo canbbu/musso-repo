@@ -1,7 +1,13 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth, RequireAdmin } from '@/features/auth/components/AuthContext';
-import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, PlayerStats, StatsManagement, NotFound, MyStats, EntirePlayerStats, SeasonRankings } from '@/pages';
+import { Dashboard, Finance, FinanceManagement, AnnouncementManagement, NotFound } from '@/pages';
+// Stats pages
+import PlayerStatsPage from '@/pages/stats/PlayerStatsPage';
+import MyStatsPage from '@/pages/stats/MyStatsPage';
+import EntirePlayerStatsPage from '@/pages/stats/EntirePlayerStatsPage';
+import SeasonRankingsPage from '@/pages/stats/SeasonRankingsPage';
+import StatsManagementPage from '@/pages/stats/StatsManagementPage';
 import DataTestPage from '@/pages/DataTestPage';
 import AttendanceStatus from '@/pages/AttendanceStatus';
 import HallOfFame from '@/pages/HallOfFame';
@@ -27,9 +33,9 @@ export function AppRoutes() {
       {/* 인증이 필요한 페이지들 */}
       <Route element={<RequireAuth />}>
         {/* 일반 회원과 관리자 모두 접근 가능한 페이지 (시즌 종료) */}
-        <Route path="/stats" element={<PlayerStats />} />
+        <Route path="/stats" element={<PlayerStatsPage />} />
         <Route path="/attendance-status" element={<AttendanceStatus />} />
-        <Route path="/season-rankings" element={<SeasonRankings />} />
+        <Route path="/season-rankings" element={<SeasonRankingsPage />} />
         
         {/* 관리자만 접근 가능한 페이지 (시즌 종료) */}
         <Route element={<RequireAdmin />}>
@@ -39,13 +45,13 @@ export function AppRoutes() {
           <Route path="/matches" element={<MatchManagementPage />} />
           <Route path="/match-history" element={<MatchHistoryPage />} />
           <Route path="/finance" element={<Finance />} />
-          <Route path="/my-stats" element={<MyStats />} />
+          <Route path="/my-stats" element={<MyStatsPage />} />
           <Route path="/hall-of-fame" element={<HallOfFame />} />
           <Route path="/tactics" element={<TacticsListPage />} />
           <Route path="/tactics/:matchId/:matchNumber" element={<TacticsPage />} />
-          <Route path="/stats-management" element={<StatsManagement />} />
+          <Route path="/stats-management" element={<StatsManagementPage />} />
           <Route path="/announcement-management" element={<AnnouncementManagement />} />
-          <Route path="/entire-player-stats" element={<EntirePlayerStats />} />
+          <Route path="/entire-player-stats" element={<EntirePlayerStatsPage />} />
           <Route path="/attendance/:matchId" element={<AttendanceCheckPage />} />
           {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}
         </Route>
