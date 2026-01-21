@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/shared/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { useMatchTactics } from '@/features/matches/hooks/use-match-tactics';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useToast } from '@/shared/hooks/use-toast';
 import { Match } from '@/features/matches/types/match.types';
-import { ClipboardCheck, ClipboardList } from 'lucide-react';
+import { ClipboardCheck, ClipboardList, CalendarIcon } from 'lucide-react';
 
 interface MatchWithTactics extends Match {
   hasTactics?: boolean;
@@ -20,6 +27,19 @@ const TacticsList: React.FC = () => {
   const { matches, loading, error, checkTacticsExistence } = useMatchTactics();
   const { canManagePlayerStats, canManageMatches, isSystemManager } = useAuth();
   const { toast } = useToast();
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  
+  // 년도별 필터링된 matches
+  const filteredMatches = useMemo(() => {
+    return matches.filter(match => {
+      const matchYear = new Date(match.date).getFullYear();
+      return matchYear === selectedYear;
+    });
+  }, [matches, selectedYear]);
+  
+  // 연도 옵션 (최근 5년)
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   const handleTacticsClick = async (matchId: number) => {
     // 해당 경기에 이미 작전판이 있는지 확인
@@ -126,7 +146,30 @@ const TacticsList: React.FC = () => {
           <p className="text-gray-600">경기를 선택하여 작전판을 확인하고 편집할 수 있습니다.</p>
         </div>
 
-        {matches.length === 0 ? (
+        {/* 년도 필터 */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-1">
+            <CalendarIcon className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-medium">연도:</span>
+          </div>
+          <Select
+            value={selectedYear.toString()}
+            onValueChange={(value) => setSelectedYear(parseInt(value))}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}년
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {filteredMatches.length === 0 ? (
           <Card>
             <CardContent className="p-6">
               <div className="text-center text-gray-500">
@@ -137,7 +180,7 @@ const TacticsList: React.FC = () => {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {matches.map((match) => {
+            {filteredMatches.map((match) => {
               const canEdit = canEditMatchRecord(match);
               const isReadOnly = !canEdit && match.status === 'completed';
               

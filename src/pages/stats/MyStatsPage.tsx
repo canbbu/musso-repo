@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Progress } from "@/shared/components/ui/progress";
-import { User, Award, Calendar, Goal, Trophy, Zap, Target, Send, Move, Shield, Dumbbell } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import { User, Award, Calendar, Goal, Trophy, Zap, Target, Send, Move, Shield, Dumbbell, CalendarIcon } from 'lucide-react';
 import { usePlayerRankings } from '@/features/stats/hooks/use-player-rankings';
 import Layout from '@/shared/components/layout/Layout';
 import FlipPlayerCard from '@/shared/components/cards/FlipPlayerCard';
 
 const MyStats = () => {
   const { userName } = useAuth();
-  const { players, loading } = usePlayerRankings();
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const { players, loading } = usePlayerRankings(selectedYear);
+  
+  // 연도 옵션 (최근 5년)
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
   if (loading || !players.length) {
     return <div>로딩 중...</div>;
@@ -28,6 +40,29 @@ const MyStats = () => {
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">내 기록</h1>
           <p className="text-gray-600">{userName}님의 이번 시즌 활동 기록입니다.</p>
+          
+          {/* 년도 필터 */}
+          <div className="flex items-center gap-4 mt-4 mb-4">
+            <div className="flex items-center gap-1">
+              <CalendarIcon className="h-4 w-4 text-gray-500" />
+              <span className="text-sm font-medium">연도:</span>
+            </div>
+            <Select
+              value={selectedYear.toString()}
+              onValueChange={(value) => setSelectedYear(parseInt(value))}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {yearOptions.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}년
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* 카드와 MVP 섹션을 가로로 배치 */}

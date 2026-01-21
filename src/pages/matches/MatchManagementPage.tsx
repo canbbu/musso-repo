@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '@/shared/components/layout/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
@@ -10,16 +10,26 @@ import {
   DialogTitle,
   DialogFooter
 } from "@/shared/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import MatchSection from '@/features/matches/components/match/MatchSection';
 import PlayerAttendanceForm from '@/features/matches/components/match/PlayerAttendanceForm';
 import { useMatchData } from '@/features/matches/hooks/use-match-data';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useToast } from '@/shared/hooks/use-toast';
-import { ClipboardCheck, Plus } from 'lucide-react';
+import { ClipboardCheck, Plus, CalendarIcon } from 'lucide-react';
 import MatchForm from '@/features/matches/components/match/MatchForm';
 
 const MatchManagement = () => {
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  
   const { 
     matches, 
     loading, 
@@ -175,9 +185,20 @@ const MatchManagement = () => {
     navigate(`/stats-management?matchId=${matchId}`);
   };
 
-  const upcomingMatches = matches.filter(match => match.status === 'upcoming');
-  const completedMatches = matches.filter(match => match.status === 'completed');
-  const canceledMatches = matches.filter(match => match.status === 'cancelled');
+  // 년도별 필터링된 matches
+  const filteredMatches = useMemo(() => {
+    return matches.filter(match => {
+      const matchYear = new Date(match.date).getFullYear();
+      return matchYear === selectedYear;
+    });
+  }, [matches, selectedYear]);
+
+  const upcomingMatches = filteredMatches.filter(match => match.status === 'upcoming');
+  const completedMatches = filteredMatches.filter(match => match.status === 'completed');
+  const canceledMatches = filteredMatches.filter(match => match.status === 'cancelled');
+  
+  // 연도 옵션 (최근 5년)
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
   
   const selectedMatch = matches.find(m => m.id === Number(selectedMatchId));
 
@@ -199,6 +220,29 @@ const MatchManagement = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">이벤트 일정</h1>
         <p className="text-gray-600">팀의 이벤트 일정을 확인하고 출석을 체크합니다.</p>
+        
+        {/* 년도 필터 */}
+        <div className="flex items-center gap-4 mt-4 mb-4">
+          <div className="flex items-center gap-1">
+            <CalendarIcon className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-medium">연도:</span>
+          </div>
+          <Select
+            value={selectedYear.toString()}
+            onValueChange={(value) => setSelectedYear(parseInt(value))}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}년
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <div className="flex justify-end mb-4">

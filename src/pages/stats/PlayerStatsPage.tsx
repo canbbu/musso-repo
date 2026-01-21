@@ -21,18 +21,25 @@ const PlayerStats = () => {
   
   // 현재 연도 계산
   const currentYear = new Date().getFullYear();
+  const defaultYear = 2026; // 기본 필터 연도
   
-  // 필터링 상태
-  const [selectedYear, setSelectedYear] = useState<number | undefined>(undefined);
+  // 필터링 상태 - 기본값을 2026년으로 설정
+  const [selectedYear, setSelectedYear] = useState<number | undefined>(defaultYear);
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
   
-  // 연도 옵션 (최근 3년)
+  // 연도 옵션 (2026년 포함, 최근 3년)
   const yearOptions = [
     { value: "all", label: '전체 연도' },
+    { value: defaultYear.toString(), label: `${defaultYear}년` },
     { value: currentYear.toString(), label: `${currentYear}년` },
     { value: (currentYear - 1).toString(), label: `${currentYear - 1}년` },
     { value: (currentYear - 2).toString(), label: `${currentYear - 2}년` }
   ];
+  
+  // 중복 제거 (2026년이 현재 연도와 같거나 가까운 경우)
+  const uniqueYearOptions = yearOptions.filter((option, index, self) => 
+    index === self.findIndex((o) => o.value === option.value)
+  );
   
   // 월 옵션
   const monthOptions = [
@@ -99,7 +106,7 @@ const PlayerStats = () => {
                 <SelectValue placeholder="전체 연도" />
               </SelectTrigger>
               <SelectContent>
-                {yearOptions.map((option) => (
+                {uniqueYearOptions.map((option) => (
                   <SelectItem 
                     key={option.label} 
                     value={option.value}
