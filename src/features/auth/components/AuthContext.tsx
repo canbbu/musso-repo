@@ -27,28 +27,23 @@ export function RequireAuth() {
   const { isAuthenticated } = useAuthContext();
   const location = useLocation();
 
-  console.log('[DEBUG] RequireAuth 체크:', {
-    isAuthenticated,
-    currentPath: location.pathname
-  });
-
-  // 인증되지 않은 경우 로그인 페이지로 리다이렉트
+  // 인증되지 않은 경우 대시보드로 리다이렉트 (사이드바에서 모달 표시)
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/dashboard" state={{ from: location.pathname, showLogin: true }} replace />;
   }
 
   // 인증된 경우 자식 라우트 렌더링
   return <Outlet />;
 }
 
-// 시즌 종료: 관리자만 접근 가능한 라우트 보호
+// 관리자만 접근 가능한 라우트 보호
 export function RequireAdmin() {
   const { isAuthenticated, canManage } = useAuthContext();
   const location = useLocation();
 
-  // 인증되지 않은 경우 로그인 페이지로 리다이렉트
+  // 인증되지 않은 경우 대시보드로 리다이렉트
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/dashboard" state={{ from: location.pathname, showLogin: true }} replace />;
   }
 
   // 관리자가 아닌 경우 선수 통계 페이지로 리다이렉트

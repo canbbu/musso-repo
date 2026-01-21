@@ -33,21 +33,23 @@ import ProfilePage from '@/pages/auth/ProfilePage';
 export function AppRoutes() {
   return (
     <Routes>
+      {/* 메인 페이지는 대시보드 */}
+      <Route path="/" element={<DashboardPage />} />
+      
       {/* 인증이 필요하지 않은 페이지들 */}
-      <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="*" element={<NotFound />} />
+      
+      {/* 로그인 없이 접근 가능한 페이지들 */}
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/stats" element={<PlayerStatsPage />} />
       
       {/* 인증이 필요한 페이지들 */}
       <Route element={<RequireAuth />}>
-        {/* 일반 회원과 관리자 모두 접근 가능한 페이지 (시즌 종료) */}
-        <Route path="/stats" element={<PlayerStatsPage />} />
         <Route path="/attendance-status" element={<AttendanceStatusPage />} />
         <Route path="/season-rankings" element={<SeasonRankingsPage />} />
         
-        {/* 관리자만 접근 가능한 페이지 (시즌 종료) */}
+        {/* 관리자만 접근 가능한 페이지 */}
         <Route element={<RequireAdmin />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/data-test" element={<DataTestPage />} />
           <Route path="/matches" element={<MatchManagementPage />} />
@@ -61,12 +63,13 @@ export function AppRoutes() {
           <Route path="/announcement-management" element={<AnnouncementManagementPage />} />
           <Route path="/entire-player-stats" element={<EntirePlayerStatsPage />} />
           <Route path="/attendance/:matchId" element={<AttendanceCheckPage />} />
-          {/* <Route path="/finance-management" element={<FinanceManagement />} /> */}
         </Route>
         
         {/* 프로필 변경은 모든 인증된 사용자에게 허용 */}
         <Route path="/change-profile" element={<ProfilePage />} />
       </Route>
+      
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
