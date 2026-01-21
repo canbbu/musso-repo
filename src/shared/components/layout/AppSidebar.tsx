@@ -37,17 +37,17 @@ const AppSidebar = () => {
     
     const baseItems = [
       // 일반 회원과 관리자 모두에게 보이는 메뉴
-      { title: '시즌 종료 랭킹', path: '/season-rankings', icon: Award, show: true, color: 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50' },
+      // { title: '시즌 종료 랭킹', path: '/season-rankings', icon: Award, show: true, color: 'text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50' },
+      { title: '대시보드', path: '/dashboard', icon: Home, show: isAdmin },
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       
       // 관리자만 보이는 메뉴들
-      { title: '대시보드', path: '/dashboard', icon: Home, show: isAdmin },
       { title: '이벤트 관리', path: '/matches', icon: Calendar, show: isAdmin },
       { title: '내 기록', path: '/my-stats', icon: User, show: isAdmin },
       { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: isAdmin, color: 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' },
       { title: '작전판', path: '/tactics', icon: Clipboard, show: isAdmin, color: 'text-green-600 hover:text-green-700 hover:bg-green-50' },
       // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
-      // { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
+      { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
       // { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
       // { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
     ];
