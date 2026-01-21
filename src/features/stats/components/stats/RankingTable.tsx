@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
-import { Award, Goal, Trophy, CalendarCheck, Star } from "lucide-react";
+import { Award, Goal, Trophy, CalendarCheck, Shield } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card";
 import type { RankingTab, Player } from '@/features/stats/types/stats.types';
 
@@ -25,8 +25,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
         return '어시스트';
       case 'attendance':
         return '출석률';
-      case 'rating':
-        return '평점';
+      case 'cleansheet':
+        return '철벽지수';
       default:
         return '득점';
     }
@@ -40,8 +40,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
         return <Trophy className="text-blue-500 h-5 w-5" />;
       case 'attendance':
         return <CalendarCheck className="text-yellow-500 h-5 w-5" />;
-      case 'rating':
-        return <Star className="text-orange-500 h-5 w-5" />;
+      case 'cleansheet':
+        return <Shield className="text-purple-500 h-5 w-5" />;
       default:
         return <Goal className="text-green-500 h-5 w-5" />;
     }
@@ -55,8 +55,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
         return player.assists;
       case 'attendance':
         return `${player.attendance}%`;
-      case 'rating':
-        return player.rating;
+      case 'cleansheet':
+        return `${player.cleansheet || 0}경기`;
       default:
         return player.goals;
     }
@@ -73,8 +73,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
           return currentPlayer.assists;
         case 'attendance':
           return currentPlayer.attendance;
-        case 'rating':
-          return currentPlayer.rating;
+        case 'cleansheet':
+          return currentPlayer.cleansheet || 0;
         default:
           return currentPlayer.goals;
       }
@@ -92,8 +92,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
             return comparePlayer.assists;
           case 'attendance':
             return comparePlayer.attendance;
-          case 'rating':
-            return comparePlayer.rating;
+          case 'cleansheet':
+            return comparePlayer.cleansheet || 0;
           default:
             return comparePlayer.goals;
         }

@@ -262,13 +262,16 @@ const MatchManagement = () => {
           <MatchSection 
             title="다가오는 이벤트"
             matches={upcomingMatches}
-            onAttendanceChange={(matchId, status) => handleAttendanceChange(matchId, status, userId!)}
+            onAttendanceChange={() => {}} // 참석/불참 기능 비활성화
             canManageAnnouncements={isCoach}
             emptyMessage="등록된 예정 이벤트가 없습니다."
             showAddButton={false}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteMatch}
             onViewMatch={handleViewMatch}
+            disableVoting={true}
+            showOnlyVoting={false}
+            hideManagementButton={false}
           />
         </TabsContent>
         <TabsContent value="completed">
@@ -281,6 +284,9 @@ const MatchManagement = () => {
             onViewMatch={handleViewMatch}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteMatch}
+            disableVoting={true}
+            showOnlyVoting={false}
+            hideManagementButton={false}
           />
         </TabsContent>
         <TabsContent value="canceled">
@@ -293,6 +299,9 @@ const MatchManagement = () => {
             onViewMatch={handleViewMatch}
             onEditClick={handleEditClick}
             onDeleteClick={handleDeleteMatch}
+            disableVoting={true}
+            showOnlyVoting={false}
+            hideManagementButton={false}
           />
         </TabsContent>
       </Tabs>

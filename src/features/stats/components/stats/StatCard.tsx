@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card";
-import { Goal, Trophy, CalendarCheck, Star } from "lucide-react";
+import { Goal, Trophy, CalendarCheck, Shield } from "lucide-react";
 import type { RankingTab, Player } from '@/features/stats/types/stats.types';
 
 interface StatCardProps {
@@ -21,8 +21,8 @@ const StatCard = ({ type, isActive, topPlayer, onClick }: StatCardProps) => {
           return 'border-blue-500 bg-blue-50';
         case 'attendance':
           return 'border-yellow-500 bg-yellow-50';
-        case 'rating':
-          return 'border-orange-500 bg-orange-50';
+        case 'cleansheet':
+          return 'border-purple-500 bg-purple-50';
       }
     }
     return '';
@@ -36,8 +36,8 @@ const StatCard = ({ type, isActive, topPlayer, onClick }: StatCardProps) => {
         return <Trophy className="mr-2 h-4 w-4 text-blue-600" />;
       case 'attendance':
         return <CalendarCheck className="mr-2 h-4 w-4 text-yellow-600" />;
-      case 'rating':
-        return <Star className="mr-2 h-4 w-4 text-orange-600" />;
+      case 'cleansheet':
+        return <Shield className="mr-2 h-4 w-4 text-purple-600" />;
     }
   };
 
@@ -49,8 +49,8 @@ const StatCard = ({ type, isActive, topPlayer, onClick }: StatCardProps) => {
         return '어시스트 랭킹';
       case 'attendance':
         return '출석 랭킹';
-      case 'rating':
-        return '평점 랭킹';
+      case 'cleansheet':
+        return '철벽지수 랭킹';
     }
   };
 
@@ -64,8 +64,8 @@ const StatCard = ({ type, isActive, topPlayer, onClick }: StatCardProps) => {
         return `${topPlayer.assists} 어시스트`;
       case 'attendance':
         return `${topPlayer.attendance}%`;
-      case 'rating':
-        return topPlayer.rating;
+      case 'cleansheet':
+        return `${topPlayer.cleansheet || 0}경기`;
     }
   };
 

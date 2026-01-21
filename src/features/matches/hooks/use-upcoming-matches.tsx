@@ -41,17 +41,22 @@ export function useUpcomingMatches() {
               }
 
               // 참석 상태별 플레이어 정보 가져오기
+              // player_id가 null인 경우(상대팀 등)를 대비해 필터링
               const { data: attendanceData, error: attendanceError } = await supabase
                 .from('match_attendance')
                 .select(`
                   status,
+                  player_id,
                   player:players(id, name)
                 `)
-                .eq('match_id', match.id);
+                .eq('match_id', match.id)
+                .not('player_id', 'is', null); // player_id가 null이 아닌 경우만 조회
                 
               if (attendanceError) {
                 console.error(`[DB 오류] 매치 ID ${match.id}에 대한 참석 정보 조회 실패:`, attendanceError);
-                throw attendanceError;
+                // 오류가 발생해도 빈 배열로 처리하여 계속 진행
+                const emptyAttendanceData: any[] = [];
+                return null; // 이 매치는 건너뛰기
               }
 
               
@@ -66,7 +71,20 @@ export function useUpcomingMatches() {
               const playerStatusMap = new Map<string, { status: StatusType; player: Player }>();
               
               attendanceData?.forEach(item => {
+                // player가 null이거나 undefined인 경우 건너뛰기
+                if (!item.player) {
+                  console.warn(`[경고] 매치 ID ${match.id}: player 정보가 없습니다.`);
+                  return;
+                }
+                
                 const player = Array.isArray(item.player) ? (item.player[0] as Player) : (item.player as Player);
+                
+                // player 객체가 유효한지 확인
+                if (!player || !player.id) {
+                  console.warn(`[경고] 매치 ID ${match.id}: 유효하지 않은 player 객체입니다.`, player);
+                  return;
+                }
+                
                 const playerId = player.id;
                 const newStatus = (item.status as StatusType) || 'pending';
                 const existing = playerStatusMap.get(playerId);

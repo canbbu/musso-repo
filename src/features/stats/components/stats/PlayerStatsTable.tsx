@@ -49,7 +49,6 @@ const PlayerStatsTable = ({
           <TableHead>출석</TableHead>
           <TableHead>경기 득점</TableHead>
           <TableHead>경기 어시스트</TableHead>
-          <TableHead>평점</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -57,7 +56,7 @@ const PlayerStatsTable = ({
         {playerStats.some(stat => stat.attended) && (
           <>
             <TableRow>
-              <TableCell colSpan={5} className="bg-green-50 font-semibold text-green-700">
+              <TableCell colSpan={4} className="bg-green-50 font-semibold text-green-700">
                 참석자
               </TableCell>
             </TableRow>
@@ -120,36 +119,6 @@ const PlayerStatsTable = ({
                       disabled={isFromTactics || (isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly}
                     />
                   </TableCell>
-                  <TableCell>
-                    <Input 
-                      type="number" 
-                      min="0" 
-                      max="10" 
-                      step="0.1"
-                      maxLength={3}
-                      value={stat.rating === 0 ? "" : stat.rating} 
-                      onChange={(e) => {
-                        // 수정 기한이 지난 경우 (비밀번호로 해제 가능)
-                        if (isEditPeriodExpired && !isPasswordUnlocked) return;
-                        
-                        // 입력값 제한 적용
-                        let value = parseFloat(e.target.value);
-                        
-                        // 값이 10보다 크면 10으로 고정
-                        if (value > 10) value = 10;
-                        
-                        // 빈 문자열은 0으로 처리
-                        if (e.target.value === "") value = 0;
-                        
-                        // 소수점 첫째 자리까지만 유지 (예: 9.87 -> 9.8)
-                        value = Math.round(value * 10) / 10;
-                        
-                        onStatChange(stat.id, 'rating', value);
-                      }}
-                      className={`w-20 h-8 ${(isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                      disabled={(isEditPeriodExpired && !isPasswordUnlocked) || isReadOnly}
-                    />
-                  </TableCell>
                 </TableRow>
               ))}
           </>
@@ -159,7 +128,7 @@ const PlayerStatsTable = ({
         {playerStats.some(stat => !stat.attended && stat.attendanceStatus === 'not_attending') && (
           <>
             <TableRow>
-              <TableCell colSpan={5} className="bg-red-50 font-semibold text-red-700">
+              <TableCell colSpan={4} className="bg-red-50 font-semibold text-red-700">
                 불참
               </TableCell>
             </TableRow>
@@ -177,7 +146,6 @@ const PlayerStatsTable = ({
                   </TableCell>
                   <TableCell>-</TableCell>
                   <TableCell>-</TableCell>
-                  <TableCell>-</TableCell>
                 </TableRow>
               ))}
           </>
@@ -187,7 +155,7 @@ const PlayerStatsTable = ({
         {playerStats.some(stat => stat.attendanceStatus === 'pending') && (
           <>
             <TableRow>
-              <TableCell colSpan={5} className="bg-yellow-50 font-semibold text-yellow-700">
+              <TableCell colSpan={4} className="bg-yellow-50 font-semibold text-yellow-700">
                 미정
               </TableCell>
             </TableRow>
@@ -203,7 +171,6 @@ const PlayerStatsTable = ({
                       disabled={isEditPeriodExpired || isReadOnly || isFromTactics}
                     />
                   </TableCell>
-                  <TableCell>-</TableCell>
                   <TableCell>-</TableCell>
                   <TableCell>-</TableCell>
                 </TableRow>

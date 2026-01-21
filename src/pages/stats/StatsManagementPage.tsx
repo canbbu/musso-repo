@@ -55,8 +55,8 @@ const StatsManagement = () => {
       if (isFromTactics) return;
       handleAttendanceChange(playerId, value ? 'attending' : 'not_attending');
     } else {
-      // 작전판에서 온 경우 평점만 수정 가능
-      if (isFromTactics && field !== 'rating') {
+      // 작전판에서 온 경우 수정 불가 (평점 비활성화)
+      if (isFromTactics) {
         return;
       }
       // 수정 기한이 지난 경우 모든 수정 불가
@@ -241,20 +241,20 @@ const StatsManagement = () => {
   }, [canManagePlayerStats, navigate, toast]);
   
   const handleSaveStats = async () => {
-    // 염지훈
-    for (const stat of playerStats) {
-      if(stat.attendanceStatus === "attending") {
-        if (stat.rating === 0 || stat.rating === null) {
-          
-          toast({
-            title: "저장 실패",
-            description: "모든 선수의 평점이 입력되어야 저장할 수 있습니다.",
-            style: { backgroundColor: "red" }, // 실패 색상
-          });
-          return false;
-        }
-      }
-    }
+    // 평점 검증 제거 (2026년도에는 평점을 사용하지 않음)
+    // for (const stat of playerStats) {
+    //   if(stat.attendanceStatus === "attending") {
+    //     if (stat.rating === 0 || stat.rating === null) {
+    //       
+    //       toast({
+    //         title: "저장 실패",
+    //         description: "모든 선수의 평점이 입력되어야 저장할 수 있습니다.",
+    //         style: { backgroundColor: "red" }, // 실패 색상
+    //       });
+    //       return false;
+    //     }
+    //   }
+    // }
 
     try {
       // match status를 completed로 갱신

@@ -28,6 +28,7 @@ export interface Player {
   assists?: number;
   attendance?: number;
   rating?: number;
+  cleansheet?: number; // 철벽지수 횟수
   boots_brand?: string;
   favorite_team?: string;
   fav_club?: string;
@@ -45,7 +46,7 @@ export interface Player {
   phy?: number; // 피지컬 (Physical)
 }
 
-export type RankingTab = 'goals' | 'assists' | 'attendance' | 'rating';
+export type RankingTab = 'goals' | 'assists' | 'attendance' | 'cleansheet';
 
 export interface Mvp {
   id: number;

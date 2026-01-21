@@ -65,7 +65,7 @@ const PlayerStats = () => {
     goalRanking,
     assistRanking,
     attendanceRanking,
-    ratingRanking,
+    cleansheetRanking,
     getCurrentRanking,
     loading
   } = usePlayerRankings(selectedYear, selectedMonth);
@@ -181,10 +181,10 @@ const PlayerStats = () => {
               />
               
               <StatCard 
-                type="rating" 
-                isActive={activeTab === 'rating'} 
-                topPlayer={ratingRanking[0]} 
-                onClick={() => setActiveTab('rating')} 
+                type="cleansheet" 
+                isActive={activeTab === 'cleansheet'} 
+                topPlayer={cleansheetRanking[0]} 
+                onClick={() => setActiveTab('cleansheet')} 
               />
             </div>
             

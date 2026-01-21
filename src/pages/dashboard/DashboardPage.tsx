@@ -225,24 +225,27 @@ const Dashboard = () => {
         </div>
       )}
       
-      {/* PC: 팀 일정과 다가오는 이벤트 반반, 모바일: 순서대로 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* 다가오는 이벤트 */}
+      <div>
+        <MatchSection 
+          title="다가오는 이벤트"
+          matches={matches.filter(m => m.status === 'upcoming')}
+          onAttendanceChange={(matchId, status) => handleAttendanceChange(matchId, status, userId as string)}
+          canManageAnnouncements={false}
+          emptyMessage="예정된 이벤트가 없습니다."
+          onViewMatch={() => {}}
+          disableVoting={false}
+          showOnlyVoting={false}
+          hideManagementButton={true}
+        />
+      </div>
+      
+      {/* 팀 일정 스케줄러 - 주석처리 */}
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <CalendarView calendarEvents={calendarEvents || {}} />
         </div>
-        <div>
-          <MatchSection 
-            title="다가오는 이벤트"
-            matches={matches.filter(m => m.status === 'upcoming')}
-            onAttendanceChange={(matchId, status) => handleAttendanceChange(matchId, status, userId as string)}
-            canManageAnnouncements={false}
-            emptyMessage="예정된 이벤트가 없습니다."
-            onViewMatch={() => {}}
-            disableVoting={false}
-            showOnlyVoting={true}
-          />
-        </div>
-      </div>
+      </div> */}
 
       {/* 공지사항은 임시 비표시 (요청사항) */}
       {false && (

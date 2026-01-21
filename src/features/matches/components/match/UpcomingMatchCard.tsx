@@ -1,13 +1,13 @@
 import React, { useState, useCallback } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
 import { Check, X, Clipboard, Eye, Edit, Trash } from "lucide-react";
-import { Match } from '@/hooks/use-match-data';
-import { useToast } from '@/hooks/use-toast';
+import { Match } from '@/features/matches/hooks/use-match-data';
+import { useToast } from '@/shared/hooks/use-toast';
 import AttendanceListModal from './AttendanceListModal';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
-import { formatKoreanDate } from '@/utils/date-helpers';
+import { useAuth } from '@/features/auth/hooks/use-auth';
+import { formatKoreanDate } from '@/shared/utils/date-helpers';
 import { format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -76,6 +76,7 @@ interface UpcomingMatchCardProps {
   onDeleteClick?: (matchId: number) => void;
   disableVoting?: boolean;
   showOnlyVoting?: boolean;
+  hideManagementButton?: boolean;
 }
 
 const UpcomingMatchCard = ({ 
@@ -86,7 +87,8 @@ const UpcomingMatchCard = ({
   onEditClick,
   onDeleteClick,
   disableVoting = false,
-  showOnlyVoting = false
+  showOnlyVoting = false,
+  hideManagementButton = false
 }: UpcomingMatchCardProps) => {
   const { toast } = useToast();
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
@@ -182,15 +184,17 @@ const UpcomingMatchCard = ({
                   <Eye size={18} className="mr-1" />
                   참석 현황
                 </Button>
-                {/* Show management button only to coaches */}
-                <Button 
-                  className="flex-1 flex items-center justify-center" 
-                  variant="outline"
-                  onClick={() => handleManageMatch(match.id)}
-                >
-                  <Clipboard size={18} className="mr-1" />
-                  이벤트 관리
-                </Button>
+                {/* Show management button only if not hidden */}
+                {!hideManagementButton && (
+                  <Button 
+                    className="flex-1 flex items-center justify-center" 
+                    variant="outline"
+                    onClick={() => handleManageMatch(match.id)}
+                  >
+                    <Clipboard size={18} className="mr-1" />
+                    이벤트 관리
+                  </Button>
+                )}
               </div>
             )}
             {canManageAnnouncements && !showOnlyVoting && (
