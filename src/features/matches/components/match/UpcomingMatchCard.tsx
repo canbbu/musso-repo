@@ -10,7 +10,6 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 import { formatKoreanDate } from '@/shared/utils/date-helpers';
 import { format, subDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import RunningRecordForm from '@/features/running/components/RunningRecordForm';
 
 // 날짜 문자열에서 YYYY-MM-DD 부분만 추출하는 함수
 function extractDatePart(dateString: string): string {
@@ -229,16 +228,6 @@ const UpcomingMatchCard = ({
             </div>
           </div>
         </div>
-        
-        {/* 런닝 기록 입력 폼 */}
-        {userId && (
-          <div className="mt-4">
-            <RunningRecordForm
-              matchDate={match.date}
-              playerId={userId}
-            />
-          </div>
-        )}
       </CardContent>
       
       {/* 참석자 목록 모달 */}
