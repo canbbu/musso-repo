@@ -84,11 +84,11 @@ export function useRunningChart({ year, month }: UseRunningChartProps) {
         // 각 월별 통계 계산
         const chartData = Object.values(monthlyData).map((monthInfo) => {
           const totalDistance = monthInfo.records.reduce((sum, r) => sum + r.distance, 0);
-          const totalDuration = monthInfo.records.reduce((sum, r) => sum + r.duration, 0);
+          const totalDuration = monthInfo.records.reduce((sum, r) => sum + r.duration, 0); // 초 단위
           
-          // 평균 페이스 계산: 총 시간 / 총 거리
+          // 평균 페이스 계산: 총 시간(초) / 총 거리(km) = 초/km, 이를 분/km로 변환
           const averagePace = totalDistance > 0
-            ? Math.round((totalDuration / totalDistance) * 100) / 100
+            ? Math.round((totalDuration / totalDistance / 60) * 100) / 100 // 분/km
             : 0;
 
           return {

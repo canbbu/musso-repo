@@ -36,6 +36,24 @@ const MyStats = () => {
   const goalEfficiency = Math.round((playerStats.goals / playerStats.games) * 100);
   const assistEfficiency = Math.round((playerStats.assists / playerStats.games) * 100);
 
+  // duration(초)을 분:초 형식으로 변환
+  const formatDuration = (totalSeconds: number): string => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}분 ${seconds}초`;
+  };
+
+  // 총 시간을 분:초 형식으로 변환
+  const formatTotalDuration = (totalSeconds: number): string => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) {
+      return `${hours}시간 ${minutes}분 ${seconds}초`;
+    }
+    return `${minutes}분 ${seconds}초`;
+  };
+
   return (
     <Layout>
       <div className="player-personal-stats">
@@ -289,7 +307,7 @@ const MyStats = () => {
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
                       <p className="text-xs text-gray-600 mb-1">총 시간</p>
                       <p className="text-xl font-bold text-blue-700">
-                        {runningRecords.reduce((sum, r) => sum + r.duration, 0)}분
+                        {formatTotalDuration(runningRecords.reduce((sum, r) => sum + r.duration, 0))}
                       </p>
                     </div>
                     <div className="text-center p-3 bg-purple-50 rounded-lg">
@@ -321,7 +339,7 @@ const MyStats = () => {
                                 })}
                               </div>
                               <div className="text-sm text-gray-600">
-                                {record.distance}km / {record.duration}분
+                                {record.distance}km / {formatDuration(record.duration)}
                               </div>
                               {record.pace && (
                                 <div className="text-xs text-gray-500">

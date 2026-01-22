@@ -25,13 +25,21 @@ const DailyRunningRecordForm: React.FC = () => {
   const { toast } = useToast();
   const { userId, userName } = useAuth();
   const [distance, setDistance] = useState<string>('');
-  const [duration, setDuration] = useState<string>('');
+  const [minutes, setMinutes] = useState<string>('');
+  const [seconds, setSeconds] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [existingRecord, setExistingRecord] = useState<RunningRecord | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // duration(초)을 분과 초로 변환
+  const secondsToMinutesAndSeconds = (totalSeconds: number): { minutes: number; seconds: number } => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return { minutes: mins, seconds: secs };
+  };
 
   // 오늘 날짜 가져오기 (YYYY-MM-DD 형식)
   const getTodayDate = (): string => {
@@ -66,13 +74,17 @@ const DailyRunningRecordForm: React.FC = () => {
         if (record) {
           setExistingRecord(record);
           setDistance(record.distance.toString());
-          setDuration(record.duration.toString());
+          // duration은 초 단위로 저장되어 있으므로 분과 초로 변환
+          const { minutes: mins, seconds: secs } = secondsToMinutesAndSeconds(record.duration);
+          setMinutes(mins.toString());
+          setSeconds(secs.toString());
           setNotes(record.notes || '');
           setIsEditing(true);
         } else {
           setExistingRecord(null);
           setDistance('');
-          setDuration('');
+          setMinutes('');
+          setSeconds('');
           setNotes('');
           setIsEditing(false);
         }
@@ -105,26 +117,48 @@ const DailyRunningRecordForm: React.FC = () => {
       return;
     }
 
-    if (!distance || !duration) {
+    if (!distance || !minutes || seconds === '') {
       toast({
         title: '입력 오류',
-        description: '거리와 시간을 모두 입력해주세요.',
+        description: '거리와 시간(분, 초)을 모두 입력해주세요.',
         variant: 'destructive',
       });
       return;
     }
 
     const distanceNum = parseFloat(distance);
-    const durationNum = parseInt(duration);
+    const minutesNum = parseInt(minutes) || 0;
+    const secondsNum = parseInt(seconds) || 0;
 
-    if (distanceNum <= 0 || durationNum <= 0) {
+    if (distanceNum <= 0) {
       toast({
         title: '입력 오류',
-        description: '거리와 시간은 0보다 큰 값이어야 합니다.',
+        description: '거리는 0보다 큰 값이어야 합니다.',
         variant: 'destructive',
       });
       return;
     }
+
+    if (minutesNum < 0 || secondsNum < 0 || secondsNum >= 60) {
+      toast({
+        title: '입력 오류',
+        description: '초는 0 이상 59 이하여야 합니다.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (minutesNum === 0 && secondsNum === 0) {
+      toast({
+        title: '입력 오류',
+        description: '시간은 0보다 큰 값이어야 합니다.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // 분과 초를 초 단위로 변환
+    const durationInSeconds = minutesNum * 60 + secondsNum;
 
     setLoading(true);
     try {
@@ -133,7 +167,7 @@ const DailyRunningRecordForm: React.FC = () => {
         await updateRunningRecord(existingRecord.id, {
           date: todayDate,
           distance: distanceNum,
-          duration: durationNum,
+          duration: durationInSeconds,
           notes: notes || undefined,
         });
         toast({
@@ -145,7 +179,7 @@ const DailyRunningRecordForm: React.FC = () => {
         await createRunningRecord(userId, {
           date: todayDate,
           distance: distanceNum,
-          duration: durationNum,
+          duration: durationInSeconds,
           notes: notes || undefined,
         });
         toast({
@@ -237,7 +271,8 @@ const DailyRunningRecordForm: React.FC = () => {
       // 상태 초기화
       setExistingRecord(null);
       setDistance('');
-      setDuration('');
+      setMinutes('');
+      setSeconds('');
       setNotes('');
       setIsEditing(false);
       setShowDeleteDialog(false);
@@ -253,9 +288,21 @@ const DailyRunningRecordForm: React.FC = () => {
     }
   };
 
-  const pace = distance && duration
-    ? (parseFloat(duration) / parseFloat(distance)).toFixed(2)
-    : '0.00';
+  // 페이스 계산 (초/km를 분/km로 변환)
+  const calculatePace = (): string => {
+    if (!distance || !minutes || seconds === '') return '0.00';
+    const distanceNum = parseFloat(distance);
+    const minutesNum = parseInt(minutes) || 0;
+    const secondsNum = parseInt(seconds) || 0;
+    if (distanceNum <= 0 || (minutesNum === 0 && secondsNum === 0)) return '0.00';
+    
+    const totalSeconds = minutesNum * 60 + secondsNum;
+    const paceInSeconds = totalSeconds / distanceNum; // 초/km
+    const paceInMinutes = paceInSeconds / 60; // 분/km
+    return paceInMinutes.toFixed(2);
+  };
+
+  const pace = calculatePace();
 
   const todayFormatted = new Date(todayDate).toLocaleDateString('ko-KR', {
     year: 'numeric',
@@ -297,7 +344,7 @@ const DailyRunningRecordForm: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label htmlFor="distance" className="text-xs">
                       거리 (km) <span className="text-gray-400 font-normal">(소수점 2자리까지)</span>
@@ -314,14 +361,34 @@ const DailyRunningRecordForm: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="duration" className="text-xs">시간 (분)</Label>
+                    <Label htmlFor="minutes" className="text-xs">시간 (분)</Label>
                     <Input
-                      id="duration"
+                      id="minutes"
                       type="number"
                       step="1"
                       min="0"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
+                      value={minutes}
+                      onChange={(e) => setMinutes(e.target.value)}
+                      placeholder="0"
+                      className="h-8 text-sm"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="seconds" className="text-xs">시간 (초)</Label>
+                    <Input
+                      id="seconds"
+                      type="number"
+                      step="1"
+                      min="0"
+                      max="59"
+                      value={seconds}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || (parseInt(val) >= 0 && parseInt(val) <= 59)) {
+                          setSeconds(val);
+                        }
+                      }}
                       placeholder="0"
                       className="h-8 text-sm"
                       disabled={loading}
@@ -329,7 +396,7 @@ const DailyRunningRecordForm: React.FC = () => {
                   </div>
                 </div>
 
-                {distance && duration && parseFloat(distance) > 0 && parseInt(duration) > 0 && (
+                {distance && minutes !== '' && seconds !== '' && parseFloat(distance) > 0 && (parseInt(minutes) > 0 || parseInt(seconds) > 0) && (
                   <div className="text-xs text-gray-600">
                     평균 페이스: <span className="font-semibold">{pace} 분/km</span>
                   </div>
@@ -352,7 +419,7 @@ const DailyRunningRecordForm: React.FC = () => {
                     type="submit"
                     size="sm"
                     className="flex-1"
-                    disabled={loading || !distance || !duration}
+                    disabled={loading || !distance || !minutes || seconds === ''}
                   >
                     {loading ? (
                       '저장 중...'
@@ -419,7 +486,9 @@ const DailyRunningRecordForm: React.FC = () => {
               if (record) {
                 setExistingRecord(record);
                 setDistance(record.distance.toString());
-                setDuration(record.duration.toString());
+                const { minutes: mins, seconds: secs } = secondsToMinutesAndSeconds(record.duration);
+                setMinutes(mins.toString());
+                setSeconds(secs.toString());
                 setNotes(record.notes || '');
                 setIsEditing(true);
               }

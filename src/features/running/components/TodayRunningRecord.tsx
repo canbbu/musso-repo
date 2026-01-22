@@ -85,6 +85,13 @@ const TodayRunningRecord: React.FC = () => {
     return null; // 기록이 없으면 표시하지 않음
   }
 
+  // duration을 분:초 형식으로 변환
+  const formatDuration = (totalSeconds: number): string => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}분 ${seconds}초`;
+  };
+
   return (
     <Card className="bg-green-50 border-green-200">
       <CardHeader className="pb-3">
@@ -101,7 +108,7 @@ const TodayRunningRecord: React.FC = () => {
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-600 mb-1">시간</p>
-            <p className="text-xl font-bold text-green-700">{record.duration}분</p>
+            <p className="text-xl font-bold text-green-700">{formatDuration(record.duration)}</p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-600 mb-1">페이스</p>
