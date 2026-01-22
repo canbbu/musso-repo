@@ -224,7 +224,7 @@ export const usePlayerStats = () => {
       
       // field가 attendanceStatus가 아닐 때만 업데이트 (attendanceStatus는 별도 함수에서 처리)
       if (field !== 'attendanceStatus') {
-        // 철벽지수의 경우 특별 처리: 입력한 값만큼 각 경기에 1씩 분배
+        // 철벽지수의 경우: 입력한 값만큼 각 경기에 1씩 분배 (작전판과 연동)
         if (field === 'cleansheet') {
           // 해당 이벤트의 모든 경기 수 가져오기
           const { data: matchNumbersData, error: matchNumbersError } = await supabase
@@ -253,6 +253,7 @@ export const usePlayerStats = () => {
           }
           
           // 입력한 값만큼 각 경기에 1씩 설정 (예: 3 입력 시 1, 2, 3경기에 각각 1)
+          // 이렇게 하면 작전판에서도 같은 데이터를 볼 수 있음
           for (let i = 0; i < Math.min(cleansheetValue, matchNumbers.length); i++) {
             const matchNumber = matchNumbers[i];
             await supabase
