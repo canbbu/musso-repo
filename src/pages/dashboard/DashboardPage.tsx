@@ -12,6 +12,8 @@ import MatchSection from '@/features/matches/components/match/MatchSection';
 import MvpVotingCard from '@/features/dashboard/components/dashboard/MvpVotingCard';
 import AttendanceChart from '@/features/dashboard/components/dashboard/AttendanceChart';
 import RunningChart from '@/features/dashboard/components/dashboard/RunningChart';
+import DailyRunningRecordForm from '@/features/running/components/DailyRunningRecordForm';
+import TodayRunningRecord from '@/features/running/components/TodayRunningRecord';
 import { useDashboardData } from '@/features/dashboard/hooks/use-dashboard-data';
 import { useMatchData, Match } from '@/features/matches/hooks/use-match-data';
 import { useActivityLogs } from '@/hooks/use-activity-logs';
@@ -214,11 +216,35 @@ const Dashboard = () => {
         </div>
       )}
       
-      {/* 그래프 섹션 - 출석률과 런닝 그래프를 나란히 배치 */}
+      {/* 4분할 레이아웃 */}
       <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 위 왼쪽: 다가오는 이벤트 */}
+        <div>
+          <MatchSection 
+            title="다가오는 이벤트"
+            matches={matches.filter(m => m.status === 'upcoming')}
+            onAttendanceChange={(matchId, status) => handleAttendanceChange(matchId, status, userId as string)}
+            canManageAnnouncements={false}
+            emptyMessage="예정된 이벤트가 없습니다."
+            onViewMatch={() => {}}
+            disableVoting={false}
+            showOnlyVoting={false}
+            hideManagementButton={true}
+          />
+        </div>
+
+        {/* 위 오른쪽: 오늘의 런닝 기록 */}
+        <div className="space-y-4">
+          <DailyRunningRecordForm />
+          <TodayRunningRecord />
+        </div>
+
+        {/* 아래 왼쪽: 출석 그래프 */}
         <div>
           <AttendanceChart />
         </div>
+
+        {/* 아래 오른쪽: 런닝 통계 */}
         <div>
           <RunningChart />
         </div>
@@ -236,21 +262,6 @@ const Dashboard = () => {
           />
         </div>
       )}
-      
-      {/* 다가오는 이벤트 */}
-      <div>
-        <MatchSection 
-          title="다가오는 이벤트"
-          matches={matches.filter(m => m.status === 'upcoming')}
-          onAttendanceChange={(matchId, status) => handleAttendanceChange(matchId, status, userId as string)}
-          canManageAnnouncements={false}
-          emptyMessage="예정된 이벤트가 없습니다."
-          onViewMatch={() => {}}
-          disableVoting={false}
-          showOnlyVoting={false}
-          hideManagementButton={true}
-        />
-      </div>
       
       {/* 팀 일정 스케줄러 - 주석처리 */}
       {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

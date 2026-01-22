@@ -9,16 +9,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
-import { User, Award, Calendar, Goal, Trophy, Zap, Target, Send, Move, Shield, Dumbbell, CalendarIcon } from 'lucide-react';
+import { User, Award, Calendar, Goal, Trophy, Zap, Target, Send, Move, Shield, Dumbbell, CalendarIcon, Activity } from 'lucide-react';
 import { usePlayerRankings } from '@/features/stats/hooks/use-player-rankings';
+import { useRunningRecords } from '@/features/running/hooks/use-running-records';
 import Layout from '@/shared/components/layout/Layout';
 import FlipPlayerCard from '@/shared/components/cards/FlipPlayerCard';
 
 const MyStats = () => {
-  const { userName } = useAuth();
+  const { userName, userId } = useAuth();
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const { players, loading } = usePlayerRankings(selectedYear);
+  const { records: runningRecords, loading: runningLoading } = useRunningRecords(userId || null, selectedYear);
   
   // 연도 옵션 (최근 5년)
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -247,6 +249,96 @@ const MyStats = () => {
                 <h3 className="text-2xl font-bold text-yellow-700">{attendanceRate}%</h3>
                 <p className="text-xs text-yellow-600 mt-1">{Math.round(playerStats.games * (attendanceRate/100))}경기 참석</p>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 런닝 기록 섹션 */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Activity className="mr-2 h-5 w-5 text-green-600" />
+                런닝 기록
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {runningLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">런닝 기록을 불러오는 중...</p>
+                  </div>
+                </div>
+              ) : runningRecords.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Activity className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <p>런닝 기록이 없습니다.</p>
+                  <p className="text-sm mt-1">이벤트 페이지에서 런닝 기록을 입력해주세요.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* 통계 요약 */}
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">총 거리</p>
+                      <p className="text-xl font-bold text-green-700">
+                        {runningRecords.reduce((sum, r) => sum + r.distance, 0).toFixed(1)}km
+                      </p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">총 시간</p>
+                      <p className="text-xl font-bold text-blue-700">
+                        {runningRecords.reduce((sum, r) => sum + r.duration, 0)}분
+                      </p>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <p className="text-xs text-gray-600 mb-1">평균 페이스</p>
+                      <p className="text-xl font-bold text-purple-700">
+                        {runningRecords.length > 0
+                          ? (runningRecords.reduce((sum, r) => sum + (r.pace || 0), 0) / runningRecords.length).toFixed(2)
+                          : '0.00'} 분/km
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 기록 목록 */}
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-sm mb-3">기록 목록</h3>
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                      {runningRecords.map((record) => (
+                        <div
+                          key={record.id}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-medium">
+                                {new Date(record.date).toLocaleDateString('ko-KR', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {record.distance}km / {record.duration}분
+                              </div>
+                              {record.pace && (
+                                <div className="text-xs text-gray-500">
+                                  페이스: {record.pace} 분/km
+                                </div>
+                              )}
+                            </div>
+                            {record.notes && (
+                              <div className="text-xs text-gray-500 mt-1">{record.notes}</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
