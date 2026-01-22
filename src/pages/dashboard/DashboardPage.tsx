@@ -10,6 +10,8 @@ import CalendarView from '@/features/dashboard/components/dashboard/CalendarView
 import MatchSection from '@/features/matches/components/match/MatchSection';
 // import UpcomingMatchesCardWrapper from '@/features/dashboard/components/dashboard/UpcomingMatchesCardWrapper';
 import MvpVotingCard from '@/features/dashboard/components/dashboard/MvpVotingCard';
+import AttendanceChart from '@/features/dashboard/components/dashboard/AttendanceChart';
+import RunningChart from '@/features/dashboard/components/dashboard/RunningChart';
 import { useDashboardData } from '@/features/dashboard/hooks/use-dashboard-data';
 import { useMatchData, Match } from '@/features/matches/hooks/use-match-data';
 import { useActivityLogs } from '@/hooks/use-activity-logs';
@@ -211,6 +213,16 @@ const Dashboard = () => {
           )}
         </div>
       )}
+      
+      {/* 그래프 섹션 - 출석률과 런닝 그래프를 나란히 배치 */}
+      <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <AttendanceChart />
+        </div>
+        <div>
+          <RunningChart />
+        </div>
+      </div>
       
       {/* MVP Voting Card - Show only when there's a completed match today */}
       {todaysCompletedMatch && (
