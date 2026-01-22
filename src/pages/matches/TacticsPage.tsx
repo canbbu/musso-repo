@@ -78,6 +78,7 @@ const Tactics = () => {
   const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
   const [showAddOpponentModal, setShowAddOpponentModal] = useState(false);
   const [showAddMatchModal, setShowAddMatchModal] = useState(false);
+  const [showCleansheetModal, setShowCleansheetModal] = useState(false);
   const [allPlayers, setAllPlayers] = useState<any[]>([]);
   const [selectedPlayerToAdd, setSelectedPlayerToAdd] = useState('');
   const [opponentTeamName, setOpponentTeamName] = useState('');
@@ -181,7 +182,7 @@ const Tactics = () => {
   }, [matchIdNum, matchNumberNum]);
 
   // 출석한 선수 목록을 가져오는 함수 (상대팀 포함)
-  const fetchAttendingPlayers = useCallback(async (): Promise<Array<{id: string; name: string; position: string; isOpponentTeam?: boolean}>> => {
+  const fetchAttendingPlayers = useCallback(async (): Promise<Array<{id: string; name: string; position: string; isOpponentTeam?: boolean; cleansheet?: number}>> => {
     try {
       // 현재 경기에서 출석 데이터를 가져옵니다 (상대팀 포함)
       let { data, error } = await supabase
@@ -193,7 +194,8 @@ const Tactics = () => {
           player_id,
           status,
           is_opponent_team,
-          opponent_team_name
+          opponent_team_name,
+          cleansheet
         `)
         .eq('match_id', matchIdNum)
         .eq('match_number', matchNumberNum)
@@ -228,7 +230,8 @@ const Tactics = () => {
             id: `opponent_${item.opponent_team_name}`,
             name: item.opponent_team_name,
             position: '상대팀',
-            isOpponentTeam: true
+            isOpponentTeam: true,
+            cleansheet: 0
           };
         } else {
           // 일반 선수인 경우
@@ -237,7 +240,8 @@ const Tactics = () => {
             id: item.player_id,
             name: playerInfo?.name || 'Unknown',
             position: playerInfo?.position || 'Unknown',
-            isOpponentTeam: false
+            isOpponentTeam: false,
+            cleansheet: item.cleansheet || 0
           };
         }
       }) || [];
@@ -2287,6 +2291,89 @@ const Tactics = () => {
             </CardContent>
           </Card>
 
+          {/* 철벽지수 입력 섹션 */}
+          <Card className="shadow-lg border-purple-200">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-t-lg p-2 sm:p-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-purple-900">
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+                  철벽지수 입력 (무실점 수비수 및 골키퍼)
+                </CardTitle>
+                {canEdit && attendingPlayers.filter(p => !p.isOpponentTeam).length > 0 && (
+                  <Button
+                    onClick={() => setShowCleansheetModal(true)}
+                    size="sm"
+                    className="bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm"
+                  >
+                    <Shield className="w-4 h-4 mr-1" />
+                    철벽지수 선택
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-2 sm:p-4">
+              {attendingPlayers.filter(p => !p.isOpponentTeam && p.cleansheet === 1).length > 0 ? (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm mb-2 text-purple-700">철벽지수 적용된 선수</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {attendingPlayers
+                      .filter(p => !p.isOpponentTeam && p.cleansheet === 1)
+                      .map((player) => (
+                        <div key={player.id} className="flex items-center justify-between p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm font-medium">{player.name}</span>
+                            <span className="text-xs text-gray-500">({player.position})</span>
+                          </div>
+                          {canEdit && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { error } = await supabase
+                                    .from('match_attendance')
+                                    .update({ cleansheet: 0 })
+                                    .eq('match_id', matchIdNum)
+                                    .eq('match_number', matchNumberNum)
+                                    .eq('player_id', player.id);
+                                  
+                                  if (error) {
+                                    console.error('철벽지수 업데이트 오류:', error);
+                                    toast.error('철벽지수 해제에 실패했습니다.');
+                                  } else {
+                                    toast.success(`${player.name}의 철벽지수가 해제되었습니다.`);
+                                    setAttendingPlayers(prev => 
+                                      prev.map(p => 
+                                        p.id === player.id 
+                                          ? { ...p, cleansheet: 0 }
+                                          : p
+                                      )
+                                    );
+                                  }
+                                } catch (error) {
+                                  console.error('철벽지수 업데이트 중 예외:', error);
+                                  toast.error('철벽지수 해제에 실패했습니다.');
+                                }
+                              }}
+                              className="text-xs text-red-600 hover:text-red-800"
+                            >
+                              해제
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-4">
+                  <p className="text-sm">철벽지수가 적용된 선수가 없습니다</p>
+                  {canEdit && (
+                    <p className="text-xs mt-1 text-gray-400">"철벽지수 선택" 버튼을 눌러 선수를 선택하세요</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* 도움말 */}
           <Card className="shadow-lg bg-blue-50 border-blue-200">
             <CardContent className="p-2 sm:p-4">
@@ -2408,6 +2495,106 @@ const Tactics = () => {
                 className="flex-1"
               >
                 취소
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 철벽지수 선택 모달 */}
+      {showCleansheetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Shield className="w-5 h-5 text-purple-600" />
+                철벽지수 선택 (무실점 수비수 및 골키퍼)
+              </h3>
+              <button
+                onClick={() => setShowCleansheetModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="text-2xl">×</span>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto mb-4">
+              <div className="space-y-2">
+                {attendingPlayers
+                  .filter(p => !p.isOpponentTeam)
+                  .sort((a, b) => a.name.localeCompare(b.name, 'ko-KR'))
+                  .map((player) => (
+                    <label
+                      key={player.id}
+                      className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={player.cleansheet === 1}
+                        onChange={async (e) => {
+                          if (!canEdit) return;
+                          const cleansheetValue = e.target.checked ? 1 : 0;
+                          
+                          // DB 업데이트
+                          try {
+                            const { error } = await supabase
+                              .from('match_attendance')
+                              .update({ cleansheet: cleansheetValue })
+                              .eq('match_id', matchIdNum)
+                              .eq('match_number', matchNumberNum)
+                              .eq('player_id', player.id);
+                            
+                            if (error) {
+                              console.error('철벽지수 업데이트 오류:', error);
+                              toast.error(`${player.name}의 철벽지수 업데이트에 실패했습니다.`);
+                            } else {
+                              // 선수 목록 업데이트
+                              setAttendingPlayers(prev => 
+                                prev.map(p => 
+                                  p.id === player.id 
+                                    ? { ...p, cleansheet: cleansheetValue }
+                                    : p
+                                )
+                              );
+                            }
+                          } catch (error) {
+                            console.error('철벽지수 업데이트 중 예외:', error);
+                            toast.error(`${player.name}의 철벽지수 업데이트에 실패했습니다.`);
+                          }
+                        }}
+                        disabled={!canEdit}
+                        className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">{player.name}</span>
+                          {player.position && (
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                              {player.position}
+                            </span>
+                          )}
+                          {player.cleansheet === 1 && (
+                            <Shield className="w-4 h-4 text-purple-600" />
+                          )}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+              </div>
+              
+              {attendingPlayers.filter(p => !p.isOpponentTeam).length === 0 && (
+                <div className="text-center text-gray-500 py-8">
+                  <p className="text-sm">출석한 선수가 없습니다</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-2 pt-4 border-t">
+              <Button
+                onClick={() => setShowCleansheetModal(false)}
+                className="flex-1"
+              >
+                완료
               </Button>
             </div>
           </div>

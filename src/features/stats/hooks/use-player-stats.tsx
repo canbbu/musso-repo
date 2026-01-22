@@ -10,6 +10,7 @@ interface PlayerStats {
   goals: number;
   assists: number;
   rating: number;
+  cleansheet?: number;
 }
 
 interface Match {
@@ -91,10 +92,10 @@ export const usePlayerStats = () => {
         return;
       }
 
-      // 해당 경기의 모든 경기 수에서의 득점/어시스트 합계 불러오기
+      // 해당 경기의 모든 경기 수에서의 득점/어시스트/철벽지수 합계 불러오기
       const { data: matchStatsData, error: matchStatsError } = await supabase
         .from('match_attendance')
-        .select('player_id, goals, assists')
+        .select('player_id, goals, assists, cleansheet')
         .eq('match_id', selectedMatch)
         .not('is_opponent_team', 'eq', true); // 상대팀 제외
 
@@ -104,14 +105,15 @@ export const usePlayerStats = () => {
         return;
       }
 
-      // 선수별 해당 경기의 모든 경기 수 득점/어시스트 합계 계산
-      const matchStatsMap: Record<string, { totalGoals: number; totalAssists: number }> = {};
+      // 선수별 해당 경기의 모든 경기 수 득점/어시스트/철벽지수 합계 계산
+      const matchStatsMap: Record<string, { totalGoals: number; totalAssists: number; totalCleansheet: number }> = {};
       matchStatsData?.forEach((row: any) => {
         if (!matchStatsMap[row.player_id]) {
-          matchStatsMap[row.player_id] = { totalGoals: 0, totalAssists: 0 };
+          matchStatsMap[row.player_id] = { totalGoals: 0, totalAssists: 0, totalCleansheet: 0 };
         }
         matchStatsMap[row.player_id].totalGoals += row.goals || 0;
         matchStatsMap[row.player_id].totalAssists += row.assists || 0;
+        matchStatsMap[row.player_id].totalCleansheet += row.cleansheet || 0;
       });
 
       // 선수별 출석 상태 매핑
@@ -120,6 +122,7 @@ export const usePlayerStats = () => {
         goals?: number;
         assists?: number;
         rating?: number;
+        cleansheet?: number;
       }> = {};
       
       attendanceData?.forEach((row: any) => {
@@ -127,7 +130,8 @@ export const usePlayerStats = () => {
           status: row.status,
           goals: row.goals || 0,
           assists: row.assists || 0,
-          rating: row.rating || 0
+          rating: row.rating || 0,
+          cleansheet: row.cleansheet || 0
         };
       });      
 
@@ -142,6 +146,7 @@ export const usePlayerStats = () => {
         goals: matchStatsMap[player.id]?.totalGoals || 0, // 해당 경기 득점 합계
         assists: matchStatsMap[player.id]?.totalAssists || 0, // 해당 경기 어시스트 합계
         rating: attendanceMap[player.id]?.rating || 0, // 평점은 현재 경기만
+        cleansheet: matchStatsMap[player.id]?.totalCleansheet || 0, // 철벽지수는 모든 경기 수 합계
       }));
 
       // 먼저 이름순으로 정렬 후, 출석 상태별로 정렬
@@ -219,17 +224,58 @@ export const usePlayerStats = () => {
       
       // field가 attendanceStatus가 아닐 때만 업데이트 (attendanceStatus는 별도 함수에서 처리)
       if (field !== 'attendanceStatus') {
-        const { error } = await supabase
-          .from('match_attendance')
-          .update({ [field]: value })
-          .match({ 
-            match_id: selectedMatch,
-            match_number: 1, // 기본값으로 1경기 설정
-            player_id: playerId
-          });
+        // 철벽지수의 경우 특별 처리: 입력한 값만큼 각 경기에 1씩 분배
+        if (field === 'cleansheet') {
+          // 해당 이벤트의 모든 경기 수 가져오기
+          const { data: matchNumbersData, error: matchNumbersError } = await supabase
+            .from('match_attendance')
+            .select('match_number')
+            .eq('match_id', selectedMatch)
+            .eq('player_id', playerId)
+            .order('match_number', { ascending: true });
           
-        if (error) {
-          console.error(`${field} 업데이트 중 오류 발생:`, error);
+          if (matchNumbersError) {
+            console.error('경기 수 조회 중 오류 발생:', matchNumbersError);
+            return;
+          }
+          
+          const matchNumbers = Array.from(new Set(matchNumbersData?.map(m => m.match_number) || [])).sort((a, b) => a - b);
+          const cleansheetValue = Number(value) || 0;
+          
+          // 모든 경기의 cleansheet를 0으로 초기화
+          for (const matchNumber of matchNumbers) {
+            await supabase
+              .from('match_attendance')
+              .update({ cleansheet: 0 })
+              .eq('match_id', selectedMatch)
+              .eq('match_number', matchNumber)
+              .eq('player_id', playerId);
+          }
+          
+          // 입력한 값만큼 각 경기에 1씩 설정 (예: 3 입력 시 1, 2, 3경기에 각각 1)
+          for (let i = 0; i < Math.min(cleansheetValue, matchNumbers.length); i++) {
+            const matchNumber = matchNumbers[i];
+            await supabase
+              .from('match_attendance')
+              .update({ cleansheet: 1 })
+              .eq('match_id', selectedMatch)
+              .eq('match_number', matchNumber)
+              .eq('player_id', playerId);
+          }
+        } else {
+          // 철벽지수가 아닌 경우 기존 로직 유지
+          const { error } = await supabase
+            .from('match_attendance')
+            .update({ [field]: value })
+            .match({ 
+              match_id: selectedMatch,
+              match_number: 1, // 기본값으로 1경기 설정
+              player_id: playerId
+            });
+            
+          if (error) {
+            console.error(`${field} 업데이트 중 오류 발생:`, error);
+          }
         }
       }
     } catch (error) {

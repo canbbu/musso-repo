@@ -174,6 +174,7 @@ export interface PlayerStats {
   assists: number;
   rating: number;
   attendanceStatus: string;
+  cleansheet?: number;
 }
 
 export interface StatsCardProps {
