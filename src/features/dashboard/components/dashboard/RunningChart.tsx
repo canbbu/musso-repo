@@ -6,14 +6,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Activity } from 'lucide-react';
 import { useRunningChart } from '@/features/dashboard/hooks/use-running-chart';
 
+type GroupByOption = 'month' | 'week';
+
 const RunningChart: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
+  const [groupBy, setGroupBy] = useState<GroupByOption>('month');
 
   const { data, loading, error } = useRunningChart({
     year: selectedYear,
     month: selectedMonth,
+    groupBy,
   });
 
   // 년도 목록 생성 (현재 년도부터 5년 전까지)
@@ -36,16 +40,18 @@ const RunningChart: React.FC = () => {
     { value: 12, label: '12월' },
   ];
 
+  // 눈에 잘 띄는 그린 계열 (가독성)
+  const lineColor = '#15803d';
   const chartConfig = {
     distance: {
-      label: '총 거리',
-      color: 'hsl(var(--chart-2))',
+      label: '총 거리 (km)',
+      color: lineColor,
     },
   };
 
-  // 차트 데이터 포맷팅
+  // 차트 데이터 포맷팅 (월별/주별 공통: periodLabel 사용)
   const chartData = data.map((item) => ({
-    month: item.month,
+    periodLabel: item.periodLabel,
     거리: item.totalDistance,
     평균페이스: item.averagePace,
   }));
@@ -55,7 +61,7 @@ const RunningChart: React.FC = () => {
     ? data.reduce((sum, item) => sum + item.averagePace, 0) / data.length
     : 0;
 
-  // 커스텀 툴팁 컴포넌트
+  // 커스텀 툴팁 - 글자 크기·대비 강화
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -63,14 +69,14 @@ const RunningChart: React.FC = () => {
       const pace = data?.평균페이스;
 
       return (
-        <div className="rounded-lg border bg-background px-3 py-2 shadow-md">
-          <p className="font-medium">{data?.month}</p>
-          <p className="text-sm text-muted-foreground">
-            총 거리: <span className="font-medium text-foreground">{distance}km</span>
+        <div className="rounded-lg border-2 border-green-200 bg-white px-4 py-3 shadow-lg border-l-4 border-l-green-600">
+          <p className="text-base font-semibold text-gray-900 mb-2">{data?.periodLabel}</p>
+          <p className="text-sm text-gray-700">
+            총 거리: <span className="font-bold text-green-700">{distance} km</span>
           </p>
-          {pace && (
-            <p className="text-sm text-muted-foreground">
-              평균 페이스: <span className="font-medium text-foreground">{pace.toFixed(2)} 분/km</span>
+          {pace !== undefined && (
+            <p className="text-sm text-gray-700 mt-1">
+              평균 페이스: <span className="font-bold text-green-700">{pace.toFixed(2)} 분/km</span>
             </p>
           )}
         </div>
@@ -87,40 +93,54 @@ const RunningChart: React.FC = () => {
             <Activity className="h-5 w-5 text-green-600" />
             <CardTitle>런닝 통계</CardTitle>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={groupBy}
+              onValueChange={(value) => setGroupBy(value as GroupByOption)}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">월별</SelectItem>
+                <SelectItem value="week">주별</SelectItem>
+              </SelectContent>
+            </Select>
             <Select
               value={selectedYear.toString()}
               onValueChange={(value) => setSelectedYear(parseInt(value))}
             >
-              <SelectTrigger className="w-[120px]">
+              <SelectTrigger className="w-[100px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}년
+                {years.map((y) => (
+                  <SelectItem key={y} value={y.toString()}>
+                    {y}년
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select
-              value={selectedMonth === undefined ? 'all' : selectedMonth.toString()}
-              onValueChange={(value) => setSelectedMonth(value === 'all' ? undefined : parseInt(value))}
-            >
-              <SelectTrigger className="w-[120px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month) => (
-                  <SelectItem
-                    key={month.value === undefined ? 'all' : month.value}
-                    value={month.value === undefined ? 'all' : month.value.toString()}
-                  >
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {groupBy === 'month' && (
+              <Select
+                value={selectedMonth === undefined ? 'all' : selectedMonth.toString()}
+                onValueChange={(value) => setSelectedMonth(value === 'all' ? undefined : parseInt(value))}
+              >
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((month) => (
+                    <SelectItem
+                      key={month.value === undefined ? 'all' : month.value}
+                      value={month.value === undefined ? 'all' : month.value.toString()}
+                    >
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -147,49 +167,68 @@ const RunningChart: React.FC = () => {
           </div>
         ) : (
           <div className="relative w-full min-w-0 overflow-hidden">
-            <ChartContainer config={chartConfig} className="h-[300px] w-full min-w-0">
+            {/* 축·그리드 글자 크기·색상 강화 (가독성) */}
+            <ChartContainer
+              config={chartConfig}
+              className="h-[320px] w-full min-w-0 [&_.recharts-cartesian-axis-tick_text]:fill-gray-700 [&_.recharts-cartesian-axis-tick_text]:text-[13px] [&_.recharts-cartesian-grid_horizontal_line]:stroke-gray-200 [&_.recharts-cartesian-grid_vertical_line]:stroke-gray-200"
+            >
               <LineChart
                 data={chartData}
-                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                margin={{
+                  top: 16,
+                  right: 16,
+                  left: 8,
+                  bottom: groupBy === 'week' ? 60 : 24,
+                }}
               >
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" vertical={true} horizontal={true} />
                 <XAxis
-                  dataKey="month"
+                  dataKey="periodLabel"
                   tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
+                  axisLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                  tickMargin={10}
+                  height={groupBy === 'week' ? 60 : 36}
+                  tick={{ fill: '#374151', fontSize: 13, fontWeight: 500 }}
                   tickFormatter={(value) => value}
+                  interval={groupBy === 'week' ? 0 : undefined}
+                  angle={groupBy === 'week' ? -45 : 0}
+                  textAnchor={groupBy === 'week' ? 'end' : 'middle'}
                 />
                 <YAxis
                   tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
+                  axisLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
+                  tickMargin={10}
+                  tick={{ fill: '#374151', fontSize: 13, fontWeight: 500 }}
                   domain={[0, 'auto']}
-                  tickFormatter={(value) => `${value}km`}
+                  tickFormatter={(value) => `${value} km`}
+                  width={56}
                 />
-                <ChartTooltip
-                  cursor={false}
-                  content={<CustomTooltip />}
-                />
+                <ChartTooltip cursor={{ stroke: lineColor, strokeWidth: 1, strokeDasharray: '4 4' }} content={<CustomTooltip />} />
                 <Line
                   type="monotone"
                   dataKey="거리"
-                  stroke="hsl(var(--chart-2))"
-                  strokeWidth={2}
-                  dot={{ fill: 'hsl(var(--chart-2))', r: 4 }}
-                  activeDot={{ r: 6 }}
+                  stroke={lineColor}
+                  strokeWidth={3}
+                  dot={{
+                    fill: '#fff',
+                    stroke: lineColor,
+                    strokeWidth: 2,
+                    r: 6,
+                  }}
+                  activeDot={{
+                    r: 8,
+                    fill: lineColor,
+                    stroke: '#fff',
+                    strokeWidth: 2,
+                  }}
                 />
               </LineChart>
             </ChartContainer>
-            {/* 그래프 중간에 평균 페이스 표시 */}
+            {/* 전체 평균 페이스: 그래프를 가리지 않도록 우측 상단 작게 표시 */}
             {overallAveragePace > 0 && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg border shadow-lg">
-                  <p className="text-xs text-gray-600 mb-1">전체 평균 페이스</p>
-                  <p className="text-2xl font-bold text-green-700">
-                    {overallAveragePace.toFixed(2)} <span className="text-sm font-normal">분/km</span>
-                  </p>
-                </div>
+              <div className="absolute top-2 right-2 pointer-events-none rounded-md bg-green-600/90 px-3 py-1.5 text-white shadow-md">
+                <p className="text-[11px] font-medium opacity-90">평균 페이스</p>
+                <p className="text-lg font-bold leading-tight">{overallAveragePace.toFixed(2)} <span className="text-xs font-normal">분/km</span></p>
               </div>
             )}
           </div>
