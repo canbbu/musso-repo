@@ -217,9 +217,9 @@ const Dashboard = () => {
       )}
       
       {/* 4분할 레이아웃 */}
-      <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6 min-w-0">
         {/* 위 왼쪽: 다가오는 이벤트 */}
-        <div>
+        <div className="min-w-0">
           <MatchSection 
             title="다가오는 이벤트"
             matches={matches.filter(m => m.status === 'upcoming')}
@@ -234,18 +234,18 @@ const Dashboard = () => {
         </div>
 
         {/* 위 오른쪽: 오늘의 런닝 기록 */}
-        <div className="space-y-4">
+        <div className="space-y-4 min-w-0">
           <DailyRunningRecordForm />
           <TodayRunningRecord />
         </div>
 
         {/* 아래 왼쪽: 출석 그래프 */}
-        <div>
+        <div className="min-w-0 overflow-hidden">
           <AttendanceChart />
         </div>
 
         {/* 아래 오른쪽: 런닝 통계 */}
-        <div>
+        <div className="min-w-0 overflow-hidden">
           <RunningChart />
         </div>
       </div>

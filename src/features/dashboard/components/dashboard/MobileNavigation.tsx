@@ -12,7 +12,7 @@ import {
 import { useAuth } from '@/features/auth/hooks/use-auth';
 // import UserProfileButton from '../profile/UserProfileButton';
 
-const MobileNavigation = () => {
+export default function MobileNavigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const { 
@@ -26,25 +26,19 @@ const MobileNavigation = () => {
   } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Define navigation items with permission checks
-  // 시즌 종료: 일반 회원은 선수 통계와 출석현황만, 관리자는 모든 메뉴 접근 가능
+  // Define navigation items with permission checks (PC AppSidebar와 동일한 순서)
   const getNavItems = () => {
     const isAdmin = canManage();
     
     const baseItems = [
-      // 일반 회원과 관리자 모두에게 보이는 메뉴
-      { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
-      
-      // 관리자만 보이는 메뉴들
       { title: '대시보드', path: '/dashboard', icon: Home, show: isAdmin },
+      { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
       { title: '이벤트 관리', path: '/matches', icon: Calendar, show: isAdmin },
-      { title: '작전판', path: '/tactics', icon: Clipboard, show: isAdmin },
       { title: '내 기록', path: '/my-stats', icon: User, show: isAdmin },
       { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: isAdmin },
-      // { title: '재정 관리', path: '/finance', icon: CreditCard, show: canManageFinance() },
-      // { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
-      // { title: '데이터 테스트', path: '/data-test', icon: Database, alwaysShow: true },
-      // { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, alwaysShow: canManage() },
+      { title: '작전판', path: '/tactics', icon: Clipboard, show: isAdmin },
+      { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
+      { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, show: isAdmin },
     ];
     
     return baseItems.filter(item => item.show);
@@ -100,17 +94,18 @@ const MobileNavigation = () => {
                     </Button>
                   </li>
                 ))}
+                {/* PC와 동일: 구분선 후 출석현황 → 프로필 변경 → 로그아웃 */}
                 <li className="pt-4 border-t mt-4">
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-left text-red-500 hover:text-red-600 hover:bg-red-50"
+                    className="w-full justify-start text-left text-green-500 hover:text-green-600 hover:bg-green-50"
                     onClick={() => {
-                      logout();
+                      navigate('/attendance-status');
                       setMobileMenuOpen(false);
                     }}
                   >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    로그아웃
+                    <Users className="h-4 w-4 mr-2" />
+                    출석현황
                   </Button>
                 </li>
                 <li>
@@ -126,56 +121,19 @@ const MobileNavigation = () => {
                     프로필 변경
                   </Button>
                 </li>
-                <li className="pt-2 border-t mt-2">
-                  {/* Separator line */}
-                </li>
-                {/* 출석현황: 일반 회원과 관리자 모두에게 표시 */}
                 <li>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-left text-green-500 hover:text-green-600 hover:bg-green-50"
+                    className="w-full justify-start text-left text-red-500 hover:text-red-600 hover:bg-red-50"
                     onClick={() => {
-                      navigate('/attendance-status');
+                      logout();
                       setMobileMenuOpen(false);
                     }}
                   >
-                    <Users className="h-4 w-4 mr-2" />
-                    출석현황
+                    <LogOut className="h-4 w-4 mr-2" />
+                    로그아웃
                   </Button>
                 </li>
-                {/* 관리자 전용 메뉴들 */}
-                {canManage() && (
-                  <>
-                    <li>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start text-left text-purple-500 hover:text-purple-600 hover:bg-purple-50"
-                        onClick={() => {
-                          navigate('/entire-player-stats');
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        <Database className="h-4 w-4 mr-2" />
-                        선수 전체 통계
-                      </Button>
-                    </li>
-                  </>
-                )}
-                {canManageAnnouncements() && (
-                  <li>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-left text-orange-500 hover:text-orange-600 hover:bg-orange-50"
-                      onClick={() => {
-                        navigate('/register');
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      회원 등록
-                    </Button>
-                  </li>
-                )}
               </ul>
             </nav>
           </SheetContent>
@@ -183,6 +141,4 @@ const MobileNavigation = () => {
       </div>
     </div>
   );
-};
-
-export default MobileNavigation;
+}

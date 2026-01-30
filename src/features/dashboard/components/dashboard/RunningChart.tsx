@@ -80,7 +80,7 @@ const RunningChart: React.FC = () => {
   };
 
   return (
-    <Card>
+    <Card className="min-w-0 overflow-hidden">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -146,8 +146,8 @@ const RunningChart: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="relative">
-            <ChartContainer config={chartConfig} className="h-[300px]">
+          <div className="relative w-full min-w-0 overflow-hidden">
+            <ChartContainer config={chartConfig} className="h-[300px] w-full min-w-0">
               <LineChart
                 data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
