@@ -344,11 +344,14 @@ const EntirePlayerStats = () => {
     setSortConfig({ key, direction });
   };
 
+  // 전체 선수 통계: 모든 회원 표시 (출석률 등 포함)
+  const playersWithStats = filteredPlayers;
+
   // 정렬된 선수 목록
   const sortedPlayers = useMemo(() => {
-    if (!sortConfig) return filteredPlayers;
+    if (!sortConfig) return playersWithStats;
 
-    return [...filteredPlayers].sort((a, b) => {
+    return [...playersWithStats].sort((a, b) => {
       const aValue = a[sortConfig.key as keyof Player] || 0;
       const bValue = b[sortConfig.key as keyof Player] || 0;
       
@@ -374,7 +377,7 @@ const EntirePlayerStats = () => {
       }
       return aValue < bValue ? 1 : -1;
     });
-  }, [filteredPlayers, sortConfig]);
+  }, [playersWithStats, sortConfig]);
 
   // 정렬 아이콘 렌더링
   const renderSortIcon = (key: string) => {

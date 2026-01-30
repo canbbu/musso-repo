@@ -180,18 +180,11 @@ const AttendanceCheck: React.FC = () => {
           </CardContent>
         </Card>
 
-        <div className="mt-6 flex gap-3">
-          <Button
-            onClick={() => navigate(`/tactics/${matchId}/1`)}
-            variant="outline"
-            className="flex-1"
-          >
-            작전판으로 이동
-          </Button>
+        <div className="mt-6 flex flex-col gap-3">
           <Button
             onClick={handleSaveAttendance}
             disabled={saving || attendingPlayers.size === 0}
-            className="flex-1 bg-green-600 hover:bg-green-700"
+            className="w-full bg-green-600 hover:bg-green-700"
           >
             {saving ? (
               <div className="flex items-center gap-2">
@@ -199,11 +192,21 @@ const AttendanceCheck: React.FC = () => {
                 저장 중...
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Save className="w-4 h-4" />
-                출석체크 완료 ({attendingPlayers.size}명)
+              <div className="flex flex-col items-center gap-1">
+                <span className="flex items-center gap-2">
+                  <Save className="w-4 h-4" />
+                  출석체크 저장 후 작전판으로 이동
+                </span>
+                <span className="text-xs opacity-90">({attendingPlayers.size}명)</span>
               </div>
             )}
+          </Button>
+          <Button
+            onClick={() => navigate(`/tactics/${matchId}/1`)}
+            variant="outline"
+            className="w-full"
+          >
+            저장 없이 작전판으로 이동
           </Button>
         </div>
       </div>

@@ -15,11 +15,13 @@ import { useMatchTactics } from '@/features/matches/hooks/use-match-tactics';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useToast } from '@/shared/hooks/use-toast';
 import { Match } from '@/features/matches/types/match.types';
-import { ClipboardCheck, ClipboardList, CalendarIcon } from 'lucide-react';
+import { ClipboardCheck, ClipboardList, CalendarIcon, Users, Target, Pencil } from 'lucide-react';
 
 interface MatchWithTactics extends Match {
   hasTactics?: boolean;
   tacticsCount?: number;
+  hasAttendance?: boolean;
+  hasGoalAssistRecord?: boolean;
 }
 
 const TacticsList: React.FC = () => {
@@ -224,12 +226,46 @@ const TacticsList: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t">
-                    {match.hasTactics ? (
+                  <div className="mt-4 pt-4 border-t space-y-2">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="flex items-center gap-1">
+                        {match.hasAttendance ? (
+                          <Badge variant="outline" className="bg-green-50 border-green-300 text-green-700">
+                            <Users className="w-3 h-3 mr-0.5" />
+                            출석체크 완료
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-100 border-gray-300 text-gray-600">
+                            <Users className="w-3 h-3 mr-0.5" />
+                            출석체크 안 함
+                          </Badge>
+                        )}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {match.hasGoalAssistRecord ? (
+                          <Badge variant="outline" className="bg-amber-50 border-amber-300 text-amber-700">
+                            <Target className="w-3 h-3 mr-0.5" />
+                            득실점 기록됨
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-100 border-gray-300 text-gray-600">
+                            <Target className="w-3 h-3 mr-0.5" />
+                            득실점 미기록
+                          </Badge>
+                        )}
+                      </span>
+                    </div>
+                    {match.hasTactics && (
                       <div className="text-sm text-green-600">
                         ✓ 작전판이 생성되어 있습니다
                       </div>
-                    ) : (
+                    )}
+                    {!match.hasTactics && match.hasAttendance && (
+                      <div className="text-sm text-blue-600">
+                        출석체크 완료 · 작전판에서 배치를 진행하세요
+                      </div>
+                    )}
+                    {!match.hasTactics && !match.hasAttendance && (
                       <div className="text-sm text-gray-500">
                         아직 작전판이 없습니다
                       </div>
@@ -241,25 +277,38 @@ const TacticsList: React.FC = () => {
                     )}
                   </div>
                   
-                  <div className="mt-4 flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleTacticsClick(match.id)}
-                    >
-                      <ClipboardList className="w-4 h-4 mr-1" />
-                      작전판보기
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleMatchRecordClick(match.id)}
-                    >
-                      <ClipboardCheck className="w-4 h-4 mr-1" />
-                      {canEdit ? '경기기록보기' : '기록보기'}
-                    </Button>
+                  <div className="mt-4 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleTacticsClick(match.id)}
+                      >
+                        <ClipboardList className="w-4 h-4 mr-1" />
+                        작전판보기
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleMatchRecordClick(match.id)}
+                      >
+                        <ClipboardCheck className="w-4 h-4 mr-1" />
+                        {canEdit ? '경기기록보기' : '기록보기'}
+                      </Button>
+                    </div>
+                    {match.hasAttendance && canManagePlayerStats() && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-gray-600 hover:text-gray-900"
+                        onClick={() => navigate(`/attendance/${match.id}`)}
+                      >
+                        <Pencil className="w-4 h-4 mr-1" />
+                        출석체크 수정
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

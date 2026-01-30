@@ -34,6 +34,9 @@ interface GoalGroup {
   timestamp: string;
 }
 
+// fallback에서 매 렌더마다 새 배열 참조가 생겨 useEffect 무한 루프가 발생하지 않도록 고정 참조
+const EMPTY_POSITIONS: PlayerPosition[] = [];
+
 const Tactics = () => {
   const { matchId, matchNumber } = useParams<{ matchId: string; matchNumber: string }>();
   const navigate = useNavigate();
@@ -84,6 +87,8 @@ const Tactics = () => {
   const [opponentTeamName, setOpponentTeamName] = useState('');
   const [isSelfMatchState, setIsSelfMatchState] = useState(true);
   const [newMatchOpponentName, setNewMatchOpponentName] = useState('');
+  // 1경기 유형 설정 모달 (작전판 첫 진입 시 자체/대외 선택)
+  const [showMatch1ConfigModal, setShowMatch1ConfigModal] = useState(false);
   const fieldRef = useRef<HTMLDivElement>(null);
   const playerListContainerRef = useRef<HTMLDivElement>(null);
   const playerListInnerRef = useRef<HTMLDivElement>(null);
@@ -92,14 +97,16 @@ const Tactics = () => {
   // 2. 득점 묶음 상태 추가
   const [goalGroups, setGoalGroups] = useState<GoalGroup[]>([]);
   const [editGoalGroup, setEditGoalGroup] = useState<GoalGroup | null>(null);
+  // 드래그 앤 드롭: 경기장 위에 드래그 중인지 (시각적 피드백용)
+  const [draggingOverField, setDraggingOverField] = useState(false);
 
   // 수정 권한 확인
   const canEdit = canManage() || canManageMatches() || canManageSystem();
 
-  // 현재 선택된 경기의 포메이션
+  // 현재 선택된 경기의 포메이션 (fallback은 EMPTY_POSITIONS 사용으로 참조 안정화 → useEffect 무한 루프 방지)
   const currentFormation = formations[matchNumberNum] || {
     name: `경기 #${matchId} - ${matchNumber}경기 작전판`,
-    positions: [],
+    positions: EMPTY_POSITIONS,
     created_by: userId || '',
     teamA_strategy: '',
     teamB_strategy: ''
@@ -422,6 +429,31 @@ const Tactics = () => {
     }
   }, [matchIdNum, userId]);
 
+  // 1경기 진입 시 유형(자체/대외) 설정 팝업 표시 (한 번만; DB에 상대팀 행이 있으면 이미 설정된 것으로 간주)
+  useEffect(() => {
+    if (!matchIdNum || matchNumberNum !== 1 || matchNumbers.length === 0 || !matchNumbers.includes(1)) return;
+    const storageKey = `tactics_match1_config_${matchIdNum}`;
+    if (localStorage.getItem(storageKey)) return;
+
+    const checkAndShow = async () => {
+      const { data: opponentRow } = await supabase
+        .from('match_attendance')
+        .select('id')
+        .eq('match_id', matchIdNum)
+        .eq('match_number', 1)
+        .eq('is_opponent_team', true)
+        .maybeSingle();
+      if (opponentRow) {
+        localStorage.setItem(storageKey, 'opponent');
+        return;
+      }
+      setShowMatch1ConfigModal(true);
+      setIsSelfMatchState(true);
+      setNewMatchOpponentName('');
+    };
+    checkAndShow();
+  }, [matchIdNum, matchNumberNum, matchNumbers]);
+
   // DB에서 로드된 데이터를 formations에 반영
   useEffect(() => {
     // 경기나 경기 번호가 변경될 때마다 데이터를 로드
@@ -628,83 +660,79 @@ const Tactics = () => {
     }
   };
 
+  /** 클릭/드롭 공통: 선택된 선수를 (targetX, targetY) 위치에 배치. 성공 시 true, 실패 시 false */
+  const placePickedPlayerAt = useCallback((targetX: number, targetY: number): boolean => {
+    if (!pickedPlayer || !canEdit) return false;
+    if (targetX < 5 || targetX > 95 || targetY < 5 || targetY > 95) return false;
+
+    const isOpponentTeam = pickedPlayer.id && pickedPlayer.id.startsWith('opponent_');
+    if (isOpponentTeam) {
+      toast.error('상대팀은 경기장에 배치할 수 없습니다');
+      return false;
+    }
+
+    const targetTeam: 'A' | 'B' = targetX <= 50 ? 'A' : 'B';
+    if (targetTeam === 'B') {
+      const hasOpponentTeam = attendingPlayers.some(player => player.isOpponentTeam);
+      if (hasOpponentTeam) {
+        toast.error('상대팀 진영에는 선수를 배치할 수 없습니다');
+        return false;
+      }
+    }
+
+    if (pickedPlayer.isOnField) {
+      const validPosition = findNearestValidPosition(targetX, targetY, pickedPlayer.id);
+      const currentPlayer = currentFormation.positions.find(p => p.playerId === pickedPlayer.id);
+      if (currentPlayer && currentPlayer.team !== targetTeam) {
+        toast.success(`${pickedPlayer.name}이(가) ${getTeamName(targetTeam)}으로 이동했습니다`);
+      }
+      updatePlayerPosition(pickedPlayer.id, validPosition.x, validPosition.y, targetTeam);
+    } else {
+      if (selectedTeam !== targetTeam) {
+        toast.info(`위치에 따라 ${getTeamName(targetTeam)}으로 배치됩니다`);
+      }
+      const validPosition = findNearestValidPosition(targetX, targetY);
+      const newPosition: PlayerPosition = {
+        playerId: pickedPlayer.id,
+        playerName: pickedPlayer.name,
+        x: validPosition.x,
+        y: validPosition.y,
+        team: targetTeam
+      };
+      setFormations(prev => ({
+        ...prev,
+        [matchNumberNum]: {
+          ...prev[matchNumberNum],
+          positions: [...prev[matchNumberNum].positions, newPosition]
+        }
+      }));
+    }
+    setPickedPlayer(null);
+    return true;
+  }, [pickedPlayer, canEdit, attendingPlayers, currentFormation.positions, selectedTeam, matchNumberNum]);
+
   // 경기장 클릭으로 선수 배치
   const handleFieldClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!pickedPlayer || !fieldRef.current || !canEdit) return;
-
     const rect = fieldRef.current.getBoundingClientRect();
     const targetX = ((e.clientX - rect.left) / rect.width) * 100;
     const targetY = ((e.clientY - rect.top) / rect.height) * 100;
-
-    // 경기장 경계 내에서만 배치
-    if (targetX >= 5 && targetX <= 95 && targetY >= 5 && targetY <= 95) {
-      // 상대팀인지 확인
-      const isOpponentTeam = pickedPlayer.id && pickedPlayer.id.startsWith('opponent_');
-      if (isOpponentTeam) {
-        toast.error('상대팀은 경기장에 배치할 수 없습니다');
-        return;
-      }
-
-      // 위치에 따라 자동으로 팀 결정
-      let targetTeam: 'A' | 'B';
-      if (targetX <= 50) {
-        targetTeam = 'A';
-      } else {
-        targetTeam = 'B';
-      }
-
-      // B팀(상대팀) 진영에 배치하려는 경우 제한
-      if (targetTeam === 'B') {
-        // 상대팀이 있는지 확인
-        const hasOpponentTeam = attendingPlayers.some(player => player.isOpponentTeam);
-        if (hasOpponentTeam) {
-          toast.error('상대팀 진영에는 선수를 배치할 수 없습니다');
-          return;
-        }
-      }
-
-      // 경기장에 이미 있는 선수를 이동하는 경우
-      if (pickedPlayer.isOnField) {
-        const validPosition = findNearestValidPosition(targetX, targetY, pickedPlayer.id);
-        const currentPlayer = currentFormation.positions.find(p => p.playerId === pickedPlayer.id);
-        
-        // 팀이 변경되는 경우 알림
-        if (currentPlayer && currentPlayer.team !== targetTeam) {
-          toast.success(`${pickedPlayer.name}이(가) ${getTeamName(targetTeam)}으로 이동했습니다`);
-        }
-        
-        updatePlayerPosition(pickedPlayer.id, validPosition.x, validPosition.y, targetTeam);
-      } else {
-        // 벤치에서 경기장으로 새로 배치하는 경우
-        // 선택된 팀과 배치 위치가 다르면 경고하고 위치에 따라 팀 결정
-        if (selectedTeam !== targetTeam) {
-          toast.info(`위치에 따라 ${getTeamName(targetTeam)}으로 배치됩니다`);
-        }
-        
-        const validPosition = findNearestValidPosition(targetX, targetY);
-        const newPosition: PlayerPosition = {
-          playerId: pickedPlayer.id,
-          playerName: pickedPlayer.name,
-          x: validPosition.x,
-          y: validPosition.y,
-          team: targetTeam
-        };
-
-        setFormations(prev => ({
-          ...prev,
-          [matchNumberNum]: {
-            ...prev[matchNumberNum],
-            positions: [...prev[matchNumberNum].positions, newPosition]
-          }
-        }));
-      }
-      
-      // 배치 후 픽업 해제
-      setPickedPlayer(null);
-    }
+    placePickedPlayerAt(targetX, targetY);
   };
+
+  // 경기장 드래그 앤 드롭으로 선수 배치
+  const handleFieldDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingOverField(false);
+    if (!fieldRef.current || !canEdit) return;
+    const rect = fieldRef.current.getBoundingClientRect();
+    const targetX = ((e.clientX - rect.left) / rect.width) * 100;
+    const targetY = ((e.clientY - rect.top) / rect.height) * 100;
+    placePickedPlayerAt(targetX, targetY);
+  }, [canEdit, placePickedPlayerAt]);
 
   // 선수 위치 업데이트
   const updatePlayerPosition = (playerId: string, x: number, y: number, team: 'A' | 'B') => {
@@ -1480,6 +1508,58 @@ const Tactics = () => {
     }
   };
 
+  // 1경기 유형 설정 확인 (자체/대외 선택 후)
+  const handleMatch1Config = async () => {
+    const storageKey = `tactics_match1_config_${matchIdNum}`;
+    try {
+      if (!isSelfMatchState && newMatchOpponentName.trim()) {
+        // 이미 1경기 상대팀 행이 있는지 확인 (중복 방지)
+        const { data: existing } = await supabase
+          .from('match_attendance')
+          .select('id')
+          .eq('match_id', matchIdNum)
+          .eq('match_number', 1)
+          .eq('is_opponent_team', true)
+          .maybeSingle();
+        if (!existing) {
+          const { error: opponentError } = await supabase
+            .from('match_attendance')
+            .insert({
+              match_id: matchIdNum,
+              match_number: 1,
+              player_id: null,
+              status: 'attending',
+              goals: 0,
+              assists: 0,
+              rating: 0,
+              tactics_position_x: null,
+              tactics_position_y: null,
+              tactics_team: null,
+              substitutions: 0,
+              is_substituted: false,
+              goal_timestamp: null,
+              assist_timestamp: null,
+              is_opponent_team: true,
+              opponent_team_name: newMatchOpponentName.trim()
+            });
+          if (opponentError) {
+            console.error('1경기 상대팀 추가 에러:', opponentError);
+            toast.error('상대팀 추가에 실패했습니다');
+            return;
+          }
+        }
+      }
+      localStorage.setItem(storageKey, isSelfMatchState ? 'self' : 'opponent');
+      setShowMatch1ConfigModal(false);
+      setIsSelfMatchState(true);
+      setNewMatchOpponentName('');
+      toast.success(isSelfMatchState ? '1경기가 자체 경기로 설정되었습니다' : `1경기가 대외 경기(상대: ${newMatchOpponentName.trim()})로 설정되었습니다`);
+    } catch (error) {
+      console.error('1경기 설정 에러:', error);
+      toast.error('1경기 설정에 실패했습니다');
+    }
+  };
+
   // 경기 추가
   const addMatch = async () => {
     setShowAddMatchModal(true);
@@ -1860,9 +1940,19 @@ const Tactics = () => {
                 <CardContent className="p-1 sm:p-6">
                   <div
                     ref={fieldRef}
-                    className="relative w-full h-[240px] lg:h-[400px] bg-green-500 rounded-lg border-4 border-white shadow-inner overflow-hidden"
-                    // 모바일/PC 반응형 높이 조정 시작: 축구장 필드 div 높이
+                    className={`relative w-full h-[240px] lg:h-[400px] bg-green-500 rounded-lg border-4 border-white shadow-inner overflow-hidden transition-all ${
+                      draggingOverField ? 'ring-4 ring-blue-400 ring-dashed ring-offset-2 bg-green-600' : ''
+                    } ${canEdit ? 'cursor-crosshair' : ''}`}
                     onClick={handleFieldClick}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                    }}
+                    onDragEnter={() => canEdit && setDraggingOverField(true)}
+                    onDragLeave={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node)) setDraggingOverField(false);
+                    }}
+                    onDrop={handleFieldDrop}
                   >
                     {/* 모바일과 데스크톱 모두 가로 경기장으로 통일 */}
                     <div className="absolute inset-0">
@@ -1920,7 +2010,21 @@ const Tactics = () => {
                       return (
                         <div
                           key={position.playerId}
-                          className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move group touch-manipulation"
+                          draggable={canEdit}
+                          onDragStart={(e) => {
+                            if (canEdit) {
+                              pickupPlayer({
+                                id: position.playerId,
+                                name: position.playerName,
+                                isOnField: true,
+                                team: position.team
+                              });
+                              e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer.setData('text/plain', position.playerId);
+                            }
+                          }}
+                          onDragEnd={() => setPickedPlayer(null)}
+                          className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing group touch-manipulation select-none"
                           style={{
                             left: `${position.x}%`,
                             top: `${position.y}%`
@@ -1933,16 +2037,14 @@ const Tactics = () => {
                           onClick={(e) => {
                             e.stopPropagation(); // 경기장 클릭 이벤트 방지
                             if (canEdit) {
-                              // 이미 픽업된 선수가 있고 그 선수가 현재 클릭한 선수와 다르면 기존 픽업 해제
                               if (pickedPlayer && pickedPlayer.id !== position.playerId) {
                                 setPickedPlayer(null);
                               }
-                              // 현재 선수를 픽업 (이동 가능하도록)
-                              pickupPlayer({ 
-                                id: position.playerId, 
-                                name: position.playerName, 
-                                isOnField: true, 
-                                team: position.team 
+                              pickupPlayer({
+                                id: position.playerId,
+                                name: position.playerName,
+                                isOnField: true,
+                                team: position.team
                               });
                             }
                           }}
@@ -1981,7 +2083,7 @@ const Tactics = () => {
                     {pickedPlayer && (
                       <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
                         <div className="text-blue-800 text-xs sm:text-sm font-semibold bg-white/95 backdrop-blur-sm px-2 sm:px-4 py-1 sm:py-2 rounded-lg shadow-lg border border-blue-200">
-                          {pickedPlayer.name}을(를) {selectedTeam}팀 영역에 배치할 위치를 클릭하세요
+                          {pickedPlayer.name} — 경기장 원하는 위치를 <span className="underline">클릭</span>하거나 <span className="underline">드래그해서 놓기</span>
                         </div>
                       </div>
                     )}
@@ -2025,9 +2127,18 @@ const Tactics = () => {
                       {availablePlayers.map((player, index) => (
                         <div
                           key={player.id}
+                          draggable={canEdit}
+                          onDragStart={(e) => {
+                            if (canEdit) {
+                              pickupPlayer({ ...player, isOnField: false, team: selectedTeam });
+                              e.dataTransfer.effectAllowed = 'move';
+                              e.dataTransfer.setData('text/plain', player.id);
+                            }
+                          }}
+                          onDragEnd={() => setPickedPlayer(null)}
                           className={`flex items-center p-2 border rounded-lg ${
-                            canEdit ? 'cursor-pointer hover:scale-105 hover:bg-gray-50' : 'cursor-default'
-                          } transition-all ${
+                            canEdit ? 'cursor-grab active:cursor-grabbing hover:scale-105 hover:bg-gray-50' : 'cursor-default'
+                          } transition-all select-none ${
                             pickedPlayer?.id === player.id ? 'opacity-50 scale-105 bg-blue-50 border-blue-300' : 'bg-white'
                           }`}
                           onDoubleClick={() => {
@@ -2103,8 +2214,17 @@ const Tactics = () => {
                         {availablePlayers.map((player, index) => (
                           <div
                             key={player.id}
-                            className={`flex flex-col items-center flex-shrink-0 w-16 ${
-                              canEdit ? 'cursor-pointer hover:scale-105' : 'cursor-default'
+                            draggable={canEdit}
+                            onDragStart={(e) => {
+                              if (canEdit) {
+                                pickupPlayer({ ...player, isOnField: false, team: selectedTeam });
+                                e.dataTransfer.effectAllowed = 'move';
+                                e.dataTransfer.setData('text/plain', player.id);
+                              }
+                            }}
+                            onDragEnd={() => setPickedPlayer(null)}
+                            className={`flex flex-col items-center flex-shrink-0 w-16 select-none ${
+                              canEdit ? 'cursor-grab active:cursor-grabbing hover:scale-105' : 'cursor-default'
                             } transition-transform ${
                               pickedPlayer?.id === player.id ? 'opacity-50 scale-110' : ''
                             }`}
@@ -2380,8 +2500,8 @@ const Tactics = () => {
               <h3 className="font-semibold text-blue-900 mb-1 sm:mb-2 text-sm sm:text-base">사용법</h3>
               <ul className="text-xs sm:text-sm text-blue-800 space-y-0.5 sm:space-y-1">
                 <li>• 상단에서 경기를 선택하거나 새로운 경기를 추가하세요</li>
-                <li>• 선수 명단의 선수를 클릭하여 선택한 후, 경기장의 원하는 위치를 클릭하여 배치하세요</li>
-                <li>• 경기장의 선수를 클릭하여 선택한 후, 다른 위치를 클릭하여 이동할 수 있습니다</li>
+                <li>• <strong>드래그 앤 드롭:</strong> 벤치 또는 경기장의 선수를 잡아당겨 경기장 원하는 위치에 놓으면 됩니다</li>
+                <li>• <strong>클릭 방식:</strong> 선수를 클릭한 뒤, 배치할 위치를 클릭해도 됩니다</li>
                 <li>• <span className="font-semibold text-green-700">경기장 위치에 따라 자동으로 팀이 결정됩니다 (좌측: A팀, 우측: B팀)</span></li>
                 <li>• 경기장의 선수를 더블클릭하거나 X 버튼을 클릭하면 벤치로 돌아갑니다</li>
                 <li>• <span className="font-semibold text-yellow-700">페널티 박스에 배치된 선수는 노란색으로 표시됩니다 (골키퍼)</span></li>
@@ -2694,6 +2814,71 @@ const Tactics = () => {
                   setShowAddOpponentModal(false);
                   setOpponentTeamName('');
                 }}
+                variant="outline"
+                className="flex-1"
+              >
+                취소
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 1경기 유형 설정 모달 (작전판 첫 진입 시) */}
+      {showMatch1ConfigModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">1경기 유형 설정</h3>
+            <p className="text-sm text-gray-500 mb-4">1경기가 자체 경기인지, 상대팀이 있는 대외 경기인지 선택하세요.</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">경기 유형 <span className="text-red-500">*</span></label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsSelfMatchState(true)}
+                    className={`flex-1 p-3 rounded-lg border-2 transition-colors ${
+                      isSelfMatchState ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                    }`}
+                  >
+                    <div className="text-sm font-medium">자체 경기</div>
+                    <div className="text-xs opacity-80">무쏘 vs 무쏘</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsSelfMatchState(false)}
+                    className={`flex-1 p-3 rounded-lg border-2 transition-colors ${
+                      !isSelfMatchState ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-orange-600 border-orange-300 hover:bg-orange-50'
+                    }`}
+                  >
+                    <div className="text-sm font-medium">대외 경기</div>
+                    <div className="text-xs opacity-80">무쏘 vs 상대팀</div>
+                  </button>
+                </div>
+              </div>
+              {!isSelfMatchState && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">상대팀 이름 <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={newMatchOpponentName}
+                    onChange={(e) => setNewMatchOpponentName(e.target.value)}
+                    placeholder="예: 지크, FC서울, 맨유 등"
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 mt-6">
+              <Button
+                onClick={handleMatch1Config}
+                disabled={!isSelfMatchState && !newMatchOpponentName.trim()}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                확인
+              </Button>
+              <Button
+                onClick={() => setShowMatch1ConfigModal(false)}
                 variant="outline"
                 className="flex-1"
               >

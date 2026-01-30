@@ -99,11 +99,26 @@ const RankingSection = ({ type, players }: RankingSectionProps) => {
     return firstSameValueIndex + 1;
   };
 
-  // 정렬된 플레이어 목록
+  // 카테고리별: 해당 데이터가 있는 선수만 표시. 출석률·평점은 전체 회원
+  let filteredPlayers: any[];
+  switch (type) {
+    case 'goals':
+      filteredPlayers = players.filter((p) => (Number(p.goals) || 0) > 0);
+      break;
+    case 'assists':
+      filteredPlayers = players.filter((p) => (Number(p.assists) || 0) > 0);
+      break;
+    case 'attendance':
+    case 'rating':
+      filteredPlayers = [...players]; // 출석률·평점: 모든 회원
+      break;
+    default:
+      filteredPlayers = [...players];
+  }
+
   // 평점 랭킹은 경기 수 21경기 이상인 사람들만 필터링
-  let filteredPlayers = [...players];
   if (type === 'rating') {
-    filteredPlayers = filteredPlayers.filter(player => player.games >= 21);
+    filteredPlayers = filteredPlayers.filter((player: any) => player.games >= 21);
   }
   
   let sortedPlayers = filteredPlayers.sort((a, b) => {

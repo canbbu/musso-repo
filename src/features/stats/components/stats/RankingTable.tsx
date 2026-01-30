@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -11,12 +11,33 @@ import { Award, Goal, Trophy, CalendarCheck, Shield } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card";
 import type { RankingTab, Player } from '@/features/stats/types/stats.types';
 
+/** 카테고리별: 해당 데이터가 있는 선수만 표시. 출석률은 전체 회원 */
+const getDisplayPlayersByTab = (activeTab: RankingTab, players: Player[]): Player[] => {
+  switch (activeTab) {
+    case 'goals':
+      return players.filter((p) => (Number(p.goals) || 0) > 0);
+    case 'assists':
+      return players.filter((p) => (Number(p.assists) || 0) > 0);
+    case 'attendance':
+      return players; // 출석률: 모든 회원
+    case 'cleansheet':
+      return players.filter((p) => (Number(p.cleansheet) || 0) > 0);
+    default:
+      return players;
+  }
+};
+
 interface RankingTableProps {
   activeTab: RankingTab;
   players: Player[];
 }
 
 const RankingTable = ({ activeTab, players }: RankingTableProps) => {
+  const displayPlayers = useMemo(
+    () => getDisplayPlayersByTab(activeTab, players),
+    [activeTab, players]
+  );
+
   const getLabelByTab = () => {
     switch (activeTab) {
       case 'goals':
@@ -64,7 +85,7 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
 
   // 실제 순위를 계산하는 함수
   const calculateRank = (playerIndex: number): number => {
-    const currentPlayer = players[playerIndex];
+    const currentPlayer = displayPlayers[playerIndex];
     const currentValue = (() => {
       switch (activeTab) {
         case 'goals':
@@ -83,7 +104,7 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
     // 현재 플레이어와 같은 수치를 가진 첫 번째 플레이어의 인덱스를 찾기
     let firstSameValueIndex = playerIndex;
     for (let i = 0; i < playerIndex; i++) {
-      const comparePlayer = players[i];
+      const comparePlayer = displayPlayers[i];
       const compareValue = (() => {
         switch (activeTab) {
           case 'goals':
@@ -167,7 +188,7 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {players.map((player, index) => {
+            {displayPlayers.map((player, index) => {
               const rank = calculateRank(index);
               return (
                 <TableRow key={player.id} className={getRankBackground(rank)}>

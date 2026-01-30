@@ -33,7 +33,7 @@ type RankingTab = 'goals' | 'assists' | 'attendance' | 'cleansheet';
 // const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 // const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const usePlayerRankings = (year?: number, month?: number) => {
+const usePlayerRankings = (year?: number, month?: number) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<RankingTab>('goals');
@@ -230,43 +230,29 @@ export const usePlayerRankings = (year?: number, month?: number) => {
     fetchPlayerData();
   }, [year, month]); // 연도나 월이 변경되면 데이터 다시 불러오기
   
-  // Get the top players in each category
-  const goalRanking = [...players].sort((a, b) => {
-    // 1차 정렬: 득점 수 (높은 순)
-    if (b.goals !== a.goals) {
-      return b.goals - a.goals;
-    }
-    // 2차 정렬: 경기 수 (적은 순)
+  // 카테고리별: 해당 데이터가 있는 선수만 표시. 출석률은 전체 회원 표시
+  const hasGoals = (p: Player) => (Number(p.goals) || 0) > 0;
+  const hasAssists = (p: Player) => (Number(p.assists) || 0) > 0;
+  const hasCleansheet = (p: Player) => (Number(p.cleansheet) || 0) > 0;
+
+  const goalRanking = [...players].filter(hasGoals).sort((a, b) => {
+    if (b.goals !== a.goals) return b.goals - a.goals;
     return a.games - b.games;
   });
-  
-  const assistRanking = [...players].sort((a, b) => {
-    // 1차 정렬: 어시스트 수 (높은 순)
-    if (b.assists !== a.assists) {
-      return b.assists - a.assists;
-    }
-    // 2차 정렬: 경기 수 (적은 순)
+  const assistRanking = [...players].filter(hasAssists).sort((a, b) => {
+    if (b.assists !== a.assists) return b.assists - a.assists;
     return a.games - b.games;
   });
-  
+  // 출석률: 모든 회원 표시 (필터 없음)
   const attendanceRanking = [...players].sort((a, b) => {
-    // 1차 정렬: 출석률 (높은 순)
-    if (b.attendance !== a.attendance) {
-      return b.attendance - a.attendance;
-    }
-    // 2차 정렬: 경기 수 (많은 순)
+    if (b.attendance !== a.attendance) return b.attendance - a.attendance;
     return b.games - a.games;
   });
-  
-  const cleansheetRanking = [...players].sort((a, b) => {
-    // 1차 정렬: 철벽지수 (높은 순)
-    if (b.cleansheet !== a.cleansheet) {
-      return b.cleansheet - a.cleansheet;
-    }
-    // 2차 정렬: 경기 수 (많은 순)
+  const cleansheetRanking = [...players].filter(hasCleansheet).sort((a, b) => {
+    if (b.cleansheet !== a.cleansheet) return b.cleansheet - a.cleansheet;
     return b.games - a.games;
   });
-  
+
   const getCurrentRanking = () => {
     switch (activeTab) {
       case 'goals':
@@ -295,4 +281,5 @@ export const usePlayerRankings = (year?: number, month?: number) => {
   };
 };
 
+export { usePlayerRankings };
 export type { RankingTab, Player };
