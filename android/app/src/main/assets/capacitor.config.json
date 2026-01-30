@@ -1,0 +1,6 @@
+{
+	"appId": "com.musso.app",
+	"appName": "무쏘",
+	"webDir": "dist",
+	"server": {}
+}
