@@ -143,18 +143,22 @@ export const usePlayerRankings = (year?: number, month?: number) => {
               statsData = [];
             }
             
-            // MVP 횟수 가져오기
-            const { data: mvpData, error: mvpError } = await supabase
+            // MVP 횟수 가져오기 (연도별 필터 적용)
+            let mvpQuery = supabase
               .from('mvp')
               .select('mvp_type')
               .eq('player_id', player.id);
+            if (year) {
+              mvpQuery = mvpQuery.eq('year', year);
+            }
+            const { data: mvpData, error: mvpError } = await mvpQuery;
             
             if (mvpError) throw mvpError;
             
-            // MVP 타입별 횟수 계산
-            const weeklyMvpCount = mvpData.filter(mvp => mvp.mvp_type === 'weekly').length;
-            const monthlyMvpCount = mvpData.filter(mvp => mvp.mvp_type === 'monthly').length;
-            const yearlyMvpCount = mvpData.filter(mvp => mvp.mvp_type === 'yearly').length;
+            // MVP 타입별 횟수 계산 (선택 연도 기준)
+            const weeklyMvpCount = (mvpData ?? []).filter(mvp => mvp.mvp_type === 'weekly').length;
+            const monthlyMvpCount = (mvpData ?? []).filter(mvp => mvp.mvp_type === 'monthly').length;
+            const yearlyMvpCount = (mvpData ?? []).filter(mvp => mvp.mvp_type === 'yearly').length;
             
             // 골, 어시스트, 철벽지수 합계 계산 (모든 경기 수에서)
             const totalGoals = statsData.reduce((sum, match) => sum + (match.goals || 0), 0);
