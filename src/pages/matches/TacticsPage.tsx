@@ -8,6 +8,7 @@ import Layout from '@/shared/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { Clipboard, Save, RotateCcw, Users, Edit3, Calendar, Shield, Target, Clock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { PlayerPosition } from '@/features/matches/types/match.types';
@@ -36,6 +37,96 @@ interface GoalGroup {
 
 // fallback에서 매 렌더마다 새 배열 참조가 생겨 useEffect 무한 루프가 발생하지 않도록 고정 참조
 const EMPTY_POSITIONS: PlayerPosition[] = [];
+
+/** 포메이션 슬롯: 팀 A 기준 (x, y) %, role은 GK/DF/MF/FW. 팀 B는 x를 100-x로 미러 */
+type FormationSlot = { x: number; y: number; role: 'GK' | 'DF' | 'MF' | 'FW' };
+
+// 4-3-3 포메이션 슬롯 (팀 A 좌측, x 작을수록 골대 쪽)
+const FORMATION_4_3_3_SLOTS_A: FormationSlot[] = [
+  { x: 10, y: 50, role: 'GK' },
+  { x: 18, y: 18, role: 'DF' }, { x: 18, y: 42, role: 'DF' }, { x: 18, y: 58, role: 'DF' }, { x: 18, y: 82, role: 'DF' },
+  { x: 32, y: 25, role: 'MF' }, { x: 32, y: 50, role: 'MF' }, { x: 32, y: 75, role: 'MF' },
+  { x: 44, y: 25, role: 'FW' }, { x: 44, y: 50, role: 'FW' }, { x: 44, y: 75, role: 'FW' },
+];
+
+// 4-4-2 포메이션 슬롯 (팀 A, 포백)
+const FORMATION_4_4_2_SLOTS_A: FormationSlot[] = [
+  { x: 10, y: 50, role: 'GK' },
+  { x: 18, y: 15, role: 'DF' }, { x: 18, y: 38, role: 'DF' }, { x: 18, y: 62, role: 'DF' }, { x: 18, y: 85, role: 'DF' },
+  { x: 32, y: 20, role: 'MF' }, { x: 32, y: 45, role: 'MF' }, { x: 32, y: 55, role: 'MF' }, { x: 32, y: 80, role: 'MF' },
+  { x: 44, y: 40, role: 'FW' }, { x: 44, y: 60, role: 'FW' },
+];
+
+// 3-5-2 포메이션 슬롯 (팀 A, 쓰리백)
+const FORMATION_3_5_2_SLOTS_A: FormationSlot[] = [
+  { x: 10, y: 50, role: 'GK' },
+  { x: 18, y: 25, role: 'DF' }, { x: 18, y: 50, role: 'DF' }, { x: 18, y: 75, role: 'DF' },
+  { x: 32, y: 15, role: 'MF' }, { x: 32, y: 35, role: 'MF' }, { x: 32, y: 50, role: 'MF' }, { x: 32, y: 65, role: 'MF' }, { x: 32, y: 85, role: 'MF' },
+  { x: 44, y: 40, role: 'FW' }, { x: 44, y: 60, role: 'FW' },
+];
+
+// 3-4-3 포메이션 슬롯 (팀 A, 쓰리백)
+const FORMATION_3_4_3_SLOTS_A: FormationSlot[] = [
+  { x: 10, y: 50, role: 'GK' },
+  { x: 18, y: 25, role: 'DF' }, { x: 18, y: 50, role: 'DF' }, { x: 18, y: 75, role: 'DF' },
+  { x: 32, y: 22, role: 'MF' }, { x: 32, y: 45, role: 'MF' }, { x: 32, y: 55, role: 'MF' }, { x: 32, y: 78, role: 'MF' },
+  { x: 44, y: 25, role: 'FW' }, { x: 44, y: 50, role: 'FW' }, { x: 44, y: 75, role: 'FW' },
+];
+
+// 5-3-2 포메이션 슬롯 (팀 A, 파이브백)
+const FORMATION_5_3_2_SLOTS_A: FormationSlot[] = [
+  { x: 10, y: 50, role: 'GK' },
+  { x: 18, y: 12, role: 'DF' }, { x: 18, y: 30, role: 'DF' }, { x: 18, y: 50, role: 'DF' }, { x: 18, y: 70, role: 'DF' }, { x: 18, y: 88, role: 'DF' },
+  { x: 32, y: 35, role: 'MF' }, { x: 32, y: 50, role: 'MF' }, { x: 32, y: 65, role: 'MF' },
+  { x: 44, y: 40, role: 'FW' }, { x: 44, y: 60, role: 'FW' },
+];
+
+// 5-4-1 포메이션 슬롯 (팀 A, 파이브백)
+const FORMATION_5_4_1_SLOTS_A: FormationSlot[] = [
+  { x: 10, y: 50, role: 'GK' },
+  { x: 18, y: 12, role: 'DF' }, { x: 18, y: 30, role: 'DF' }, { x: 18, y: 50, role: 'DF' }, { x: 18, y: 70, role: 'DF' }, { x: 18, y: 88, role: 'DF' },
+  { x: 32, y: 22, role: 'MF' }, { x: 32, y: 42, role: 'MF' }, { x: 32, y: 58, role: 'MF' }, { x: 32, y: 78, role: 'MF' },
+  { x: 44, y: 50, role: 'FW' },
+];
+
+// 4-2-3-1 포메이션 슬롯 (팀 A, 포백)
+const FORMATION_4_2_3_1_SLOTS_A: FormationSlot[] = [
+  { x: 10, y: 50, role: 'GK' },
+  { x: 18, y: 18, role: 'DF' }, { x: 18, y: 40, role: 'DF' }, { x: 18, y: 60, role: 'DF' }, { x: 18, y: 82, role: 'DF' },
+  { x: 28, y: 40, role: 'MF' }, { x: 28, y: 60, role: 'MF' },
+  { x: 36, y: 22, role: 'MF' }, { x: 36, y: 50, role: 'MF' }, { x: 36, y: 78, role: 'MF' },
+  { x: 44, y: 50, role: 'FW' },
+];
+
+// 4-5-1 포메이션 슬롯 (팀 A, 포백)
+const FORMATION_4_5_1_SLOTS_A: FormationSlot[] = [
+  { x: 10, y: 50, role: 'GK' },
+  { x: 18, y: 15, role: 'DF' }, { x: 18, y: 38, role: 'DF' }, { x: 18, y: 62, role: 'DF' }, { x: 18, y: 85, role: 'DF' },
+  { x: 32, y: 15, role: 'MF' }, { x: 32, y: 35, role: 'MF' }, { x: 32, y: 50, role: 'MF' }, { x: 32, y: 65, role: 'MF' }, { x: 32, y: 85, role: 'MF' },
+  { x: 44, y: 50, role: 'FW' },
+];
+
+const FORMATION_TEMPLATES: Record<string, FormationSlot[]> = {
+  '4-3-3': FORMATION_4_3_3_SLOTS_A,
+  '4-4-2': FORMATION_4_4_2_SLOTS_A,
+  '3-5-2': FORMATION_3_5_2_SLOTS_A,
+  '3-4-3': FORMATION_3_4_3_SLOTS_A,
+  '5-3-2': FORMATION_5_3_2_SLOTS_A,
+  '5-4-1': FORMATION_5_4_1_SLOTS_A,
+  '4-2-3-1': FORMATION_4_2_3_1_SLOTS_A,
+  '4-5-1': FORMATION_4_5_1_SLOTS_A,
+};
+
+/** 포지션별 선수 이름 색상 (GK/DF/MF/FW 구분) */
+const ROLE_NAME_COLORS: Record<'GK' | 'DF' | 'MF' | 'FW', string> = {
+  GK: 'text-amber-700',
+  DF: 'text-blue-700',
+  MF: 'text-emerald-700',
+  FW: 'text-rose-700',
+};
+
+/** 포메이션/포지션 배치 디버깅용 (true 시 콘솔 로그 출력) */
+const DEBUG_FORMATION = true;
 
 const Tactics = () => {
   const { matchId, matchNumber } = useParams<{ matchId: string; matchNumber: string }>();
@@ -89,17 +180,19 @@ const Tactics = () => {
   const [newMatchOpponentName, setNewMatchOpponentName] = useState('');
   // 1경기 유형 설정 모달 (작전판 첫 진입 시 자체/대외 선택)
   const [showMatch1ConfigModal, setShowMatch1ConfigModal] = useState(false);
-  const fieldRef = useRef<HTMLDivElement>(null);
+  const formationPanelRef = useRef<HTMLDivElement>(null);
   const playerListContainerRef = useRef<HTMLDivElement>(null);
   const playerListInnerRef = useRef<HTMLDivElement>(null);
   const mainContainerRef = useRef<HTMLDivElement>(null);
+  /** DB에서 포메이션 로드한 경기 키 (저장 후 tactics 변경 시 formations 덮어쓰기 방지) */
+  const lastLoadedMatchKeyRef = useRef<string>('');
 
   // 2. 득점 묶음 상태 추가
   const [goalGroups, setGoalGroups] = useState<GoalGroup[]>([]);
   const [editGoalGroup, setEditGoalGroup] = useState<GoalGroup | null>(null);
-  // 드래그 앤 드롭: 경기장 위에 드래그 중인지 (시각적 피드백용)
-  const [draggingOverField, setDraggingOverField] = useState(false);
-
+  // 팀별 포메이션 타입 (선수를 놓을 때 해당 포지션 슬롯으로 스냅)
+  const [formationTypeA, setFormationTypeA] = useState<string>('4-3-3');
+  const [formationTypeB, setFormationTypeB] = useState<string>('4-4-2');
   // 수정 권한 확인
   const canEdit = canManage() || canManageMatches() || canManageSystem();
 
@@ -454,43 +547,57 @@ const Tactics = () => {
     checkAndShow();
   }, [matchIdNum, matchNumberNum, matchNumbers]);
 
-  // DB에서 로드된 데이터를 formations에 반영
+  // DB에서 로드된 데이터를 formations에 반영 (경기/경기번호가 바뀔 때만 로드, 저장 후 tactics 변경 시 덮어쓰지 않음)
   useEffect(() => {
-    // 경기나 경기 번호가 변경될 때마다 데이터를 로드
-    if (matchIdNum && matchNumberNum) {
-      const loadAttendanceData = async () => {
-        const attendancePositions = await fetchAttendanceData();
-        
+    if (!matchIdNum || !matchNumberNum) return;
+    const matchKey = `${matchIdNum}-${matchNumberNum}`;
+    // 같은 경기에서 tactics만 바뀐 경우(저장 후 fetchTactics 등)에는 로드하지 않아 수정 사항이 유지되도록 함
+    if (lastLoadedMatchKeyRef.current === matchKey) {
+      console.log('[포메이션] DB로드 스킵 (같은 경기, 수정 사항 유지)', { matchKey, lastLoaded: lastLoadedMatchKeyRef.current });
+      return;
+    }
+    lastLoadedMatchKeyRef.current = matchKey;
+    console.log('[포메이션] DB에서 로드 시작', { matchKey });
+
+    const loadAttendanceData = async () => {
+      const attendancePositions = await fetchAttendanceData();
+      console.log('[포메이션] DB에서 로드 완료 → formations 반영', {
+        matchKey,
+        positionsCount: attendancePositions.length,
+        playerIds: attendancePositions.map(p => ({ id: p.playerId, name: p.playerName?.slice(0, 8), team: p.team }))
+      });
+      setFormations(prev => {
+        const name = tactics?.name || `경기 #${matchId} - ${matchNumber}경기 작전판`;
+        const teamA = tactics?.team_a_strategy ?? prev[matchNumberNum]?.teamA_strategy ?? '';
+        const teamB = tactics?.team_b_strategy ?? prev[matchNumberNum]?.teamB_strategy ?? '';
         if (attendancePositions.length > 0) {
-          // DB에서 가져온 포지션 데이터가 있으면 사용
-          setFormations(prev => ({
+          return {
             ...prev,
             [matchNumberNum]: {
-              name: tactics?.name || `경기 #${matchId} - ${matchNumber}경기 작전판`,
+              name,
               positions: attendancePositions,
               created_by: userId || '',
-              teamA_strategy: tactics?.team_a_strategy || '',
-              teamB_strategy: tactics?.team_b_strategy || ''
+              teamA_strategy: teamA,
+              teamB_strategy: teamB
             }
-          }));
-        } else {
-          // DB 데이터가 없으면 빈 상태로 설정하되, 기존 전략은 보존
-          setFormations(prev => ({
-            ...prev,
-            [matchNumberNum]: {
-              name: tactics?.name || `경기 #${matchId} - ${matchNumber}경기 작전판`,
-              positions: [],
-              created_by: userId || '',
-              teamA_strategy: prev[matchNumberNum]?.teamA_strategy || tactics?.team_a_strategy || '',
-              teamB_strategy: prev[matchNumberNum]?.teamB_strategy || tactics?.team_b_strategy || ''
-            }
-          }));
+          };
         }
-      };
+        return {
+          ...prev,
+          [matchNumberNum]: {
+            name,
+            positions: [],
+            created_by: userId || '',
+            teamA_strategy: teamA,
+            teamB_strategy: teamB
+          }
+        };
+      });
+    };
 
-      loadAttendanceData();
-    }
-  }, [matchIdNum, matchNumberNum, tactics, fetchAttendanceData]);
+    loadAttendanceData();
+    // tactics 제외: 저장 후 fetchTactics()로 tactics만 바뀌어도 effect가 돌면 formations가 DB로 덮어써져 수정 사항이 사라짐
+  }, [matchIdNum, matchNumberNum, fetchAttendanceData]);
 
   // 골키퍼 위치 판별 함수 (페널티 박스 내부)
   const isInPenaltyBox = (x: number, y: number, team: 'A' | 'B') => {
@@ -524,9 +631,9 @@ const Tactics = () => {
   // 선택 해제를 위한 전역 클릭 이벤트
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
-      // 경기장이나 선수 명단 클릭이 아닌 경우 선택 해제
+      // 포메이션 패널이나 선수 명단 클릭이 아닌 경우 선택 해제
       const target = e.target as HTMLElement;
-      const isFieldClick = fieldRef.current?.contains(target);
+      const isFieldClick = formationPanelRef.current?.contains(target);
       const isPlayerListClick = playerListContainerRef.current?.contains(target);
       
       if (!isFieldClick && !isPlayerListClick && pickedPlayer) {
@@ -608,6 +715,159 @@ const Tactics = () => {
     }) || false;
   };
 
+  /** 팀별 포메이션 슬롯 (B팀은 x 미러) */
+  const getSlotsForTeam = (team: 'A' | 'B'): FormationSlot[] => {
+    const formationType = team === 'A' ? formationTypeA : formationTypeB;
+    const template = FORMATION_TEMPLATES[formationType] || FORMATION_4_3_3_SLOTS_A;
+    const slots = team === 'A' ? template : template.map(({ x, y, role }) => ({ x: 100 - x, y, role }));
+    if (DEBUG_FORMATION && team === 'B') {
+      console.log('[포메이션] getSlotsForTeam B', { formationType, slotCount: slots.length, slots: slots.map(s => `${s.role}(${s.x.toFixed(0)},${s.y.toFixed(0)})`) });
+    }
+    return slots;
+  };
+
+  /** 슬롯 인덱스에 배치된 선수 (각 선수를 가장 가까운 슬롯에 매칭했을 때 이 슬롯에 매칭된 선수). 없으면 null */
+  const getPlayerAtSlot = (team: 'A' | 'B', slotIndex: number): PlayerPosition | null => {
+    const slots = getSlotsForTeam(team);
+    const teamPositions = currentFormation?.positions?.filter(p => p.team === team) || [];
+    const slotToPos = new Map<number, PlayerPosition>();
+    for (const pos of teamPositions) {
+      let bestIdx = 0;
+      let bestD = Math.sqrt(Math.pow(pos.x - slots[0].x, 2) + Math.pow(pos.y - slots[0].y, 2));
+      for (let i = 1; i < slots.length; i++) {
+        const d = Math.sqrt(Math.pow(pos.x - slots[i].x, 2) + Math.pow(pos.y - slots[i].y, 2));
+        if (d < bestD) {
+          bestD = d;
+          bestIdx = i;
+        }
+      }
+      const existing = slotToPos.get(bestIdx);
+      const slot = slots[bestIdx];
+      const dist = Math.sqrt(Math.pow(pos.x - slot.x, 2) + Math.pow(pos.y - slot.y, 2));
+      if (!existing || Math.sqrt(Math.pow(existing.x - slot.x, 2) + Math.pow(existing.y - slot.y, 2)) > dist) {
+        slotToPos.set(bestIdx, pos);
+      }
+    }
+    return slotToPos.get(slotIndex) ?? null;
+  };
+
+  /** 픽업된 선수를 지정 슬롯에 배치 (슬롯에 이미 있던 선수는 제거 후 배치) */
+  const placePlayerInSlot = (team: 'A' | 'B', slotIndex: number): boolean => {
+    if (!pickedPlayer || !canEdit) return false;
+    const isOpponent = pickedPlayer.id?.startsWith('opponent_');
+    if (isOpponent) {
+      toast.error('상대팀은 배치할 수 없습니다');
+      return false;
+    }
+    if (team === 'B' && attendingPlayers.some(p => p.isOpponentTeam)) {
+      toast.error('상대팀 진영에는 선수를 배치할 수 없습니다');
+      return false;
+    }
+    const slots = getSlotsForTeam(team);
+    const slot = slots[slotIndex];
+    if (!slot) return false;
+    const maxSlots = slots.length;
+    const currentTeamCount = currentFormation.positions.filter(p => p.team === team).length;
+    if (!pickedPlayer.isOnField && currentTeamCount >= maxSlots) {
+      toast.error(`${getTeamName(team)} 포메이션 인원이 가득 찼습니다 (${maxSlots}명)`);
+      return false;
+    }
+    const existingAtSlot = getPlayerAtSlot(team, slotIndex);
+    const newPos: PlayerPosition = {
+      playerId: pickedPlayer.id,
+      playerName: pickedPlayer.name,
+      x: slot.x,
+      y: slot.y,
+      team
+    };
+    setFormations(prev => {
+      const current = prev[matchNumberNum].positions;
+      const withoutOld = existingAtSlot ? current.filter(p => p.playerId !== existingAtSlot.playerId) : current;
+      const withoutPicked = withoutOld.filter(p => p.playerId !== pickedPlayer.id);
+      const next = [...withoutPicked, newPos];
+      console.log('[포메이션] 슬롯 배치(placePlayerInSlot)', {
+        team,
+        slotIndex,
+        playerName: pickedPlayer.name,
+        beforeCount: current.length,
+        afterCount: next.length,
+        removedAtSlot: existingAtSlot ? existingAtSlot.playerName : null
+      });
+      return { ...prev, [matchNumberNum]: { ...prev[matchNumberNum], positions: next } };
+    });
+    setPickedPlayer(null);
+    return true;
+  };
+
+  /** 이미 선수가 배치된 슬롯 제외. 한 선수당 "가장 가까운 슬롯 하나"만 점유로 간주해, 한 명이 두 슬롯을 점유하는 문제 방지 */
+  const getEmptySlots = (team: 'A' | 'B', excludePlayerId?: string): FormationSlot[] => {
+    const slots = getSlotsForTeam(team);
+    const teamPositions = currentFormation?.positions?.filter(p => p.team === team) || [];
+    const occupiedSlotIndices = new Set<number>();
+    teamPositions.forEach(pos => {
+      if (excludePlayerId && pos.playerId === excludePlayerId) return;
+      let nearestIdx = 0;
+      let minDist = Math.sqrt(Math.pow(slots[0].x - pos.x, 2) + Math.pow(slots[0].y - pos.y, 2));
+      for (let i = 1; i < slots.length; i++) {
+        const d = Math.sqrt(Math.pow(slots[i].x - pos.x, 2) + Math.pow(slots[i].y - pos.y, 2));
+        if (d < minDist) {
+          minDist = d;
+          nearestIdx = i;
+        }
+      }
+      occupiedSlotIndices.add(nearestIdx);
+    });
+    const empty = slots.filter((_, i) => !occupiedSlotIndices.has(i));
+    if (DEBUG_FORMATION && team === 'B') {
+      console.log('[포메이션] getEmptySlots B', { totalSlots: slots.length, teamPositionsCount: teamPositions.length, emptyCount: empty.length });
+    }
+    return empty;
+  };
+
+  /** 클릭/드롭 위치(targetX)가 어느 포지션 영역인지 반환 (경기장 4등분 기준) */
+  const getRoleFromPosition = (targetX: number, team: 'A' | 'B'): 'GK' | 'DF' | 'MF' | 'FW' => {
+    if (team === 'A') {
+      if (targetX < 12.5) return 'GK';
+      if (targetX < 25) return 'DF';
+      if (targetX < 37.5) return 'MF';
+      return 'FW';
+    }
+    // B팀: 우측 절반 50~100% → FW(50~62.5), MF(62.5~75), DF(75~87.5), GK(87.5~100)
+    if (targetX >= 87.5) return 'GK';
+    if (targetX >= 75) return 'DF';
+    if (targetX >= 62.5) return 'MF';
+    return 'FW';
+  };
+
+  /** 드롭/클릭 위치에서 가장 가까운 빈 포지션 슬롯으로 스냅. 클릭한 영역(역할)과 같은 역할 슬롯으로만 스냅(다른 역할 슬롯으로 넘어가면 포메이션이 깨짐). */
+  const findNearestSlot = (targetX: number, targetY: number, team: 'A' | 'B', excludePlayerId?: string): { x: number; y: number } | null => {
+    const emptySlots = getEmptySlots(team, excludePlayerId);
+    if (emptySlots.length === 0) {
+      if (DEBUG_FORMATION && team === 'B') console.log('[포메이션] findNearestSlot B → null (빈 슬롯 없음)');
+      return null;
+    }
+    const preferredRole = getRoleFromPosition(targetX, team);
+    const sameRoleSlots = emptySlots.filter(s => s.role === preferredRole);
+    // 같은 역할의 빈 슬롯만 사용. 다른 역할로 스냅하면 4-4-2가 4-3-3처럼 보이는 문제 방지
+    if (sameRoleSlots.length === 0) {
+      if (DEBUG_FORMATION && team === 'B') console.log('[포메이션] findNearestSlot B → null (해당 역할 빈 슬롯 없음)', { preferredRole });
+      return null;
+    }
+    let nearest = sameRoleSlots[0];
+    let minDist = Math.sqrt(Math.pow(nearest.x - targetX, 2) + Math.pow(nearest.y - targetY, 2));
+    for (let i = 1; i < sameRoleSlots.length; i++) {
+      const d = Math.sqrt(Math.pow(sameRoleSlots[i].x - targetX, 2) + Math.pow(sameRoleSlots[i].y - targetY, 2));
+      if (d < minDist) {
+        minDist = d;
+        nearest = sameRoleSlots[i];
+      }
+    }
+    if (DEBUG_FORMATION && team === 'B') {
+      console.log('[포메이션] findNearestSlot B', { targetX: targetX.toFixed(1), targetY: targetY.toFixed(1), preferredRole, chosen: `${nearest.role}(${nearest.x.toFixed(0)},${nearest.y.toFixed(0)})` });
+    }
+    return { x: nearest.x, y: nearest.y };
+  };
+
   // 가장 가까운 빈 공간 찾기
   const findNearestValidPosition = (targetX: number, targetY: number, excludePlayerId?: string) => {
     // 우선 원하는 위치가 가능한지 확인
@@ -680,8 +940,24 @@ const Tactics = () => {
       }
     }
 
+    // 포메이션 인원 제한: 벤치에서 올릴 때 해당 팀 슬롯 수를 초과하면 배치 불가
+    const maxSlots = getSlotsForTeam(targetTeam).length;
+    const currentTeamCount = currentFormation.positions.filter(p => p.team === targetTeam).length;
+    if (!pickedPlayer.isOnField && currentTeamCount >= maxSlots) {
+      const formationLabel = targetTeam === 'A' ? formationTypeA : formationTypeB;
+      toast.error(`${getTeamName(targetTeam)} 포메이션 인원이 가득 찼습니다 (${formationLabel}: ${maxSlots}명)`);
+      return false;
+    }
+
+    // 포메이션 슬롯으로 스냅 (FW 쪽에 놓으면 FW 슬롯 등). 없으면 기존처럼 가장 가까운 빈 공간
+    const snapped = findNearestSlot(targetX, targetY, targetTeam, pickedPlayer.isOnField ? pickedPlayer.id : undefined);
+    const validPosition = snapped ?? findNearestValidPosition(targetX, targetY, pickedPlayer.isOnField ? pickedPlayer.id : undefined);
+
+    if (DEBUG_FORMATION && targetTeam === 'B') {
+      console.log('[포메이션] placePickedPlayerAt B', { targetX: targetX.toFixed(1), targetY: targetY.toFixed(1), snapped: snapped ? `(${snapped.x.toFixed(0)},${snapped.y.toFixed(0)})` : null, final: `(${validPosition.x.toFixed(0)},${validPosition.y.toFixed(0)})` });
+    }
+
     if (pickedPlayer.isOnField) {
-      const validPosition = findNearestValidPosition(targetX, targetY, pickedPlayer.id);
       const currentPlayer = currentFormation.positions.find(p => p.playerId === pickedPlayer.id);
       if (currentPlayer && currentPlayer.team !== targetTeam) {
         toast.success(`${pickedPlayer.name}이(가) ${getTeamName(targetTeam)}으로 이동했습니다`);
@@ -691,7 +967,6 @@ const Tactics = () => {
       if (selectedTeam !== targetTeam) {
         toast.info(`위치에 따라 ${getTeamName(targetTeam)}으로 배치됩니다`);
       }
-      const validPosition = findNearestValidPosition(targetX, targetY);
       const newPosition: PlayerPosition = {
         playerId: pickedPlayer.id,
         playerName: pickedPlayer.name,
@@ -709,30 +984,7 @@ const Tactics = () => {
     }
     setPickedPlayer(null);
     return true;
-  }, [pickedPlayer, canEdit, attendingPlayers, currentFormation.positions, selectedTeam, matchNumberNum]);
-
-  // 경기장 클릭으로 선수 배치
-  const handleFieldClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!pickedPlayer || !fieldRef.current || !canEdit) return;
-    const rect = fieldRef.current.getBoundingClientRect();
-    const targetX = ((e.clientX - rect.left) / rect.width) * 100;
-    const targetY = ((e.clientY - rect.top) / rect.height) * 100;
-    placePickedPlayerAt(targetX, targetY);
-  };
-
-  // 경기장 드래그 앤 드롭으로 선수 배치
-  const handleFieldDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDraggingOverField(false);
-    if (!fieldRef.current || !canEdit) return;
-    const rect = fieldRef.current.getBoundingClientRect();
-    const targetX = ((e.clientX - rect.left) / rect.width) * 100;
-    const targetY = ((e.clientY - rect.top) / rect.height) * 100;
-    placePickedPlayerAt(targetX, targetY);
-  }, [canEdit, placePickedPlayerAt]);
+  }, [pickedPlayer, canEdit, attendingPlayers, currentFormation.positions, selectedTeam, matchNumberNum, formationTypeA, formationTypeB]);
 
   // 선수 위치 업데이트
   const updatePlayerPosition = (playerId: string, x: number, y: number, team: 'A' | 'B') => {
@@ -754,14 +1006,91 @@ const Tactics = () => {
   // 선수 제거 (경기장에서 벤치로)
   const removePlayerFromField = (playerId: string) => {
     if (!canEdit) return;
-    
+    setFormations(prev => {
+      const current = prev[matchNumberNum].positions;
+      const removed = current.find(p => p.playerId === playerId);
+      const next = current.filter(pos => pos.playerId !== playerId);
+      console.log('[포메이션] 선수 제거(removePlayerFromField)', {
+        playerId,
+        playerName: removed?.playerName ?? '(unknown)',
+        beforeCount: current.length,
+        afterCount: next.length,
+        remainingIds: next.map(p => p.playerId)
+      });
+      return {
+        ...prev,
+        [matchNumberNum]: {
+          ...prev[matchNumberNum],
+          positions: next
+        }
+      };
+    });
+  };
+
+  /** 한 팀의 선수들을 현재 포메이션 슬롯에 맞춰 재배치. 역할(구역)이 맞는 선수를 우선 해당 역할 슬롯에 배치해 4-4-2 등 포메이션 라인이 맞게 함. */
+  const computeTeamPositionsByFormation = (team: 'A' | 'B', positions: PlayerPosition[]): PlayerPosition[] => {
+    const slots = getSlotsForTeam(team);
+    const teamPositions = positions.filter(p => p.team === team);
+    if (teamPositions.length === 0) return [];
+    const roleOrder: Record<'GK' | 'DF' | 'MF' | 'FW', number> = { GK: 0, DF: 1, MF: 2, FW: 3 };
+    const sortedSlots = [...slots].sort((a, b) => {
+      if (roleOrder[a.role] !== roleOrder[b.role]) return roleOrder[a.role] - roleOrder[b.role];
+      if (a.y !== b.y) return a.y - b.y;
+      return a.x - b.x;
+    });
+    const assigned = new Set<string>();
+    const newTeamPositions: PlayerPosition[] = [];
+    for (const slot of sortedSlots) {
+      const posRole = (x: number) => getRoleFromPosition(x, team);
+      const sameRolePositions = teamPositions.filter(p => !assigned.has(p.playerId) && posRole(p.x) === slot.role);
+      const candidates = sameRolePositions.length > 0 ? sameRolePositions : teamPositions.filter(p => !assigned.has(p.playerId));
+      let nearestPos: PlayerPosition | null = null;
+      let nearestDist = Infinity;
+      for (const pos of candidates) {
+        if (assigned.has(pos.playerId)) continue;
+        const d = Math.pow(pos.x - slot.x, 2) + Math.pow(pos.y - slot.y, 2);
+        if (d < nearestDist) {
+          nearestDist = d;
+          nearestPos = pos;
+        }
+      }
+      if (nearestPos) {
+        assigned.add(nearestPos.playerId);
+        newTeamPositions.push({
+          ...nearestPos,
+          x: slot.x,
+          y: slot.y,
+          team
+        });
+      }
+    }
+    for (const pos of teamPositions) {
+      if (!assigned.has(pos.playerId)) newTeamPositions.push(pos);
+    }
+    if (DEBUG_FORMATION && team === 'B') {
+      console.log('[포메이션] computeTeamPositionsByFormation B', {
+        formationSlots: sortedSlots.map(s => `${s.role}(${s.x.toFixed(0)},${s.y.toFixed(0)})`),
+        before: teamPositions.map(p => `${p.playerName}(${p.x.toFixed(0)},${p.y.toFixed(0)})`),
+        after: newTeamPositions.map(p => `${p.playerName}→(${p.x.toFixed(0)},${p.y.toFixed(0)})`)
+      });
+    }
+    return newTeamPositions;
+  };
+
+  /** A·B 팀 모두 현재 설정된 포메이션에 맞춰 선수 재배치 */
+  const applyFormation = () => {
+    if (!canEdit) return;
+    const current = currentFormation.positions;
+    const newA = computeTeamPositionsByFormation('A', current);
+    const newB = computeTeamPositionsByFormation('B', current);
     setFormations(prev => ({
       ...prev,
       [matchNumberNum]: {
         ...prev[matchNumberNum],
-        positions: prev[matchNumberNum].positions.filter(pos => pos.playerId !== playerId)
+        positions: [...newA, ...newB]
       }
     }));
+    toast.success('설정된 포메이션에 맞춰 선수를 재배치했습니다');
   };
 
   // 팀별 선수 수 계산
@@ -1381,6 +1710,12 @@ const Tactics = () => {
       toast.error('수정 권한이 없습니다');
       return;
     }
+    const positionsToSave = currentFormation.positions;
+    console.log('[포메이션] 저장 클릭(saveFormation) — 현재 로컬 formations 기준', {
+      matchNumberNum,
+      positionsCount: positionsToSave.length,
+      players: positionsToSave.map(p => ({ id: p.playerId, name: p.playerName?.slice(0, 8), team: p.team }))
+    });
     try {
       // 저장 전에 다른 경기의 중복 데이터 정리
       await cleanupDuplicateData();
@@ -1424,15 +1759,17 @@ const Tactics = () => {
           };
         })
       };
+      console.log('[포메이션] saveTactics 호출 — 전송할 players 수', { count: formData.players.length, player_ids: formData.players.map(p => p.player_id) });
       
       const result = await saveTactics(formData);
+      console.log('[포메이션] saveTactics 결과', { success: result.success, error: result.error });
       if (result.success) {
         toast.success('작전판이 저장되었습니다');
       } else {
         toast.error('저장에 실패했습니다: ' + result.error);
       }
     } catch (error) {
-      console.error('Error saving formation:', error);
+      console.error('[포메이션] 저장 예외', error);
       toast.error('저장에 실패했습니다');
     }
   };
@@ -1759,15 +2096,15 @@ const Tactics = () => {
         <div className="space-y-2 sm:space-y-6 p-1 sm:p-4 max-w-full">
           {/* 헤더 */}
           <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 rounded-xl p-2 sm:p-6 border border-green-200">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-4">
-              <div>
-                <h1 className="text-lg sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
-                  <Clipboard className="w-5 h-5 sm:w-8 sm:h-8 text-green-600" />
-                  작전판
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-4 min-w-0 overflow-hidden">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3 min-w-0">
+                  <Clipboard className="w-5 h-5 sm:w-8 sm:h-8 text-green-600 shrink-0" />
+                  <span className="truncate">작전판</span>
                 </h1>
-                <p className="text-xs sm:text-base text-gray-600">경기별로 선수들을 배치하고 포메이션을 만들어보세요</p>
+                <p className="text-xs sm:text-base text-gray-600 break-words min-w-0">경기별로 선수들을 배치하고 포메이션을 만들어보세요</p>
               </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
                 {/* 세션 만료 표시는 제거하고, 현재 경기 번호만 표시 */}
                 <Badge variant="outline" className="bg-blue-50 border-blue-300 text-blue-700">
                   <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
@@ -1786,16 +2123,16 @@ const Tactics = () => {
           {/* 경기 탭 */}
           <Card className="shadow-lg border-0 bg-white">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg p-2 sm:p-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-                  경기 선택
+              <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base min-w-0 shrink-0">
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <span className="truncate">경기 선택</span>
                 </CardTitle>
                 {canEdit && (
                   <Button
                     onClick={addMatch}
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm shrink-0"
                   >
                     경기 추가
                   </Button>
@@ -1872,18 +2209,17 @@ const Tactics = () => {
 
           {/* 팀 선택 - 모든 화면 크기에서 표시 */}
 
-          {/* PC: 경기장과 선수 명단을 좌우로 배치, 모바일: 세로로 배치 */}
+          {/* PC: 포메이션 편집과 선수 명단을 좌우로 배치, 모바일: 세로로 배치 */}
           <div className="lg:grid lg:grid-cols-5 lg:gap-6 space-y-4 lg:space-y-0">
-            {/* 경기장 - PC에서는 4/5 차지 */}
+            {/* 포메이션 편집 영역 - PC에서는 4/5 차지 */}
             <div className="lg:col-span-4">
               <Card 
-                className="shadow-lg h-[300px] lg:h-[500px] flex flex-col justify-center"
-                // 모바일/PC 반응형 높이 조정 시작: 경기장 Card 높이
+                className="shadow-lg min-h-[300px] lg:min-h-[400px] flex flex-col"
               >
                 <CardHeader className="pb-1 sm:pb-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base">
-                    <span>축구장</span>
-                    <div className="flex items-center gap-2 sm:gap-4">
+                  <CardTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm sm:text-base">
+                    <span className="min-w-0 break-words">포메이션 편집 (A팀 / B팀)</span>
+                    <div className="flex items-center gap-2 sm:gap-4 flex-wrap min-w-0">
                       <div className="hidden lg:flex items-center gap-2">
                         <Badge variant="outline" className="bg-blue-50 border-blue-300 text-blue-700">
                           <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
@@ -1894,218 +2230,230 @@ const Tactics = () => {
                           B팀 {getTeamPlayerCount('B')}명
                         </Badge>
                       </div>
-                      <div className="lg:hidden">
-                        <Badge variant="outline" className="bg-white/80 backdrop-blur-sm border-green-300 text-green-700">
+                      <div className="lg:hidden flex-shrink-0">
+                        <Badge variant="outline" className="bg-white/80 backdrop-blur-sm border-green-300 text-green-700 text-xs">
                           <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           {currentFormation.positions.length}명 배치됨
                         </Badge>
                       </div>
                       {canEdit && (
-                        <div className="flex gap-1 sm:gap-2">
+                        <div className="flex flex-wrap gap-1 sm:gap-2 justify-end sm:justify-start min-w-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={applyFormation}
+                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 text-xs sm:text-sm shrink-0"
+                          >
+                            <Target className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 shrink-0" />
+                            <span className="hidden sm:inline">포메이션 적용</span>
+                            <span className="sm:hidden">적용</span>
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={resetFormation}
-                            className="text-red-600 border-red-200 hover:bg-red-50 text-xs sm:text-sm"
+                            className="text-red-600 border-red-200 hover:bg-red-50 text-xs sm:text-sm shrink-0"
                           >
-                            <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                            <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
                             초기화
                           </Button>
                           <Button
                             onClick={saveFormation}
                             size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+                            className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm shrink-0"
                           >
-                            <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                            <Save className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
                             저장
                           </Button>
                           <Button
                             onClick={handleNextPage}
                             size="sm"
                             disabled={hasUnsavedChanges()}
-                            className={`text-xs sm:text-sm ${
+                            className={`text-xs sm:text-sm shrink-0 ${
                               hasUnsavedChanges() 
                                 ? 'bg-gray-400 cursor-not-allowed' 
                                 : 'bg-blue-600 hover:bg-blue-700'
                             }`}
                           >
-                            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                            다음 페이지
+                            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">다음 페이지</span>
+                            <span className="sm:hidden">다음</span>
                           </Button>
                         </div>
                       )}
                     </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-1 sm:p-6">
-                  <div
-                    ref={fieldRef}
-                    className={`relative w-full h-[240px] lg:h-[400px] bg-green-500 rounded-lg border-4 border-white shadow-inner overflow-hidden transition-all ${
-                      draggingOverField ? 'ring-4 ring-blue-400 ring-dashed ring-offset-2 bg-green-600' : ''
-                    } ${canEdit ? 'cursor-crosshair' : ''}`}
-                    onClick={handleFieldClick}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = 'move';
-                    }}
-                    onDragEnter={() => canEdit && setDraggingOverField(true)}
-                    onDragLeave={(e) => {
-                      if (!e.currentTarget.contains(e.relatedTarget as Node)) setDraggingOverField(false);
-                    }}
-                    onDrop={handleFieldDrop}
-                  >
-                    {/* 모바일과 데스크톱 모두 가로 경기장으로 통일 */}
-                    <div className="absolute inset-0">
-                      {/* 중앙선 (세로) */}
-                      <div className="absolute top-0 left-1/2 w-1 h-full bg-white transform -translate-x-0.5"></div>
-                      
-                      {/* A팀/B팀 구분선 표시 */}
-                      <div className="absolute left-2 top-2 text-white text-xs font-bold bg-blue-600 px-2 py-1 rounded">A팀</div>
-                      <div className="absolute right-2 top-2 text-white text-xs font-bold bg-red-600 px-2 py-1 rounded">B팀</div>
-                      
-                      {/* 중앙 원 */}
-                      <div className="absolute top-1/2 left-1/2 w-10 h-10 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 border-2 border-white rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
-                      <div className="absolute top-1/2 left-1/2 w-1 h-1 sm:w-2 sm:h-2 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
-                      
-                      {/* 골대 (좌우) */}
-                      <div className="absolute top-1/2 left-0 w-1 sm:w-2 lg:w-3 h-6 sm:h-12 lg:h-16 bg-white transform -translate-y-1/2"></div>
-                      <div className="absolute top-1/2 right-0 w-1 sm:w-2 lg:w-3 h-6 sm:h-12 lg:h-16 bg-white transform -translate-y-1/2"></div>
-                      
-                      {/* 골 에리어 (좌우) */}
-                      <div className="absolute top-1/2 left-0 w-8 sm:w-12 lg:w-16 h-16 sm:h-20 lg:h-24 border-2 border-white border-l-0 transform -translate-y-1/2"></div>
-                      <div className="absolute top-1/2 right-0 w-8 sm:w-12 lg:w-16 h-16 sm:h-20 lg:h-24 border-2 border-white border-r-0 transform -translate-y-1/2"></div>
-                      
-                      {/* 페널티 에리어 (좌우) */}
-                      <div className="absolute top-1/2 left-0 w-12 sm:w-18 lg:w-24 h-24 sm:h-32 lg:h-40 border-2 border-white border-l-0 transform -translate-y-1/2"></div>
-                      <div className="absolute top-1/2 right-0 w-12 sm:w-18 lg:w-24 h-24 sm:h-32 lg:h-40 border-2 border-white border-r-0 transform -translate-y-1/2"></div>
-                      
-                      {/* 페널티 스팟 (좌우) */}
-                      <div className="absolute top-1/2 left-10 sm:left-16 lg:left-20 w-1 h-1 sm:w-2 sm:h-2 bg-white rounded-full transform -translate-y-1/2"></div>
-                      <div className="absolute top-1/2 right-10 sm:right-16 lg:right-20 w-1 h-1 sm:w-2 sm:h-2 bg-white rounded-full transform -translate-y-1/2"></div>
-                      
-                      {/* 코너 아크 */}
-                      <div className="absolute top-0 left-0 w-3 h-3 sm:w-6 sm:h-6 lg:w-8 lg:h-8 border-2 border-white border-b-0 border-r-0 rounded-br-full"></div>
-                      <div className="absolute top-0 right-0 w-3 h-3 sm:w-6 sm:h-6 lg:w-8 lg:h-8 border-2 border-white border-b-0 border-l-0 rounded-bl-full"></div>
-                      <div className="absolute bottom-0 left-0 w-3 h-3 sm:w-6 sm:h-6 lg:w-8 lg:h-8 border-2 border-white border-t-0 border-r-0 rounded-tr-full"></div>
-                      <div className="absolute bottom-0 right-0 w-3 h-3 sm:w-6 sm:h-6 lg:w-8 lg:h-8 border-2 border-white border-t-0 border-l-0 rounded-tl-full"></div>
+                <CardContent ref={formationPanelRef} className="p-1 sm:p-6 space-y-6">
+                  {/* A팀 포메이션 — 포지션별 슬롯에 선수 배치 */}
+                  <div className="rounded-lg border border-blue-200 bg-blue-50/30 p-3 min-w-0 overflow-hidden">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        <span className="text-white text-xs sm:text-sm font-bold bg-blue-600 px-2 py-1 rounded shadow shrink-0">A팀 포메이션</span>
+                        <span className="text-blue-900 text-xs font-medium bg-blue-100 px-2 py-0.5 rounded border border-blue-300 shrink-0">{formationTypeA}</span>
+                      </div>
+                      {canEdit && (
+                        <Select value={formationTypeA} onValueChange={(v) => setFormationTypeA(v || '4-3-3')}>
+                          <SelectTrigger className="w-[80px] sm:w-[92px] h-8 text-xs border-blue-200 bg-white shrink-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="4-3-3">4-3-3 (포백)</SelectItem>
+                            <SelectItem value="4-4-2">4-4-2 (포백)</SelectItem>
+                            <SelectItem value="4-2-3-1">4-2-3-1 (포백)</SelectItem>
+                            <SelectItem value="4-5-1">4-5-1 (포백)</SelectItem>
+                            <SelectItem value="3-5-2">3-5-2 (쓰리백)</SelectItem>
+                            <SelectItem value="3-4-3">3-4-3 (쓰리백)</SelectItem>
+                            <SelectItem value="5-3-2">5-3-2 (파이브백)</SelectItem>
+                            <SelectItem value="5-4-1">5-4-1 (파이브백)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
-
-                    {/* 배치된 선수들 */}
-                    {currentFormation.positions.map((position, index) => {
-                      // 골키퍼 여부 확인 (페널티 박스 내부)
-                      const isGoalkeeper = isInPenaltyBox(position.x, position.y, position.team);
-                      // 현재 사용자 여부 확인
-                      const isMyPlayer = isCurrentUser(position.playerName);
-                      
-                      // 색상 결정: 골키퍼 > 현재 사용자 > 팀 색상
-                      let circleColor;
-                      if (isGoalkeeper) {
-                        circleColor = 'bg-yellow-500 hover:bg-yellow-600';
-                      } else if (isMyPlayer) {
-                        circleColor = position.team === 'A' ? 'bg-blue-800 hover:bg-blue-900 ring-2 ring-yellow-400' : 'bg-red-800 hover:bg-red-900 ring-2 ring-yellow-400';
-                      } else {
-                        circleColor = position.team === 'A' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700';
-                      }
-                      
-                      return (
-                        <div
-                          key={position.playerId}
-                          draggable={canEdit}
-                          onDragStart={(e) => {
-                            if (canEdit) {
-                              pickupPlayer({
-                                id: position.playerId,
-                                name: position.playerName,
-                                isOnField: true,
-                                team: position.team
-                              });
-                              e.dataTransfer.effectAllowed = 'move';
-                              e.dataTransfer.setData('text/plain', position.playerId);
-                            }
-                          }}
-                          onDragEnd={() => setPickedPlayer(null)}
-                          className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing group touch-manipulation select-none"
-                          style={{
-                            left: `${position.x}%`,
-                            top: `${position.y}%`
-                          }}
-                          onDoubleClick={() => {
-                            if (canEdit) {
-                              removePlayerFromField(position.playerId);
-                            }
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation(); // 경기장 클릭 이벤트 방지
-                            if (canEdit) {
-                              if (pickedPlayer && pickedPlayer.id !== position.playerId) {
-                                setPickedPlayer(null);
-                              }
-                              pickupPlayer({
-                                id: position.playerId,
-                                name: position.playerName,
-                                isOnField: true,
-                                team: position.team
-                              });
-                            }
-                          }}
-                        >
-                          <div className={`${circleColor} text-white rounded-full w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 flex items-center justify-center shadow-lg border-2 border-white transition-colors relative ${
-                            pickedPlayer?.id === position.playerId ? 'ring-4 ring-yellow-400 ring-opacity-75' : ''
-                          }`}>
-                            <span className="text-[8px] sm:text-[10px] font-bold">
-                              {currentFormation.positions.filter(p => p.team === position.team).findIndex(p => p.playerId === position.playerId) + 1}
-                            </span>
-                            {canEdit && (
-                              <div className="absolute -top-0.5 sm:-top-1 -right-0.5 sm:-right-1 w-2 h-2 sm:w-4 sm:h-4 bg-gray-800 rounded-full flex items-center justify-center text-white text-[6px] sm:text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     removePlayerFromField(position.playerId);
-                                   }}>
-                                ×
-                              </div>
-                            )}
-                          </div>
-                          {/* 선수 이름 표시 */}
-                          <div className="absolute top-3 sm:top-5 md:top-6 left-1/2 transform -translate-x-1/2 text-center">
-                            <div className={`text-gray-800 text-[7px] sm:text-xs px-0.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium shadow-sm border min-w-max max-w-10 sm:max-w-20 md:max-w-24 truncate ${
-                              isMyPlayer ? 'bg-yellow-200 border-yellow-400 font-bold' : 'bg-white/90'
-                            }`}>
-                              {/* 모바일에서는 성만 표시, 데스크톱에서는 전체 이름 */}
-                              <span className="sm:hidden">{position.playerName.split('_')[0]}</span>
-                              <span className="hidden sm:inline">{position.playerName}</span>
+                    {/* 포지션별 왼쪽→오른쪽 배치: GK | DF | MF | FW */}
+                    <div className="flex flex-row gap-3 sm:gap-4 flex-wrap">
+                      {(['GK', 'DF', 'MF', 'FW'] as const).map((role) => {
+                        const slots = getSlotsForTeam('A').map((s, i) => ({ ...s, index: i })).filter(s => s.role === role);
+                        if (slots.length === 0) return null;
+                        return (
+                          <div key={role} className="flex flex-col gap-1.5">
+                            <span className="text-xs font-semibold text-gray-600">{role}</span>
+                            <div className="flex flex-col gap-1.5">
+                              {slots.map(({ index }) => {
+                                const pos = getPlayerAtSlot('A', index);
+                                return (
+                                  <div
+                                    key={index}
+                                    draggable={canEdit && !!pos}
+                                    onDragStart={(e) => pos && canEdit && (pickupPlayer({ id: pos.playerId, name: pos.playerName, isOnField: true, team: 'A' }), e.dataTransfer.setData('text/plain', pos.playerId), e.dataTransfer.effectAllowed = 'move')}
+                                    onDragEnd={() => setPickedPlayer(null)}
+                                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                    onDrop={(e) => { e.preventDefault(); placePlayerInSlot('A', index); }}
+                                    onClick={() => {
+                                      if (!canEdit) return;
+                                      if (pickedPlayer) placePlayerInSlot('A', index);
+                                      else if (pos) pickupPlayer({ id: pos.playerId, name: pos.playerName, isOnField: true, team: 'A' });
+                                    }}
+                                    className={`min-w-[72px] sm:min-w-[88px] max-w-full px-2 py-1.5 rounded-md border text-xs transition-colors overflow-hidden ${
+                                      pos ? 'bg-blue-100 border-blue-300 text-blue-900 cursor-grab' : 'bg-white border-dashed border-gray-300 text-gray-500 hover:border-blue-400 hover:bg-blue-50/50'
+                                    } ${pickedPlayer ? 'cursor-pointer' : ''} ${pos && pickedPlayer?.id === pos.playerId ? 'ring-2 ring-yellow-400' : ''}`}
+                                  >
+                                    {pos ? (
+                                      <span className="flex items-center justify-between gap-1 min-w-0">
+                                        <span className={`truncate font-medium min-w-0 ${ROLE_NAME_COLORS[role]}`}>{pos.playerName.split('_')[0]}</span>
+                                        {canEdit && (
+                                          <button type="button" onClick={(e) => { e.stopPropagation(); removePlayerFromField(pos.playerId); }} className="text-gray-500 hover:text-red-600 shrink-0">×</button>
+                                        )}
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-400 whitespace-nowrap">선수 배치</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-
-                    {/* 픽업된 선수가 있을 때 안내 메시지 */}
-                    {pickedPlayer && (
-                      <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 pointer-events-none">
-                        <div className="text-blue-800 text-xs sm:text-sm font-semibold bg-white/95 backdrop-blur-sm px-2 sm:px-4 py-1 sm:py-2 rounded-lg shadow-lg border border-blue-200">
-                          {pickedPlayer.name} — 경기장 원하는 위치를 <span className="underline">클릭</span>하거나 <span className="underline">드래그해서 놓기</span>
-                        </div>
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
                   </div>
+
+                  {/* B팀 포메이션 — 포지션별 슬롯에 선수 배치 */}
+                  <div className="rounded-lg border border-red-200 bg-red-50/30 p-3 min-w-0 overflow-hidden">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        <span className="text-white text-xs sm:text-sm font-bold bg-red-600 px-2 py-1 rounded shadow shrink-0">B팀 포메이션</span>
+                        <span className="text-red-900 text-xs font-medium bg-red-100 px-2 py-0.5 rounded border border-red-300 shrink-0">{formationTypeB}</span>
+                      </div>
+                      {canEdit && (
+                        <Select value={formationTypeB} onValueChange={(v) => setFormationTypeB(v || '4-4-2')}>
+                          <SelectTrigger className="w-[80px] sm:w-[92px] h-8 text-xs border-red-200 bg-white shrink-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="4-3-3">4-3-3 (포백)</SelectItem>
+                            <SelectItem value="4-4-2">4-4-2 (포백)</SelectItem>
+                            <SelectItem value="4-2-3-1">4-2-3-1 (포백)</SelectItem>
+                            <SelectItem value="4-5-1">4-5-1 (포백)</SelectItem>
+                            <SelectItem value="3-5-2">3-5-2 (쓰리백)</SelectItem>
+                            <SelectItem value="3-4-3">3-4-3 (쓰리백)</SelectItem>
+                            <SelectItem value="5-3-2">5-3-2 (파이브백)</SelectItem>
+                            <SelectItem value="5-4-1">5-4-1 (파이브백)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                    {/* 포지션별 왼쪽→오른쪽 배치: GK | DF | MF | FW */}
+                    <div className="flex flex-row gap-3 sm:gap-4 flex-wrap">
+                      {(['GK', 'DF', 'MF', 'FW'] as const).map((role) => {
+                        const slots = getSlotsForTeam('B').map((s, i) => ({ ...s, index: i })).filter(s => s.role === role);
+                        if (slots.length === 0) return null;
+                        return (
+                          <div key={role} className="flex flex-col gap-1.5">
+                            <span className="text-xs font-semibold text-gray-600">{role}</span>
+                            <div className="flex flex-col gap-1.5">
+                              {slots.map(({ index }) => {
+                                const pos = getPlayerAtSlot('B', index);
+                                return (
+                                  <div
+                                    key={index}
+                                    draggable={canEdit && !!pos}
+                                    onDragStart={(e) => pos && canEdit && (pickupPlayer({ id: pos.playerId, name: pos.playerName, isOnField: true, team: 'B' }), e.dataTransfer.setData('text/plain', pos.playerId), e.dataTransfer.effectAllowed = 'move')}
+                                    onDragEnd={() => setPickedPlayer(null)}
+                                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                    onDrop={(e) => { e.preventDefault(); placePlayerInSlot('B', index); }}
+                                    onClick={() => {
+                                      if (!canEdit) return;
+                                      if (pickedPlayer) placePlayerInSlot('B', index);
+                                      else if (pos) pickupPlayer({ id: pos.playerId, name: pos.playerName, isOnField: true, team: 'B' });
+                                    }}
+                                    className={`min-w-[72px] sm:min-w-[88px] max-w-full px-2 py-1.5 rounded-md border text-xs transition-colors overflow-hidden ${
+                                      pos ? 'bg-red-100 border-red-300 text-red-900 cursor-grab' : 'bg-white border-dashed border-gray-300 text-gray-500 hover:border-red-400 hover:bg-red-50/50'
+                                    } ${pickedPlayer ? 'cursor-pointer' : ''} ${pos && pickedPlayer?.id === pos.playerId ? 'ring-2 ring-yellow-400' : ''}`}
+                                  >
+                                    {pos ? (
+                                      <span className="flex items-center justify-between gap-1 min-w-0">
+                                        <span className={`truncate font-medium min-w-0 ${ROLE_NAME_COLORS[role]}`}>{pos.playerName.split('_')[0]}</span>
+                                        {canEdit && (
+                                          <button type="button" onClick={(e) => { e.stopPropagation(); removePlayerFromField(pos.playerId); }} className="text-gray-500 hover:text-red-600 shrink-0">×</button>
+                                        )}
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-400 whitespace-nowrap">선수 배치</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {pickedPlayer && (
+                    <div className="text-center py-1.5 px-2 text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 rounded border border-blue-200 break-words min-w-0 overflow-hidden">
+                      {pickedPlayer.name} — 배치할 포지션 칸을 클릭하거나 드래그해서 놓기
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* 선수 벤치 - PC에서는 1/5 차지, 모바일에서는 경기장 아래 전체 폭 */}
+            {/* 선수 명단 - PC에서는 1/5 차지, 모바일에서는 포메이션 아래 전체 폭 */}
             <div className="lg:col-span-1">
               <Card 
                 className="shadow-lg h-[160px] lg:h-[500px] flex flex-col"
                 // 모바일/PC 반응형 높이 조정 시작: 선수명단 Card 높이
               >
                 <CardHeader className="pb-1 sm:pb-3">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-                      선수 명단
+                  <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-sm sm:text-base min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 shrink-0">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                      <span className="truncate">선수 명단</span>
                     </div>
                     {canEdit && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 shrink-0">
                         <Button
                           onClick={() => setShowAddPlayerModal(true)}
                           size="sm"
@@ -2186,9 +2534,9 @@ const Tactics = () => {
                   {/* 모바일용 가로 스크롤은 기존대로 유지 */}
                   <div className="lg:hidden">
                     {/* 모바일용 가로 스크롤 */}
-                    <div className="text-xs text-gray-500 mb-2 flex items-center justify-between">
-                      <span>← 스크롤하여 더 많은 선수를 확인하세요 →</span>
-                      <span>출석: {availablePlayers.length}명 / 총 {attendingPlayers.length}명</span>
+                    <div className="text-xs text-gray-500 mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 min-w-0 overflow-hidden">
+                      <span className="truncate">← 스크롤하여 더 많은 선수를 확인하세요 →</span>
+                      <span className="shrink-0">출석: {availablePlayers.length}명 / 총 {attendingPlayers.length}명</span>
                     </div>
                     
                     <div 
@@ -2495,17 +2843,16 @@ const Tactics = () => {
           </Card>
 
           {/* 도움말 */}
-          <Card className="shadow-lg bg-blue-50 border-blue-200">
-            <CardContent className="p-2 sm:p-4">
+          <Card className="shadow-lg bg-blue-50 border-blue-200 min-w-0 overflow-hidden">
+            <CardContent className="p-2 sm:p-4 min-w-0">
               <h3 className="font-semibold text-blue-900 mb-1 sm:mb-2 text-sm sm:text-base">사용법</h3>
-              <ul className="text-xs sm:text-sm text-blue-800 space-y-0.5 sm:space-y-1">
+              <ul className="text-xs sm:text-sm text-blue-800 space-y-0.5 sm:space-y-1 break-words min-w-0 overflow-hidden">
                 <li>• 상단에서 경기를 선택하거나 새로운 경기를 추가하세요</li>
-                <li>• <strong>드래그 앤 드롭:</strong> 벤치 또는 경기장의 선수를 잡아당겨 경기장 원하는 위치에 놓으면 됩니다</li>
-                <li>• <strong>클릭 방식:</strong> 선수를 클릭한 뒤, 배치할 위치를 클릭해도 됩니다</li>
-                <li>• <span className="font-semibold text-green-700">경기장 위치에 따라 자동으로 팀이 결정됩니다 (좌측: A팀, 우측: B팀)</span></li>
-                <li>• 경기장의 선수를 더블클릭하거나 X 버튼을 클릭하면 벤치로 돌아갑니다</li>
-                <li>• <span className="font-semibold text-yellow-700">페널티 박스에 배치된 선수는 노란색으로 표시됩니다 (골키퍼)</span></li>
-                <li>• <span className="font-semibold text-purple-700">본인의 이름이 포함된 선수는 진한 색상과 노란 테두리로 강조됩니다</span></li>
+                <li>• <strong>드래그 앤 드롭:</strong> 벤치 또는 포메이션 슬롯의 선수를 잡아당겨 배치할 포지션 칸(GK/DF/MF/FW)에 놓으면 됩니다</li>
+                <li>• <strong>클릭 방식:</strong> 선수를 클릭한 뒤, 배치할 포지션 칸을 클릭해도 됩니다</li>
+                <li>• <span className="font-semibold text-green-700">A팀·B팀 포메이션을 각각 선택(4-3-3, 4-4-2)한 뒤 해당 슬롯에 선수를 배치합니다</span></li>
+                <li>• 포메이션 슬롯의 선수에서 X 버튼을 누르면 해당 슬롯에서 제거(벤치로) 됩니다</li>
+                <li>• <span className="font-semibold text-purple-700">선택한 선수는 노란 테두리로 표시됩니다</span></li>
                 <li>• 감독/코치는 각 팀의 전술 지시란에 전술을 입력할 수 있습니다</li>
                 <li>• <span className="font-semibold text-orange-700">"저장" 버튼을 눌러야 작전판이 데이터베이스에 저장됩니다</span></li>
                 <li>• <span className="font-semibold text-green-700">경기 버튼의 점 표시: 초록색(저장됨), 주황색(저장되지 않음), 회색(데이터 없음)</span></li>

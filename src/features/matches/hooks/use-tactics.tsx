@@ -247,6 +247,37 @@ export const useTactics = (matchId: number, matchNumber: number = 1) => {
         }
       }
 
+      // 포메이션에서 제거된 선수: formData.players에 없는 참석자는 DB에서 위치 정보(tactics_position_x/y/team) 초기화
+      const playerIdsInFormation = new Set(
+        formData.players
+          .filter(p => p.player_id && !String(p.player_id).startsWith('opponent_'))
+          .map(p => p.player_id)
+      );
+      const { data: attendeesWithPosition } = await supabase
+        .from('match_attendance')
+        .select('player_id')
+        .eq('match_id', formData.match_id)
+        .eq('match_number', formData.match_number)
+        .eq('is_opponent_team', false)
+        .not('tactics_position_x', 'is', null);
+
+      const toClear = attendeesWithPosition?.filter(row => !playerIdsInFormation.has(row.player_id)) ?? [];
+      for (const row of toClear) {
+        const { error: clearError } = await supabase
+          .from('match_attendance')
+          .update({
+            tactics_position_x: null,
+            tactics_position_y: null,
+            tactics_team: null
+          })
+          .eq('match_id', formData.match_id)
+          .eq('match_number', formData.match_number)
+          .eq('player_id', row.player_id);
+        if (clearError) {
+          console.error('match_attendance 위치 초기화 에러:', clearError, row.player_id);
+        }
+      }
+
       // 저장 후 데이터 다시 가져오기
       await fetchTactics();
 
