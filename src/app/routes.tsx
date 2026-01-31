@@ -2,6 +2,7 @@ import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { RequireAuth, RequireAdmin } from '@/features/auth/components/AuthContext';
 import { NotFound } from '@/pages';
+import FutsalPage from '@/pages/futsal/FutsalPage';
 // Finance pages
 import FinancePage from '@/pages/finance/FinancePage';
 import FinanceManagementPage from '@/pages/finance/FinanceManagementPage';
@@ -33,22 +34,18 @@ import ProfilePage from '@/pages/auth/ProfilePage';
 export function AppRoutes() {
   return (
     <Routes>
-      {/* 메인 페이지는 대시보드 */}
+      {/* 풋살 전용: 빈 페이지 (기본은 축구) */}
+      <Route path="/futsal/*" element={<FutsalPage />} />
+
+      {/* 메인(축구) 페이지 */}
       <Route path="/" element={<DashboardPage />} />
-      
-      {/* 인증이 필요하지 않은 페이지들 */}
       <Route path="/login" element={<LoginPage />} />
-      
-      {/* 로그인 없이 접근 가능한 페이지들 */}
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/stats" element={<PlayerStatsPage />} />
-      
-      {/* 인증이 필요한 페이지들 */}
+
       <Route element={<RequireAuth />}>
         <Route path="/attendance-status" element={<AttendanceStatusPage />} />
         <Route path="/season-rankings" element={<SeasonRankingsPage />} />
-        
-        {/* 관리자만 접근 가능한 페이지 */}
         <Route element={<RequireAdmin />}>
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/data-test" element={<DataTestPage />} />
@@ -64,11 +61,9 @@ export function AppRoutes() {
           <Route path="/entire-player-stats" element={<EntirePlayerStatsPage />} />
           <Route path="/attendance/:matchId" element={<AttendanceCheckPage />} />
         </Route>
-        
-        {/* 프로필 변경은 모든 인증된 사용자에게 허용 */}
         <Route path="/change-profile" element={<ProfilePage />} />
       </Route>
-      
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -14,7 +14,8 @@ import {
   SidebarMenuSubItem
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/hooks/use-auth';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard, Award } from 'lucide-react';
+import { useSport } from '@/app/sport-context';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard, Award, Footprints, Circle } from 'lucide-react';
 // import UserProfileButton from './profile/UserProfileButton';
 
 const AppSidebar = () => {
@@ -27,8 +28,8 @@ const AppSidebar = () => {
     canManageFinance, 
     canManagePlayerStats 
   } = useAuth();
+  const { linkTo, isActivePath, sport } = useSport();
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Define navigation items with permission checks
   // 시즌 종료: 일반 회원은 선수 통계와 출석현황만, 관리자는 모든 메뉴 접근 가능
@@ -72,11 +73,31 @@ const AppSidebar = () => {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
+            {/* 축구 ↔ 풋살 페이지 전환 */}
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="text-sky-600 hover:text-sky-700 hover:bg-sky-50"
+                onClick={() => navigate(sport === 'futsal' ? '/' : '/futsal')}
+              >
+                {sport === 'futsal' ? (
+                  <>
+                    <Circle className="h-5 w-5 mr-3" />
+                    <span>축구 페이지로</span>
+                  </>
+                ) : (
+                  <>
+                    <Footprints className="h-5 w-5 mr-3" />
+                    <span>풋살 페이지로</span>
+                  </>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarSeparator />
             {navItems.map((item) => (
               <SidebarMenuItem key={item.path}>
                 <SidebarMenuButton
-                  className={`${location.pathname === item.path ? "bg-primary/10" : ""} ${item.color || ""}`}
-                  onClick={() => navigate(item.path)}
+                  className={`${isActivePath(item.path) ? "bg-primary/10" : ""} ${item.color || ""}`}
+                  onClick={() => navigate(linkTo(item.path))}
                 >
                   <item.icon className={`h-5 w-5 mr-3 ${item.color ? item.color.split(' ')[0] : 'text-primary'}`} />
                   <span>{item.title}</span>
@@ -95,7 +116,7 @@ const AppSidebar = () => {
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                onClick={() => navigate('/change-profile')}
+                onClick={() => navigate(linkTo('/change-profile'))}
               >
                 <Key className="h-5 w-5 mr-3" />
                 <span>프로필 변경</span>
@@ -106,7 +127,7 @@ const AppSidebar = () => {
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="text-green-500 hover:text-green-600 hover:bg-green-50"
-                onClick={() => navigate('/attendance-status')}
+                onClick={() => navigate(linkTo('/attendance-status'))}
               >
                 <Users className="h-5 w-5 mr-3" />
                 <span>출석현황</span>
@@ -118,7 +139,7 @@ const AppSidebar = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     className="text-purple-500 hover:text-purple-600 hover:bg-purple-50"
-                    onClick={() => navigate('/entire-player-stats')}
+                    onClick={() => navigate(linkTo('/entire-player-stats'))}
                   >
                     <Database className="h-5 w-5 mr-3" />
                     <span>선수 전체 통계</span>
@@ -130,7 +151,7 @@ const AppSidebar = () => {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   className="text-orange-500 hover:text-orange-600 hover:bg-orange-50"
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate(linkTo('/register'))}
                 >
                   <UserPlus className="h-5 w-5 mr-3" />
                   <span>회원 등록</span>

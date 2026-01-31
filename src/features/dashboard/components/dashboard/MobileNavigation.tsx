@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Crown, Key, Users, Clipboard } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, X, Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Crown, Key, Users, Clipboard, Footprints, Circle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import {
   Sheet,
@@ -10,11 +10,12 @@ import {
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import { useSport } from '@/app/sport-context';
 // import UserProfileButton from '../profile/UserProfileButton';
 
 export default function MobileNavigation() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { linkTo, isActivePath, sport } = useSport();
   const { 
     logout, 
     userName, 
@@ -48,7 +49,7 @@ export default function MobileNavigation() {
   
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center">
-      <h1 className="text-lg font-semibold">축구회 관리</h1>
+      <h1 className="text-lg font-semibold">{sport === 'futsal' ? '풋살 관리' : '축구회 관리'}</h1>
       <div className="flex items-center gap-2">
         {/* <UserProfileButton /> */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -67,53 +68,82 @@ export default function MobileNavigation() {
             </div>
             <nav className="flex-1 overflow-y-auto">
               <ul className="space-y-2 pb-4">
-                {navItems.map((item) => (
-                  <li key={item.path}>
-                    <Button
-                      variant={location.pathname === item.path ? "default" : "ghost"}
-                      className={`w-full justify-start text-left ${
-                        item.path === '/hall-of-fame' 
-                          ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
-                          : item.path === '/tactics'
-                          ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        navigate(item.path);
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <item.icon className={`h-4 w-4 mr-2 ${
-                        item.path === '/hall-of-fame' 
-                          ? 'text-yellow-600' 
-                          : item.path === '/tactics'
-                          ? 'text-green-600'
-                          : ''
-                      }`} />
-                      {item.title}
-                    </Button>
-                  </li>
-                ))}
-                {/* PC와 동일: 구분선 후 출석현황 → 프로필 변경 → 로그아웃 */}
-                <li className="pt-4 border-t mt-4">
+                {/* 축구 ↔ 풋살 페이지 전환 */}
+                <li>
                   <Button
-                    variant="ghost"
-                    className="w-full justify-start text-left text-green-500 hover:text-green-600 hover:bg-green-50"
+                    variant="outline"
+                    className="w-full justify-start text-left text-sky-600 hover:text-sky-700 hover:bg-sky-50 border-sky-200"
                     onClick={() => {
-                      navigate('/attendance-status');
+                      navigate(sport === 'futsal' ? '/' : '/futsal');
                       setMobileMenuOpen(false);
                     }}
                   >
-                    <Users className="h-4 w-4 mr-2" />
-                    출석현황
+                    {sport === 'futsal' ? (
+                      <>
+                        <Circle className="h-4 w-4 mr-2" />
+                        축구 페이지로 이동
+                      </>
+                    ) : (
+                      <>
+                        <Footprints className="h-4 w-4 mr-2" />
+                        풋살 페이지로 이동
+                      </>
+                    )}
                   </Button>
                 </li>
-                <li>
+                {/* 풋살 페이지에서는 축구 메뉴 숨김 (네비게이션은 축구/풋살 따로) */}
+                {sport === 'soccer' && (
+                  <>
+                    <li className="border-t pt-2 mt-2" />
+                    {navItems.map((item) => (
+                      <li key={item.path}>
+                        <Button
+                          variant={isActivePath(item.path) ? "default" : "ghost"}
+                          className={`w-full justify-start text-left ${
+                            item.path === '/hall-of-fame'
+                              ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50'
+                              : item.path === '/tactics'
+                              ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                              : ''
+                          }`}
+                          onClick={() => {
+                            navigate(linkTo(item.path));
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          <item.icon className={`h-4 w-4 mr-2 ${
+                            item.path === '/hall-of-fame'
+                              ? 'text-yellow-600'
+                              : item.path === '/tactics'
+                              ? 'text-green-600'
+                              : ''
+                          }`} />
+                          {item.title}
+                        </Button>
+                      </li>
+                    ))}
+                    <li className="pt-4 border-t mt-4">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-left text-green-500 hover:text-green-600 hover:bg-green-50"
+                        onClick={() => {
+                          navigate(linkTo('/attendance-status'));
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        출석현황
+                      </Button>
+                    </li>
+                  </>
+                )}
+                {/* 프로필 변경 · 로그아웃 (축구/풋살 공통) */}
+                <li className="border-t pt-2 mt-2">
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-left text-blue-500 hover:text-blue-600 hover:bg-blue-50"
                     onClick={() => {
-                      navigate('/change-profile');
+                      navigate(sport === 'futsal' ? '/change-profile' : linkTo('/change-profile'));
                       setMobileMenuOpen(false);
                     }}
                   >

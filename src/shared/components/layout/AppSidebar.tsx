@@ -15,7 +15,8 @@ import {
 } from '@/shared/components/ui/sidebar';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { LoginModal } from '@/features/auth/components/LoginModal';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard, Award } from 'lucide-react';
+import { useSport } from '@/app/sport-context';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard, Award, Footprints, Circle } from 'lucide-react';
 // import UserProfileButton from './profile/UserProfileButton';
 
 // 로그인 없이 접근 가능한 경로
@@ -32,25 +33,27 @@ const AppSidebar = () => {
     canManageFinance, 
     canManagePlayerStats 
   } = useAuth();
+  const { linkTo, isActivePath, sport } = useSport();
   const navigate = useNavigate();
   const location = useLocation();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
 
-  // 메뉴 클릭 핸들러 - 로그인 체크
+  // 메뉴 클릭 핸들러 - 로그인 체크 (현재 스포츠 모드의 경로로 이동)
   const handleMenuClick = (path: string) => {
+    const targetPath = linkTo(path);
     // 공개 경로는 바로 이동
     if (PUBLIC_PATHS.includes(path)) {
-      navigate(path);
+      navigate(targetPath);
       return;
     }
     
     // 로그인 필요 경로는 인증 체크
     if (!isAuthenticated) {
-      setPendingPath(path);
+      setPendingPath(targetPath);
       setLoginModalOpen(true);
     } else {
-      navigate(path);
+      navigate(targetPath);
     }
   };
 
@@ -117,35 +120,83 @@ const AppSidebar = () => {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.path}>
-                <SidebarMenuButton
-                  className={`${location.pathname === item.path ? "bg-primary/10" : ""} ${item.color || ""} ${!isAuthenticated && item.requiresAuth ? "opacity-70" : ""}`}
-                  onClick={() => handleMenuClick(item.path)}
-                >
-                  <item.icon className={`h-5 w-5 mr-3 ${item.color ? item.color.split(' ')[0] : 'text-primary'}`} />
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-            <SidebarSeparator />
-            {/* 출석현황: 로그인 필요 */}
+            {/* 축구 ↔ 풋살 페이지 전환 */}
             <SidebarMenuItem>
               <SidebarMenuButton
-                className={`text-green-500 hover:text-green-600 hover:bg-green-50 ${!isAuthenticated ? "opacity-70" : ""}`}
-                onClick={() => handleMenuClick('/attendance-status')}
+                className="text-sky-600 hover:text-sky-700 hover:bg-sky-50"
+                onClick={() => navigate(sport === 'futsal' ? '/' : '/futsal')}
               >
-                <Users className="h-5 w-5 mr-3" />
-                <span>출석현황</span>
+                {sport === 'futsal' ? (
+                  <>
+                    <Circle className="h-5 w-5 mr-3" />
+                    <span>축구 페이지로</span>
+                  </>
+                ) : (
+                  <>
+                    <Footprints className="h-5 w-5 mr-3" />
+                    <span>풋살 페이지로</span>
+                  </>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {isAuthenticated && (
+            {/* 풋살 페이지에서는 축구 메뉴 숨김 (네비게이션은 축구/풋살 따로) */}
+            {sport === 'soccer' && (
+              <>
+                <SidebarSeparator />
+                {navItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton
+                      className={`${isActivePath(item.path) ? "bg-primary/10" : ""} ${item.color || ""} ${!isAuthenticated && item.requiresAuth ? "opacity-70" : ""}`}
+                      onClick={() => handleMenuClick(item.path)}
+                    >
+                      <item.icon className={`h-5 w-5 mr-3 ${item.color ? item.color.split(' ')[0] : 'text-primary'}`} />
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+                <SidebarSeparator />
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className={`text-green-500 hover:text-green-600 hover:bg-green-50 ${!isAuthenticated ? "opacity-70" : ""}`}
+                    onClick={() => handleMenuClick('/attendance-status')}
+                  >
+                    <Users className="h-5 w-5 mr-3" />
+                    <span>출석현황</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                {isAuthenticated && (
+                  <>
+                    <SidebarSeparator />
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                        onClick={() => handleMenuClick('/change-profile')}
+                      >
+                        <Key className="h-5 w-5 mr-3" />
+                        <span>프로필 변경</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={logout}
+                      >
+                        <LogOut className="h-5 w-5 mr-3" />
+                        <span>로그아웃</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
+                )}
+              </>
+            )}
+            {/* 풋살: 축구 페이지로만 표시, 로그아웃/프로필은 공통 */}
+            {sport === 'futsal' && isAuthenticated && (
               <>
                 <SidebarSeparator />
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                    onClick={() => handleMenuClick('/change-profile')}
+                    onClick={() => navigate('/change-profile')}
                   >
                     <Key className="h-5 w-5 mr-3" />
                     <span>프로필 변경</span>
