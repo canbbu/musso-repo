@@ -123,17 +123,17 @@ const AppSidebar = () => {
             {/* 축구 ↔ 풋살 페이지 전환 */}
             <SidebarMenuItem>
               <SidebarMenuButton
-                className="text-sky-600 hover:text-sky-700 hover:bg-sky-50"
+                className="py-4 px-3 text-base font-medium bg-sky-100 text-sky-700 hover:bg-sky-200 hover:text-sky-800 border border-sky-200/60 rounded-lg"
                 onClick={() => navigate(sport === 'futsal' ? '/' : '/futsal')}
               >
                 {sport === 'futsal' ? (
                   <>
-                    <Circle className="h-5 w-5 mr-3" />
+                    <Circle className="h-6 w-6 mr-3 shrink-0" />
                     <span>축구 페이지로</span>
                   </>
                 ) : (
                   <>
-                    <Footprints className="h-5 w-5 mr-3" />
+                    <Footprints className="h-6 w-6 mr-3 shrink-0" />
                     <span>풋살 페이지로</span>
                   </>
                 )}

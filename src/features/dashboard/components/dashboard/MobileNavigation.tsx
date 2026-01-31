@@ -72,7 +72,7 @@ export default function MobileNavigation() {
                 <li>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left text-sky-600 hover:text-sky-700 hover:bg-sky-50 border-sky-200"
+                    className="w-full justify-start text-left py-4 px-4 text-base font-medium bg-sky-100 text-sky-700 hover:bg-sky-200 hover:text-sky-800 border-2 border-sky-200 rounded-lg"
                     onClick={() => {
                       navigate(sport === 'futsal' ? '/' : '/futsal');
                       setMobileMenuOpen(false);
@@ -80,12 +80,12 @@ export default function MobileNavigation() {
                   >
                     {sport === 'futsal' ? (
                       <>
-                        <Circle className="h-4 w-4 mr-2" />
+                        <Circle className="h-5 w-5 mr-3 shrink-0" />
                         축구 페이지로 이동
                       </>
                     ) : (
                       <>
-                        <Footprints className="h-4 w-4 mr-2" />
+                        <Footprints className="h-5 w-5 mr-3 shrink-0" />
                         풋살 페이지로 이동
                       </>
                     )}
