@@ -108,8 +108,7 @@ const Dashboard = () => {
         alert(`⚠️ 세션 정리 중 일부 오류가 발생했습니다:\n\n${errorMessages.join('\n')}\n\n콘솔을 확인해주세요.`);
       }
     } catch (error) {
-      console.error('🚨 세션 정리 중 전체 오류:', error);
-      alert(`❌ 세션 정리 중 오류가 발생했습니다.\n\n오류: ${error instanceof Error ? error.message : '알 수 없는 오류'}\n\n콘솔을 확인해주세요.`);
+      alert(`❌ 세션 정리 중 오류가 발생했습니다.\n\n오류: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
     } finally {
       setIsCleaningLogs(false);
     }
@@ -159,12 +158,6 @@ const Dashboard = () => {
                 className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 새로고침
-              </button>
-              <button 
-                onClick={() => console.log(error)} 
-                className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-              >
-                콘솔 로그 출력
               </button>
             </div>
           </div>
@@ -230,6 +223,7 @@ const Dashboard = () => {
             disableVoting={false}
             showOnlyVoting={false}
             hideManagementButton={true}
+            collapseToCount={2}
           />
         </div>
 

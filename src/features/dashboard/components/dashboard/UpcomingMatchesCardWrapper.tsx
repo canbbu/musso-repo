@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card";
 import { Button } from '@/shared/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Plus, Check, X, Eye } from 'lucide-react';
+import { CalendarDays, Plus, Check, X, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { Match, useMatchData } from '@/features/matches/hooks/use-match-data';
 import UpcomingMatchCard from '@/features/matches/components/match/UpcomingMatchCard';
@@ -30,7 +30,6 @@ function extractDatePart(dateString: string): string {
     return dateString.substring(0, 10);
   }
   
-  console.warn("날짜 포맷 변환 실패:", dateString);
   return dateString;
 }
 
@@ -49,7 +48,6 @@ function getAttendanceDeadline(matchDate: string) {
     
     // 유효한 날짜인지 확인 (Invalid Date 체크)
     if (isNaN(eventDate.getTime())) {
-      console.warn("잘못된 날짜 형식:", matchDate, "->", cleanDateString);
       return new Date();
     }
     
@@ -66,7 +64,6 @@ function formatDeadline(deadline: Date) {
   try {
     // 유효한 날짜인지 확인
     if (!deadline || isNaN(deadline.getTime())) {
-      console.warn("유효하지 않은 마감일:", deadline);
       return "날짜 정보 없음";
     }
     
@@ -78,6 +75,8 @@ function formatDeadline(deadline: Date) {
   }
 }
 
+const DISPLAY_LIMIT = 2;
+
 const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrapperProps) => {
   const { canManageMatches, canManageAnnouncements, userId } = useAuth();
   const { handleAttendanceChange } = useMatchData();
@@ -85,6 +84,8 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
   
   // 현재 표시 중인 모달의 이벤트 ID를 관리
   const [viewingMatchId, setViewingMatchId] = useState<number | null>(null);
+  // 다가오는 이벤트 펼침/접침 (기본: 접침, 최대 2개만 표시)
+  const [expanded, setExpanded] = useState(false);
   
   // 모달 열기 함수
   const openAttendanceModal = (matchId: number) => {
@@ -116,6 +117,25 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
   const now = new Date();
   const deadline = getAttendanceDeadline(currentlyViewingMatch?.date || '');
   const isDeadlinePassed = now > deadline;
+
+  // 취소/과거 제외 후 날짜순 정렬한 전체 목록
+  const allUpcoming = upcomingMatches
+    .filter(match => {
+      if (match.status === "cancelled") return false;
+      const matchDate = new Date(match.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return matchDate >= today;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+  // 접침 시 최대 2개만 표시, 펼침 시 전체
+  const visibleMatches = expanded ? allUpcoming : allUpcoming.slice(0, DISPLAY_LIMIT);
+  const hasMore = allUpcoming.length > DISPLAY_LIMIT;
   
   return (
     <Card>
@@ -133,25 +153,7 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {upcomingMatches
-            .filter(match => {
-              // 취소된 매치 제외
-              if (match.status === "cancelled") return false;
-              
-              // 현재 날짜 기준으로 과거 매치 제외
-              const matchDate = new Date(match.date);
-              const today = new Date();
-              today.setHours(0, 0, 0, 0); // 오늘 자정을 기준으로 비교
-              
-              return matchDate >= today;
-            })
-            .sort((a, b) => {
-              // 날짜순으로 정렬 (가까운 날짜가 먼저)
-              const dateA = new Date(a.date);
-              const dateB = new Date(b.date);
-              return dateA.getTime() - dateB.getTime();
-            })
-            .map((match) => {
+          {visibleMatches.map((match) => {
               // 날짜 유효성 검사
               let matchDeadline: Date;
               let isMatchDeadlinePassed = false;
@@ -161,7 +163,6 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
                   matchDeadline = getAttendanceDeadline(match.date);
                   isMatchDeadlinePassed = now > matchDeadline;
                 } else {
-                  console.warn("이벤트 날짜 정보 없음:", match);
                   matchDeadline = new Date();
                 }
               } catch (error) {
@@ -215,10 +216,30 @@ const UpcomingMatchesCardWrapper = ({ upcomingMatches }: UpcomingMatchesCardWrap
               );
             })}
           
-          {upcomingMatches.length === 0 && (
+          {allUpcoming.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">예정된 이벤트가 없습니다.</p>
             </div>
+          )}
+
+          {hasMore && (
+            <Button
+              variant="ghost"
+              className="w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+              onClick={() => setExpanded((prev) => !prev)}
+            >
+              {expanded ? (
+                <>
+                  <ChevronUp className="h-4 w-4" />
+                  접기
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4" />
+                  이벤트 {allUpcoming.length - DISPLAY_LIMIT}개 더 보기
+                </>
+              )}
+            </Button>
           )}
         </div>
         

@@ -100,12 +100,6 @@ export function useAttendanceChart({ year, month }: UseAttendanceChartProps) {
 
             if (attendanceError) throw attendanceError;
 
-            // 디버깅: 원본 데이터 로그
-            if (dayInfo.date === '2026-01-18') {
-              console.log(`[${dayInfo.date}] 원본 출석 데이터:`, attendanceRecords);
-              console.log(`[${dayInfo.date}] 경기 ID들:`, matchIds);
-            }
-
             // 고유 선수 수 계산
             // 1단계: 같은 match_id와 player_id 조합이 여러 match_number에 있을 수 있으므로
             //        match_id와 player_id 조합으로 먼저 중복 제거 (match_number = 1 우선)
@@ -130,25 +124,6 @@ export function useAttendanceChart({ year, month }: UseAttendanceChartProps) {
               const playerId = key.split('_')[1]; // `${match_id}_${player_id}`에서 player_id 추출
               uniquePlayerIds.add(playerId);
             });
-
-            // 디버깅: 중간 결과 로그
-            if (dayInfo.date === '2026-01-18') {
-              console.log(`[${dayInfo.date}] matchPlayerMap 크기:`, matchPlayerMap.size);
-              console.log(`[${dayInfo.date}] matchPlayerMap 내용:`, Array.from(matchPlayerMap.entries()));
-              console.log(`[${dayInfo.date}] uniquePlayerIds 크기:`, uniquePlayerIds.size);
-              console.log(`[${dayInfo.date}] uniquePlayerIds 내용:`, Array.from(uniquePlayerIds));
-              
-              // 중복된 player_id 찾기
-              const playerIdCounts = new Map<string, number>();
-              matchPlayerMap.forEach((_, key) => {
-                const playerId = key.split('_')[1];
-                playerIdCounts.set(playerId, (playerIdCounts.get(playerId) || 0) + 1);
-              });
-              const duplicates = Array.from(playerIdCounts.entries()).filter(([_, count]) => count > 1);
-              if (duplicates.length > 0) {
-                console.log(`[${dayInfo.date}] ⚠️ 중복된 player_id 발견:`, duplicates);
-              }
-            }
 
             const attendanceCount = uniquePlayerIds.size;
 

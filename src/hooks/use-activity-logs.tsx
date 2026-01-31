@@ -207,11 +207,6 @@ export function useActivityLogs() {
     
     // 이미 로그인했거나 로깅 중이면 리턴
     if (isLogging || (currentSession && !isDifferentDay(currentSession.login_time, today))) {
-      console.log('[활동로그] 중복 로그인 시도 방지:', { 
-        isLogging, 
-        currentSession: !!currentSession, 
-        hasLoggedIn 
-      });
       return currentSession;
     }
     

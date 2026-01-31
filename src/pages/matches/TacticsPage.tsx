@@ -553,19 +553,12 @@ const Tactics = () => {
     const matchKey = `${matchIdNum}-${matchNumberNum}`;
     // 같은 경기에서 tactics만 바뀐 경우(저장 후 fetchTactics 등)에는 로드하지 않아 수정 사항이 유지되도록 함
     if (lastLoadedMatchKeyRef.current === matchKey) {
-      console.log('[포메이션] DB로드 스킵 (같은 경기, 수정 사항 유지)', { matchKey, lastLoaded: lastLoadedMatchKeyRef.current });
       return;
     }
     lastLoadedMatchKeyRef.current = matchKey;
-    console.log('[포메이션] DB에서 로드 시작', { matchKey });
 
     const loadAttendanceData = async () => {
       const attendancePositions = await fetchAttendanceData();
-      console.log('[포메이션] DB에서 로드 완료 → formations 반영', {
-        matchKey,
-        positionsCount: attendancePositions.length,
-        playerIds: attendancePositions.map(p => ({ id: p.playerId, name: p.playerName?.slice(0, 8), team: p.team }))
-      });
       setFormations(prev => {
         const name = tactics?.name || `경기 #${matchId} - ${matchNumber}경기 작전판`;
         const teamA = tactics?.team_a_strategy ?? prev[matchNumberNum]?.teamA_strategy ?? '';
@@ -720,9 +713,6 @@ const Tactics = () => {
     const formationType = team === 'A' ? formationTypeA : formationTypeB;
     const template = FORMATION_TEMPLATES[formationType] || FORMATION_4_3_3_SLOTS_A;
     const slots = team === 'A' ? template : template.map(({ x, y, role }) => ({ x: 100 - x, y, role }));
-    if (DEBUG_FORMATION && team === 'B') {
-      console.log('[포메이션] getSlotsForTeam B', { formationType, slotCount: slots.length, slots: slots.map(s => `${s.role}(${s.x.toFixed(0)},${s.y.toFixed(0)})`) });
-    }
     return slots;
   };
 
@@ -785,14 +775,6 @@ const Tactics = () => {
       const withoutOld = existingAtSlot ? current.filter(p => p.playerId !== existingAtSlot.playerId) : current;
       const withoutPicked = withoutOld.filter(p => p.playerId !== pickedPlayer.id);
       const next = [...withoutPicked, newPos];
-      console.log('[포메이션] 슬롯 배치(placePlayerInSlot)', {
-        team,
-        slotIndex,
-        playerName: pickedPlayer.name,
-        beforeCount: current.length,
-        afterCount: next.length,
-        removedAtSlot: existingAtSlot ? existingAtSlot.playerName : null
-      });
       return { ...prev, [matchNumberNum]: { ...prev[matchNumberNum], positions: next } };
     });
     setPickedPlayer(null);
@@ -818,9 +800,6 @@ const Tactics = () => {
       occupiedSlotIndices.add(nearestIdx);
     });
     const empty = slots.filter((_, i) => !occupiedSlotIndices.has(i));
-    if (DEBUG_FORMATION && team === 'B') {
-      console.log('[포메이션] getEmptySlots B', { totalSlots: slots.length, teamPositionsCount: teamPositions.length, emptyCount: empty.length });
-    }
     return empty;
   };
 
@@ -843,14 +822,12 @@ const Tactics = () => {
   const findNearestSlot = (targetX: number, targetY: number, team: 'A' | 'B', excludePlayerId?: string): { x: number; y: number } | null => {
     const emptySlots = getEmptySlots(team, excludePlayerId);
     if (emptySlots.length === 0) {
-      if (DEBUG_FORMATION && team === 'B') console.log('[포메이션] findNearestSlot B → null (빈 슬롯 없음)');
       return null;
     }
     const preferredRole = getRoleFromPosition(targetX, team);
     const sameRoleSlots = emptySlots.filter(s => s.role === preferredRole);
     // 같은 역할의 빈 슬롯만 사용. 다른 역할로 스냅하면 4-4-2가 4-3-3처럼 보이는 문제 방지
     if (sameRoleSlots.length === 0) {
-      if (DEBUG_FORMATION && team === 'B') console.log('[포메이션] findNearestSlot B → null (해당 역할 빈 슬롯 없음)', { preferredRole });
       return null;
     }
     let nearest = sameRoleSlots[0];
@@ -861,9 +838,6 @@ const Tactics = () => {
         minDist = d;
         nearest = sameRoleSlots[i];
       }
-    }
-    if (DEBUG_FORMATION && team === 'B') {
-      console.log('[포메이션] findNearestSlot B', { targetX: targetX.toFixed(1), targetY: targetY.toFixed(1), preferredRole, chosen: `${nearest.role}(${nearest.x.toFixed(0)},${nearest.y.toFixed(0)})` });
     }
     return { x: nearest.x, y: nearest.y };
   };
@@ -953,10 +927,6 @@ const Tactics = () => {
     const snapped = findNearestSlot(targetX, targetY, targetTeam, pickedPlayer.isOnField ? pickedPlayer.id : undefined);
     const validPosition = snapped ?? findNearestValidPosition(targetX, targetY, pickedPlayer.isOnField ? pickedPlayer.id : undefined);
 
-    if (DEBUG_FORMATION && targetTeam === 'B') {
-      console.log('[포메이션] placePickedPlayerAt B', { targetX: targetX.toFixed(1), targetY: targetY.toFixed(1), snapped: snapped ? `(${snapped.x.toFixed(0)},${snapped.y.toFixed(0)})` : null, final: `(${validPosition.x.toFixed(0)},${validPosition.y.toFixed(0)})` });
-    }
-
     if (pickedPlayer.isOnField) {
       const currentPlayer = currentFormation.positions.find(p => p.playerId === pickedPlayer.id);
       if (currentPlayer && currentPlayer.team !== targetTeam) {
@@ -1008,15 +978,7 @@ const Tactics = () => {
     if (!canEdit) return;
     setFormations(prev => {
       const current = prev[matchNumberNum].positions;
-      const removed = current.find(p => p.playerId === playerId);
       const next = current.filter(pos => pos.playerId !== playerId);
-      console.log('[포메이션] 선수 제거(removePlayerFromField)', {
-        playerId,
-        playerName: removed?.playerName ?? '(unknown)',
-        beforeCount: current.length,
-        afterCount: next.length,
-        remainingIds: next.map(p => p.playerId)
-      });
       return {
         ...prev,
         [matchNumberNum]: {
@@ -1066,13 +1028,6 @@ const Tactics = () => {
     }
     for (const pos of teamPositions) {
       if (!assigned.has(pos.playerId)) newTeamPositions.push(pos);
-    }
-    if (DEBUG_FORMATION && team === 'B') {
-      console.log('[포메이션] computeTeamPositionsByFormation B', {
-        formationSlots: sortedSlots.map(s => `${s.role}(${s.x.toFixed(0)},${s.y.toFixed(0)})`),
-        before: teamPositions.map(p => `${p.playerName}(${p.x.toFixed(0)},${p.y.toFixed(0)})`),
-        after: newTeamPositions.map(p => `${p.playerName}→(${p.x.toFixed(0)},${p.y.toFixed(0)})`)
-      });
     }
     return newTeamPositions;
   };
@@ -1711,11 +1666,6 @@ const Tactics = () => {
       return;
     }
     const positionsToSave = currentFormation.positions;
-    console.log('[포메이션] 저장 클릭(saveFormation) — 현재 로컬 formations 기준', {
-      matchNumberNum,
-      positionsCount: positionsToSave.length,
-      players: positionsToSave.map(p => ({ id: p.playerId, name: p.playerName?.slice(0, 8), team: p.team }))
-    });
     try {
       // 저장 전에 다른 경기의 중복 데이터 정리
       await cleanupDuplicateData();
@@ -1759,10 +1709,8 @@ const Tactics = () => {
           };
         })
       };
-      console.log('[포메이션] saveTactics 호출 — 전송할 players 수', { count: formData.players.length, player_ids: formData.players.map(p => p.player_id) });
-      
+
       const result = await saveTactics(formData);
-      console.log('[포메이션] saveTactics 결과', { success: result.success, error: result.error });
       if (result.success) {
         toast.success('작전판이 저장되었습니다');
       } else {
