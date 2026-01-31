@@ -1,26 +1,21 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Layout from '@/shared/components/layout/Layout';
-import { Button } from '@/shared/components/ui/button';
-import { Circle } from 'lucide-react';
+import { Routes, Route } from 'react-router-dom';
+import { RequireFutsalAccess } from '@/features/auth/components/AuthContext';
+import LoginPage from '@/pages/auth/LoginPage';
+import FutsalRegisterPage from './FutsalRegisterPage';
+import FutsalDashboardPage from './FutsalDashboardPage';
+import FutsalEventManagementPage from './FutsalEventManagementPage';
+import FutsalMembersPage from './FutsalMembersPage';
 
-/** 풋살 전용 페이지 (현재 빈 페이지) */
+/** 풋살: 대시보드는 로그인 없이 접근, 이벤트/회원은 풋살 권한 필요 */
 export default function FutsalPage() {
-  const navigate = useNavigate();
-
   return (
-    <Layout>
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <p className="text-muted-foreground">풋살 전용 페이지입니다.</p>
-        <Button
-          variant="outline"
-          className="text-sky-600 hover:text-sky-700 hover:bg-sky-50"
-          onClick={() => navigate('/')}
-        >
-          <Circle className="h-4 w-4 mr-2" />
-          축구 페이지로 이동
-        </Button>
-      </div>
-    </Layout>
+    <Routes>
+      <Route path="login" element={<LoginPage fromFutsal />} />
+      <Route path="register" element={<FutsalRegisterPage />} />
+      <Route index element={<FutsalDashboardPage />} />
+      <Route path="events" element={<RequireFutsalAccess><FutsalEventManagementPage /></RequireFutsalAccess>} />
+      <Route path="members" element={<RequireFutsalAccess><FutsalMembersPage /></RequireFutsalAccess>} />
+    </Routes>
   );
 }

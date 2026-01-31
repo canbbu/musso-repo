@@ -34,10 +34,12 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
     setError(null);
     
     try {
-      // 전체 회원 목록 가져오기
+      // 축구 경기 참석용 회원 목록 (풋살 전용 회원 제외)
       const { data: playersData, error: playersError } = await supabase
         .from('players')
-        .select('*');
+        .select('*')
+        .eq('is_deleted', false)
+        .neq('role', 'futsal-guest');
         
       if (playersError) throw playersError;
       

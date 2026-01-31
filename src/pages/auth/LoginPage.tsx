@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,20 +7,29 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/shared/hooks/use-toast';
 import { supabase } from '@/shared/lib/supabase/client';
 
-const Login = () => {
+const AUTH_STATE_CHANGED = 'auth-state-changed';
+
+interface LoginPageProps {
+  fromFutsal?: boolean;
+}
+
+const Login = ({ fromFutsal }: LoginPageProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [username, setusername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  
+  const hasRedirectedRef = useRef(false);
+
   useEffect(() => {
-    // Check if already logged in
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (isAuthenticated === 'true') {
-      navigate('/dashboard');
-    }
-  }, [navigate]);
+    if (hasRedirectedRef.current) return;
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (!isAuthenticated) return;
+    hasRedirectedRef.current = true;
+    const from = (location.state as { from?: string })?.from;
+    navigate(from ?? (fromFutsal ? '/futsal' : '/dashboard'), { replace: true });
+  }, [navigate, fromFutsal, location.state]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,23 +65,20 @@ const Login = () => {
       }
       
       // 로그인 성공 시 로컬 스토리지 업데이트
-      await Promise.all([
-        localStorage.setItem('isAuthenticated', 'true'),
-        localStorage.setItem('userId', data.id),
-        localStorage.setItem('userName', data.name || data.username),
-        localStorage.setItem('userRole', data.role || 'player')
-      ]);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('userName', data.name || data.username);
+      localStorage.setItem('userRole', data.role || 'player');
+      // auth 상태 갱신 후 이동 (갱신 없이 이동하면 가드가 비로그인으로 보고 다시 로그인으로 돌려보냄)
+      window.dispatchEvent(new Event(AUTH_STATE_CHANGED));
 
-      // 토스트 메시지 표시
       toast({
         title: "로그인 성공",
         description: `${data.name || data.username}님, 환영합니다!`,
       });
-      
-      // 모든 작업이 완료된 후 페이지 이동
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 500);
+
+      const from = (location.state as { from?: string })?.from;
+      navigate(from ?? (fromFutsal ? '/futsal' : '/dashboard'), { replace: true });
       
     } catch (error) {
       toast({
@@ -89,28 +95,32 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-[350px]">
         <CardHeader>
-          <CardTitle className="text-2xl">축구회 로그인</CardTitle>
-          <CardDescription>계정에 로그인하여 시스템을 이용하세요.</CardDescription>
+          <CardTitle className="text-2xl">{fromFutsal ? '풋살 로그인' : '축구회 로그인'}</CardTitle>
+          <CardDescription>
+            {fromFutsal ? '풋살 페이지 이용을 위해 로그인하세요.' : '계정에 로그인하여 시스템을 이용하세요.'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">유저네임</Label>
-              <Input 
-                id="username" 
-                placeholder="유저네임을 입력하세요" 
-                value={username} 
+              <Input
+                id="username"
+                autoComplete="username"
+                placeholder="유저네임을 입력하세요"
+                value={username}
                 onChange={(e) => setusername(e.target.value)}
                 disabled={loading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">비밀번호</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="비밀번호를 입력하세요" 
-                value={password} 
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="비밀번호를 입력하세요"
+                value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
               />
@@ -125,9 +135,16 @@ const Login = () => {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center gap-2">
-          <p className="text-sm text-gray-500">
-            © 2025 무쏘 축구회 관리 시스템
-          </p>
+          {fromFutsal ? (
+            <p className="text-sm text-muted-foreground">
+              계정이 없으신가요?{' '}
+              <Link to="/futsal/register" className="text-primary font-medium underline">
+                회원가입
+              </Link>
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">© 2025 무쏘 축구회 관리 시스템</p>
+          )}
         </CardFooter>
       </Card>
     </div>

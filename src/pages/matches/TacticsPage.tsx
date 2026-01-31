@@ -350,12 +350,14 @@ const Tactics = () => {
     }
   }, [matchIdNum, matchNumberNum]);
 
-  // 모든 선수 목록을 가져오는 함수
+  // 축구 경기용 선수 목록 (풋살 전용 회원 제외)
   const fetchAllPlayers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('players')
         .select('id, name, position')
+        .eq('is_deleted', false)
+        .neq('role', 'futsal-guest')
         .order('name', { ascending: true }) as { data: any; error: any };
 
       if (error) {

@@ -15,6 +15,7 @@ export interface AuthState extends UserInfo {
   canManageAnnouncements: () => boolean;
   canManageFinance: () => boolean;
   canManagePlayerStats: () => boolean;
+  canManageFutsal: () => boolean;
   canAccessBasicFeatures: () => boolean;
   isAdmin: () => boolean;
   isSystemManager: () => boolean;
@@ -25,6 +26,7 @@ export interface AuthState extends UserInfo {
   canManageFinanceWithSystemAdmin: () => boolean;
   canManagePlayerStatsWithSystemAdmin: () => boolean;
   isAdminWithSystemAdmin: () => boolean;
+  isFutsalGuest: () => boolean;
 }
 
 export interface LoginCredentials {

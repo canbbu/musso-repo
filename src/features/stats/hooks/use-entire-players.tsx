@@ -86,11 +86,12 @@ export const useEntirePlayers = () => {
       
       setLoading(true);
       try {
-        // 기본 선수 정보 가져오기
+        // 축구 통계용 선수만 (풋살 전용 회원 제외)
         const { data, error } = await supabase
           .from('players')
           .select('*')
-          .eq('is_deleted', false);
+          .eq('is_deleted', false)
+          .neq('role', 'futsal-guest');
         
         if (error) throw error;
         
@@ -419,11 +420,12 @@ export const useEntirePlayers = () => {
       // 상태 업데이트
       await checkMvpStatus('weekly', year, undefined, week);
       
-      // 플레이어 목록 새로고침
+      // 플레이어 목록 새로고침 (축구 통계용만)
       const { data: updatedPlayers, error: refreshError } = await supabase
         .from('players')
         .select('*')
-        .eq('is_deleted', false);
+        .eq('is_deleted', false)
+        .neq('role', 'futsal-guest');
       
       if (!refreshError && updatedPlayers) {
         setPlayers(updatedPlayers);
@@ -488,11 +490,12 @@ export const useEntirePlayers = () => {
       // 상태 업데이트
       await checkMvpStatus('monthly', year, month);
       
-      // 플레이어 목록 새로고침
+      // 플레이어 목록 새로고침 (축구 통계용만)
       const { data: updatedPlayers, error: refreshError } = await supabase
         .from('players')
         .select('*')
-        .eq('is_deleted', false);
+        .eq('is_deleted', false)
+        .neq('role', 'futsal-guest');
       
       if (!refreshError && updatedPlayers) {
         setPlayers(updatedPlayers);
@@ -556,11 +559,12 @@ export const useEntirePlayers = () => {
       // 상태 업데이트
       await checkMvpStatus('yearly', year);
       
-      // 플레이어 목록 새로고침
+      // 플레이어 목록 새로고침 (축구 통계용만)
       const { data: updatedPlayers, error: refreshError } = await supabase
         .from('players')
         .select('*')
-        .eq('is_deleted', false);
+        .eq('is_deleted', false)
+        .neq('role', 'futsal-guest');
       
       if (!refreshError && updatedPlayers) {
         setPlayers(updatedPlayers);

@@ -43,10 +43,12 @@ const usePlayerRankings = (year?: number, month?: number) => {
       try {
         setLoading(true);
         
-        // 선수 기본 정보 가져오기
+        // 축구 통계용 선수만 (풋살 전용 회원 제외)
         const { data: playersData, error: playersError } = await supabase
           .from('players')
-          .select('id, name, position, birthday, fav_club, boots_brand');
+          .select('id, name, position, birthday, fav_club, boots_brand')
+          .eq('is_deleted', false)
+          .neq('role', 'futsal-guest');
         
         if (playersError) throw playersError;
         

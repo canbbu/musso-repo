@@ -2,11 +2,13 @@
 import { supabase } from '@/shared/lib/supabase/client';
 import { Player, MatchInfo, AttendanceData, AttendanceStatus } from '../types/attendance.types';
 
-// 모든 선수 목록 가져오기
+// 축구용 선수 목록 (풋살 전용 회원 제외)
 export async function getPlayers(): Promise<Player[]> {
   const { data, error } = await supabase
     .from('players')
     .select('id, name, position')
+    .eq('is_deleted', false)
+    .neq('role', 'futsal-guest')
     .order('name');
 
   if (error) throw error;

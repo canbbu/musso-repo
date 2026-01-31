@@ -10,6 +10,7 @@ import Layout from '@/shared/components/layout/Layout';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Navigate } from 'react-router-dom';
+import { insertPlayerSportAccess } from '@/features/sport-access/api/sport-access.api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -134,6 +135,7 @@ const Register = () => {
       if (error) {
         throw new Error('회원등록 처리 중 오류가 발생했습니다.');
       }
+      await insertPlayerSportAccess(data.id, name, true, false);
       toast({
         title: "회원등록 성공",
         description: `${name} 회원이 축구회에 등록되었습니다.`,

@@ -62,31 +62,20 @@ export function LoginModal({
         throw new Error('비밀번호가 일치하지 않습니다.');
       }
       
-      await Promise.all([
-        localStorage.setItem('isAuthenticated', 'true'),
-        localStorage.setItem('userId', data.id),
-        localStorage.setItem('userName', data.name || data.username),
-        localStorage.setItem('userRole', data.role || 'player')
-      ]);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('userName', data.name || data.username);
+      localStorage.setItem('userRole', data.role || 'player');
+      window.dispatchEvent(new Event('auth-state-changed'));
 
       toast({
         title: "로그인 성공",
         description: `${data.name || data.username}님, 환영합니다!`,
       });
-      
+
       onOpenChange(false);
-      
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      }
-      
-      if (redirectPath) {
-        setTimeout(() => {
-          navigate(redirectPath);
-        }, 300);
-      } else {
-        window.location.reload();
-      }
+      if (onLoginSuccess) onLoginSuccess();
+      if (redirectPath) navigate(redirectPath);
       
     } catch (error) {
       toast({
@@ -111,10 +100,11 @@ export function LoginModal({
         <form onSubmit={handleLogin} className="space-y-4 mt-4">
           <div className="space-y-2">
             <Label htmlFor="modal-username">유저네임</Label>
-            <Input 
-              id="modal-username" 
-              placeholder="유저네임을 입력하세요" 
-              value={username} 
+            <Input
+              id="modal-username"
+              autoComplete="username"
+              placeholder="유저네임을 입력하세요"
+              value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={loading}
               autoFocus
@@ -122,11 +112,12 @@ export function LoginModal({
           </div>
           <div className="space-y-2">
             <Label htmlFor="modal-password">비밀번호</Label>
-            <Input 
-              id="modal-password" 
-              type="password" 
-              placeholder="비밀번호를 입력하세요" 
-              value={password} 
+            <Input
+              id="modal-password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="비밀번호를 입력하세요"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
             />

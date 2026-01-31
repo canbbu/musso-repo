@@ -23,6 +23,8 @@ export const useAttendance = (matchId: string | undefined) => {
       const { data, error } = await supabase
         .from('players')
         .select('id, name, position')
+        .eq('is_deleted', false)
+        .neq('role', 'futsal-guest')
         .order('name');
 
       if (error) {

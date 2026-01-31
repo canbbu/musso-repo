@@ -14,18 +14,21 @@ export interface Database {
         Row: {
           id: string
           name: string
+          username?: string
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           name: string
+          username?: string
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           name?: string
+          username?: string
           created_at?: string
           updated_at?: string
         }
@@ -189,6 +192,178 @@ export interface Database {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      futsal_events: {
+        Row: {
+          id: number
+          title: string
+          date: string
+          time: string | null
+          location: string
+          description: string | null
+          status: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          title: string
+          date: string
+          time?: string | null
+          location: string
+          description?: string | null
+          status?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          title?: string
+          date?: string
+          time?: string | null
+          location?: string
+          description?: string | null
+          status?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      futsal_event_participation: {
+        Row: {
+          id: number
+          event_id: number
+          player_id: string
+          player_name: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          event_id: number
+          player_id: string
+          status: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          event_id?: number
+          player_id?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      futsal_event_comments: {
+        Row: {
+          id: number
+          event_id: number
+          player_id: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          event_id: number
+          player_id: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          event_id?: number
+          player_id?: string
+          content?: string
+          created_at?: string
+        }
+      }
+      player_sport_access: {
+        Row: {
+          id: number
+          player_id: string
+          sport: string
+          can_access: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          player_id: string
+          sport: string
+          can_access?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          player_id?: string
+          sport?: string
+          can_access?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      futsal_access_requests: {
+        Row: {
+          id: number
+          player_id: string
+          status: string
+          message: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          id?: number
+          player_id: string
+          status?: string
+          message?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          id?: number
+          player_id?: string
+          status?: string
+          message?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+      }
+      soccer_access_requests: {
+        Row: {
+          id: number
+          player_id: string
+          status: string
+          message: string | null
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          id?: number
+          player_id: string
+          status?: string
+          message?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          id?: number
+          player_id?: string
+          status?: string
+          message?: string | null
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
         }
       }
     }

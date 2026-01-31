@@ -22,7 +22,9 @@ export async function getPlayerStatsByMatch(matchId: number, matchNumber: number
 
   const { data: playersData, error: playersError } = await supabase
     .from('players')
-    .select('*');
+    .select('*')
+    .eq('is_deleted', false)
+    .neq('role', 'futsal-guest');
 
   if (playersError) throw playersError;
 
@@ -80,10 +82,12 @@ export async function getPlayerStatsByMatch(matchId: number, matchNumber: number
 
 // 모든 선수 통계 가져오기 (필터링 가능)
 export async function getAllPlayerStats(filters?: StatsFilters): Promise<Player[]> {
-  // 선수 기본 정보 가져오기
+  // 축구 통계용 선수만 (풋살 전용 회원 제외)
   const { data: playersData, error: playersError } = await supabase
     .from('players')
-    .select('id, name, position, birthday, fav_club, boots_brand');
+    .select('id, name, position, birthday, fav_club, boots_brand')
+    .eq('is_deleted', false)
+    .neq('role', 'futsal-guest');
 
   if (playersError) throw playersError;
 
@@ -232,11 +236,13 @@ export async function getMatchesForStats(): Promise<Array<{ id: number; date: st
   }));
 }
 
-// 선수 목록 가져오기
+// 축구용 선수 목록 (풋살 전용 회원 제외)
 export async function getPlayers(): Promise<Player[]> {
   const { data, error } = await supabase
     .from('players')
-    .select('*');
+    .select('*')
+    .eq('is_deleted', false)
+    .neq('role', 'futsal-guest');
 
   if (error) throw error;
   return data || [];

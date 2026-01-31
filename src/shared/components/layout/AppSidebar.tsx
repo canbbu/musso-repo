@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { LoginModal } from '@/features/auth/components/LoginModal';
 import { useSport } from '@/app/sport-context';
-import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard, Award, Footprints, Circle } from 'lucide-react';
+import { Home, Calendar, Trophy, Image, CreditCard, LogOut, User, Database, UserPlus, Key, Users, Crown, Clipboard, Award, Footprints, Circle, CalendarDays } from 'lucide-react';
 // import UserProfileButton from './profile/UserProfileButton';
 
 // 로그인 없이 접근 가능한 경로
@@ -28,7 +28,9 @@ const AppSidebar = () => {
     userName,
     isAuthenticated,
     canManage, 
-    canManageMatches, 
+    canManageMatches,
+    canManageFutsal,
+    isSystemManager, 
     canManageAnnouncements, 
     canManageFinance, 
     canManagePlayerStats 
@@ -164,6 +166,17 @@ const AppSidebar = () => {
                     <span>출석현황</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {isSystemManager?.() && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className={`${location.pathname === '/sport-members' ? 'bg-primary/10' : ''} text-amber-600 hover:text-amber-700 hover:bg-amber-50`}
+                      onClick={() => navigate('/sport-members')}
+                    >
+                      <Users className="h-5 w-5 mr-3" />
+                      <span>스포츠 권한 관리</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
                 {isAuthenticated && (
                   <>
                     <SidebarSeparator />
@@ -189,28 +202,55 @@ const AppSidebar = () => {
                 )}
               </>
             )}
-            {/* 풋살: 축구 페이지로만 표시, 로그아웃/프로필은 공통 */}
-            {sport === 'futsal' && isAuthenticated && (
+            {/* 풋살: 대시보드, 이벤트 관리(권한 시), 프로필/로그아웃 */}
+            {sport === 'futsal' && (
               <>
                 <SidebarSeparator />
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    className="text-blue-500 hover:text-blue-600 hover:bg-blue-50"
-                    onClick={() => navigate('/change-profile')}
+                    className={`${location.pathname === '/futsal' || location.pathname === '/futsal/' ? 'bg-primary/10' : ''} text-sky-600 hover:text-sky-700 hover:bg-sky-50`}
+                    onClick={() => navigate('/futsal')}
                   >
-                    <Key className="h-5 w-5 mr-3" />
-                    <span>프로필 변경</span>
+                    <Home className="h-5 w-5 mr-3" />
+                    <span>대시보드</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                    onClick={logout}
-                  >
-                    <LogOut className="h-5 w-5 mr-3" />
-                    <span>로그아웃</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {canManageFutsal?.() && (
+                  <>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className={`${location.pathname === '/futsal/events' ? 'bg-primary/10' : ''} text-sky-600 hover:text-sky-700 hover:bg-sky-50`}
+                        onClick={() => navigate('/futsal/events')}
+                      >
+                        <CalendarDays className="h-5 w-5 mr-3" />
+                        <span>이벤트 관리</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className={`${location.pathname === '/futsal/members' ? 'bg-primary/10' : ''} text-sky-600 hover:text-sky-700 hover:bg-sky-50`}
+                        onClick={() => navigate('/futsal/members')}
+                      >
+                        <Users className="h-5 w-5 mr-3" />
+                        <span>풋살 권한 관리</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
+                )}
+                {isAuthenticated && (
+                  <>
+                    <SidebarSeparator />
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={logout}
+                      >
+                        <LogOut className="h-5 w-5 mr-3" />
+                        <span>로그아웃</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </>
+                )}
               </>
             )}
           </SidebarMenu>

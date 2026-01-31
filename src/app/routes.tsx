@@ -1,6 +1,6 @@
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
-import { RequireAuth, RequireAdmin } from '@/features/auth/components/AuthContext';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { RequireAuth, RequireAdmin, RequireSoccerAccess } from '@/features/auth/components/AuthContext';
 import { NotFound } from '@/pages';
 import FutsalPage from '@/pages/futsal/FutsalPage';
 // Finance pages
@@ -30,38 +30,44 @@ import AttendanceCheckPage from '@/pages/matches/AttendanceCheckPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import RegisterPage from '@/pages/auth/RegisterPage';
 import ProfilePage from '@/pages/auth/ProfilePage';
+// Sport members (축구/풋살 권한 한 row에서 관리)
+import SportAccessManagementPage from '@/pages/members/SportAccessManagementPage';
 
 export function AppRoutes() {
   return (
     <Routes>
-      {/* 풋살 전용: 빈 페이지 (기본은 축구) */}
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/futsal/*" element={<FutsalPage />} />
 
-      {/* 메인(축구) 페이지 */}
-      <Route path="/" element={<DashboardPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/stats" element={<PlayerStatsPage />} />
-
-      <Route element={<RequireAuth />}>
-        <Route path="/attendance-status" element={<AttendanceStatusPage />} />
-        <Route path="/season-rankings" element={<SeasonRankingsPage />} />
-        <Route element={<RequireAdmin />}>
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/data-test" element={<DataTestPage />} />
-          <Route path="/matches" element={<MatchManagementPage />} />
-          <Route path="/match-history" element={<MatchHistoryPage />} />
-          <Route path="/finance" element={<FinancePage />} />
-          <Route path="/my-stats" element={<MyStatsPage />} />
-          <Route path="/hall-of-fame" element={<HallOfFame />} />
-          <Route path="/tactics" element={<TacticsListPage />} />
-          <Route path="/tactics/:matchId/:matchNumber" element={<TacticsPage />} />
-          <Route path="/stats-management" element={<StatsManagementPage />} />
-          <Route path="/announcement-management" element={<AnnouncementManagementPage />} />
-          <Route path="/entire-player-stats" element={<EntirePlayerStatsPage />} />
-          <Route path="/attendance/:matchId" element={<AttendanceCheckPage />} />
+      {/* 축구: 대시보드·스탯은 비로그인도 접근 가능, 나머지는 로그인+축구 권한 필요 */}
+      <Route path="/" element={<Outlet />}>
+        <Route index element={<DashboardPage />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="stats" element={<PlayerStatsPage />} />
+        <Route element={<RequireSoccerAccess />}>
+          <Route element={<RequireAuth />}>
+            <Route path="attendance-status" element={<AttendanceStatusPage />} />
+            <Route path="season-rankings" element={<SeasonRankingsPage />} />
+            <Route element={<RequireAdmin />}>
+              <Route path="register" element={<RegisterPage />} />
+              <Route path="data-test" element={<DataTestPage />} />
+              <Route path="matches" element={<MatchManagementPage />} />
+              <Route path="match-history" element={<MatchHistoryPage />} />
+              <Route path="finance" element={<FinancePage />} />
+              <Route path="my-stats" element={<MyStatsPage />} />
+              <Route path="hall-of-fame" element={<HallOfFame />} />
+              <Route path="tactics" element={<TacticsListPage />} />
+              <Route path="tactics/:matchId/:matchNumber" element={<TacticsPage />} />
+              <Route path="stats-management" element={<StatsManagementPage />} />
+              <Route path="announcement-management" element={<AnnouncementManagementPage />} />
+              <Route path="entire-player-stats" element={<EntirePlayerStatsPage />} />
+              <Route path="attendance/:matchId" element={<AttendanceCheckPage />} />
+              <Route path="sport-members" element={<SportAccessManagementPage />} />
+              <Route path="soccer-members" element={<Navigate to="/sport-members" replace />} />
+            </Route>
+            <Route path="change-profile" element={<ProfilePage />} />
+          </Route>
         </Route>
-        <Route path="/change-profile" element={<ProfilePage />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

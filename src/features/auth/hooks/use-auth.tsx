@@ -21,6 +21,19 @@ export function useAuth(): AuthState {
     };
   });
 
+  // 풋살 이름 참여 등으로 localStorage가 갱신되었을 때 auth 상태 반영
+  useEffect(() => {
+    const handleAuthStateChanged = () => {
+      const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+      const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName');
+      const role = localStorage.getItem('userRole') || 'player';
+      setUserInfo({ userId, userName, role, isAuthenticated });
+    };
+    window.addEventListener('auth-state-changed', handleAuthStateChanged);
+    return () => window.removeEventListener('auth-state-changed', handleAuthStateChanged);
+  }, []);
+
   // 세션 유효성 검증 및 정보 갱신
   useEffect(() => {
     let isMounted = true; // cleanup을 위한 플래그
@@ -151,6 +164,11 @@ export function useAuth(): AuthState {
     return hasPermission(['coach', 'assistant_coach', 'system-manager']);
   }, [hasPermission]);
 
+  // 풋살 페이지 전체 권한 (이벤트·회원·권한요청 관리) - system-manager, futsal-manager
+  const canManageFutsal = useCallback(() => {
+    return hasPermission(['system-manager', 'futsal-manager']);
+  }, [hasPermission]);
+
   // 일반 사용자 권한 (모든 사용자에게 부여 - 참석, 불참석, 투표, 갤러리 접근)
   const canAccessBasicFeatures = useCallback(() => {
     return userInfo.isAuthenticated;
@@ -198,12 +216,18 @@ export function useAuth(): AuthState {
     return hasPermission(['president', 'vice_president', 'coach', 'system-manager']);
   }, [hasPermission]);
 
+  /** 이름만 등록한 풋살 전용 회원 (축구 페이지·관리 권한 없음) */
+  const isFutsalGuest = useCallback(() => {
+    return userInfo.role === 'futsal-guest';
+  }, [userInfo.role]);
+
   return {
     ...userInfo,
     logout,
     hasPermission,
     canManage,
     canManageMatches,
+    canManageFutsal,
     canManageAnnouncements,
     canManageFinance,
     canManagePlayerStats,
@@ -216,6 +240,7 @@ export function useAuth(): AuthState {
     canManageAnnouncementsWithSystemAdmin,
     canManageFinanceWithSystemAdmin,
     canManagePlayerStatsWithSystemAdmin,
-    isAdminWithSystemAdmin
+    isAdminWithSystemAdmin,
+    isFutsalGuest,
   };
 }
