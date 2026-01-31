@@ -88,10 +88,10 @@ const RunningChart: React.FC = () => {
   return (
     <Card className="min-w-0 overflow-hidden">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-green-600" />
-            <CardTitle>런닝 통계</CardTitle>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex shrink-0 items-center gap-2">
+            <Activity className="h-5 w-5 shrink-0 text-green-600" />
+            <CardTitle className="whitespace-nowrap text-base sm:text-2xl">런닝 통계</CardTitle>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Select

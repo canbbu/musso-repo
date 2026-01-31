@@ -83,12 +83,12 @@ const AttendanceChart: React.FC = () => {
   return (
     <Card className="min-w-0 overflow-hidden">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-blue-600" />
-            <CardTitle>출석 인원수 통계</CardTitle>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex shrink-0 items-center gap-2">
+            <Calendar className="h-5 w-5 shrink-0 text-blue-600" />
+            <CardTitle className="whitespace-nowrap text-base sm:text-2xl">출석 인원수 통계</CardTitle>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select
               value={selectedYear.toString()}
               onValueChange={(value) => setSelectedYear(parseInt(value))}
