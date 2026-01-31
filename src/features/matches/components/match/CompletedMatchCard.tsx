@@ -55,8 +55,17 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="match-info mb-4 md:mb-0">
+            <p className="text-2xl font-bold text-foreground mb-2">
+              {new Date(match.date).toLocaleDateString('ko-KR', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </p>
             <div className="flex items-center mb-1">
-              <h3 className="text-xl font-semibold"> {match.opponent}</h3>
+              <h3 className="text-xl font-semibold">상대: {match.opponent}</h3>
               <span className={`ml-3 px-3 py-1 rounded-full text-sm ${
                 match.result === 'win' 
                   ? 'bg-green-100 text-green-800' 
@@ -67,15 +76,6 @@ const CompletedMatchCard = ({ match, canManagePlayerStats = false }: CompletedMa
                 {match.score}
               </span>
             </div>
-            <p className="text-gray-600 mb-1">
-              {new Date(match.date).toLocaleDateString('ko-KR', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </p>
             <p className="text-gray-600 mb-3">{match.location}</p>
             
             <div className="flex gap-4 text-sm">

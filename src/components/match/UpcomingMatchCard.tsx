@@ -117,10 +117,10 @@ const UpcomingMatchCard = ({
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="match-info mb-4 md:mb-0">
-            <h3 className="text-xl font-semibold mb-1"> {match.opponent}</h3>
-            <p className="text-gray-600 mb-1">
+            <p className="text-2xl font-bold text-foreground mb-2">
               {formatKoreanDate(match.date)}
             </p>
+            <h3 className="text-xl font-semibold mb-1">상대: {match.opponent}</h3>
             <p className="text-gray-600 mb-3">{match.location}</p>
             
             <div className="flex gap-4 text-sm">
