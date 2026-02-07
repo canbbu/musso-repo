@@ -7,6 +7,9 @@ import { Check, X, Clock } from 'lucide-react';
 import { formatKoreanDate } from '@/utils/date-helpers';
 import { Player, MatchInfo, AttendanceListModalProps } from '@/types/dashboard';
 
+/** 모달 내부용: 참석 상태·username 포함 */
+type PlayerWithAttendance = Player & { attendance_status: string; username?: string };
+
 const roleOrder = {
   '회장': 1,
   '부회장': 2,
@@ -17,7 +20,7 @@ const roleOrder = {
 };
 
 const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: AttendanceListModalProps) => {
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<PlayerWithAttendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
@@ -52,8 +55,8 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
       if (attendanceError) throw attendanceError;
       
       // 참석 정보와 회원 정보 병합
-      const playersWithAttendance = playersData.map((player: Player) => {
-        const attendance = attendanceData?.find((a: any) => a.player_id === player.id);
+      const playersWithAttendance: PlayerWithAttendance[] = playersData.map((player: Player & { username?: string }) => {
+        const attendance = attendanceData?.find((a: { player_id: string; status: string }) => a.player_id === player.id);
         return {
           ...player,
           attendance_status: attendance ? getNormalizedStatus(attendance.status) : '미정'
@@ -61,7 +64,7 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
       });
       
       // 이름 기준 오름차순 정렬
-      const sortedPlayers = playersWithAttendance.sort((a: Player, b: Player) => a.name.localeCompare(b.name, 'ko'));
+      const sortedPlayers = playersWithAttendance.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
       setPlayers(sortedPlayers);
     } catch (error) {
       console.error('참석 정보를 불러오는 중 오류가 발생했습니다:', error);
@@ -159,7 +162,7 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
     </Dialog>
   );
   
-  function renderPlayerList(playerList: Player[]) {
+  function renderPlayerList(playerList: PlayerWithAttendance[]) {
     if (loading) {
       return <div className="py-8 text-center">데이터를 불러오는 중...</div>;
     }
@@ -179,7 +182,7 @@ const AttendanceListModal = ({ isOpen, onClose, matchId, matchInfo }: Attendance
             <div className="flex items-center">
               <div>
                 <div className="font-medium">{player.name}</div>
-                <div className="text-sm text-gray-500">{player.username}</div>
+                <div className="text-sm text-gray-500">{player.username ?? player.name}</div>
               </div>
             </div>
             <div className="flex items-center">

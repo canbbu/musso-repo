@@ -67,6 +67,8 @@ const PlayerStats = () => {
     attendanceRanking,
     cleansheetRanking,
     getCurrentRanking,
+    getPrevRanking,
+    hasPrevPeriod,
     loading
   } = usePlayerRankings(selectedYear, selectedMonth);
 
@@ -194,7 +196,11 @@ const PlayerStats = () => {
               />
             </div>
             
-            <RankingTable activeTab={activeTab} players={getCurrentRanking()} />
+            <RankingTable
+              activeTab={activeTab}
+              players={getCurrentRanking()}
+              prevRanking={activeTab === 'power' ? getPrevRanking() : undefined}
+            />
           </>
         )}
       </div>

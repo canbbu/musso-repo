@@ -35,208 +35,189 @@ type RankingTab = 'power' | 'goals' | 'assists' | 'attendance' | 'cleansheet';
 // const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 // const supabase = createClient(supabaseUrl, supabaseKey);
 
+// 한 기간(연도·월) 기준 선수 통계 조회
+async function fetchPeriodPlayers(
+  year: number | undefined,
+  month: number | undefined,
+  playersData: { id: string; name: string; position: string; birthday?: string; fav_club?: string; boots_brand?: string }[],
+  playerStatsMap: Map<string, { pac?: number; sho?: number; pas?: number; dri?: number; def?: number; phy?: number }>
+): Promise<Player[]> {
+  let matchesQuery = supabase
+    .from('matches')
+    .select('id, date')
+    .eq('status', 'completed');
+
+  if (year) {
+    const startDate = month
+      ? new Date(year, month - 1, 1).toISOString()
+      : new Date(year, 0, 1).toISOString();
+    const endDate = month
+      ? new Date(year, month, 0).toISOString()
+      : new Date(year, 11, 31).toISOString();
+    matchesQuery = matchesQuery.gte('date', startDate).lte('date', endDate);
+  }
+
+  const { data: completedMatches, error: matchesError } = await matchesQuery;
+  if (matchesError) throw matchesError;
+  const totalCompletedMatches = completedMatches?.length || 0;
+  const completedMatchIds = (completedMatches ?? []).map((m: { id: number }) => m.id);
+
+  const playerStats = await Promise.all(
+    playersData.map(async (player) => {
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('match_attendance')
+        .select('*')
+        .eq('player_id', player.id)
+        .eq('status', 'attending')
+        .eq('match_number', 1)
+        .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]);
+      if (attendanceError) throw attendanceError;
+
+      let statsData: { goals?: number; assists?: number; cleansheet?: number }[] = [];
+      try {
+        const { data, error: statsError } = await supabase
+          .from('match_attendance')
+          .select('goals, assists, cleansheet')
+          .eq('player_id', player.id)
+          .not('is_opponent_team', 'eq', true)
+          .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]);
+        if (statsError?.message?.includes('cleansheet')) {
+          const { data: fd, error: fe } = await supabase
+            .from('match_attendance')
+            .select('goals, assists')
+            .eq('player_id', player.id)
+            .not('is_opponent_team', 'eq', true)
+            .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]);
+          if (fe) throw fe;
+          statsData = (fd || []).map((item: { goals?: number; assists?: number }) => ({ ...item, cleansheet: 0 }));
+        } else if (statsError) {
+          throw statsError;
+        } else {
+          statsData = data || [];
+        }
+      } catch (err) {
+        console.error(`[오류] 선수 ${player.id} 통계 조회 실패:`, err);
+      }
+
+      let mvpQuery = supabase.from('mvp').select('mvp_type').eq('player_id', player.id);
+      if (year) mvpQuery = mvpQuery.eq('year', year);
+      const { data: mvpData, error: mvpError } = await mvpQuery;
+      if (mvpError) throw mvpError;
+      const weeklyMvpCount = (mvpData ?? []).filter((m: { mvp_type: string }) => m.mvp_type === 'weekly').length;
+      const monthlyMvpCount = (mvpData ?? []).filter((m: { mvp_type: string }) => m.mvp_type === 'monthly').length;
+      const yearlyMvpCount = (mvpData ?? []).filter((m: { mvp_type: string }) => m.mvp_type === 'yearly').length;
+
+      const totalGoals = statsData.reduce((s, m) => s + (m.goals || 0), 0);
+      const totalAssists = statsData.reduce((s, m) => s + (m.assists || 0), 0);
+      const totalCleansheet = statsData.reduce((s, m) => s + (m.cleansheet || 0), 0);
+      const matchesWithRating = attendanceData.filter((m: { rating?: number }) => (m.rating || 0) > 0);
+      const averageRating = matchesWithRating.length > 0
+        ? matchesWithRating.reduce((s: number, m: { rating?: number }) => s + (m.rating || 0), 0) / matchesWithRating.length
+        : 0;
+      const attendance = totalCompletedMatches > 0
+        ? Math.round((attendanceData.length / totalCompletedMatches) * 100)
+        : 0;
+      const cleansheet = totalCleansheet;
+      const powerScore = attendanceData.length * 2 + totalGoals + totalAssists + cleansheet;
+      const playerStatData = playerStatsMap.get(player.id);
+      let averageStat = 0;
+      if (playerStatData) {
+        const { pac, sho, pas, dri, def, phy } = playerStatData;
+        const sum = (pac || 0) + (sho || 0) + (pas || 0) + (dri || 0) + (def || 0) + (phy || 0);
+        const count = [pac, sho, pas, dri, def, phy].filter((v) => v != null).length;
+        averageStat = count > 0 ? Math.round(sum / count) : 0;
+      }
+
+      return {
+        id: player.id,
+        name: player.name,
+        position: player.position,
+        birthday: player.birthday,
+        favorite_team: player.fav_club,
+        boots_brand: player.boots_brand ?? '',
+        weekly_mvp_count: weeklyMvpCount,
+        monthly_mvp_count: monthlyMvpCount,
+        yearly_mvp_count: yearlyMvpCount,
+        games: attendanceData.length,
+        goals: totalGoals,
+        assists: totalAssists,
+        attendance,
+        rating: parseFloat(averageRating.toFixed(1)),
+        cleansheet,
+        powerScore: parseFloat(powerScore.toFixed(2)),
+        avr_stat: averageStat,
+        pac: playerStatData?.pac,
+        sho: playerStatData?.sho,
+        pas: playerStatData?.pas,
+        dri: playerStatData?.dri,
+        def: playerStatData?.def,
+        phy: playerStatData?.phy
+      };
+    })
+  );
+  return playerStats;
+}
+
 const usePlayerRankings = (year?: number, month?: number) => {
   const [players, setPlayers] = useState<Player[]>([]);
+  const [prevPlayers, setPrevPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<RankingTab>('power');
-  
+
   useEffect(() => {
-    const fetchPlayerData = async () => {
+    const run = async () => {
       try {
         setLoading(true);
-        
-        // 축구 통계용 선수만 (풋살 전용 회원 제외)
+
         const { data: playersData, error: playersError } = await supabase
           .from('players')
           .select('id, name, position, birthday, fav_club, boots_brand')
           .eq('is_deleted', false)
           .neq('role', 'futsal-guest');
-        
         if (playersError) throw playersError;
-        
-        // player_stats 테이블에서 능력치 정보 가져오기
+
         const { data: playerStatsData, error: playerStatsError } = await supabase
           .from('player_stats')
           .select('id, pac, sho, pas, dri, def, phy');
-          
         if (playerStatsError) throw playerStatsError;
-        
-        // 완료된 이벤트 쿼리 구성
-        let matchesQuery = supabase
-          .from('matches')
-          .select('id, date')
-          .eq('status', 'completed');
-        
-        // 연도와 월 필터 적용
-        if (year) {
-          const startDate = month 
-            ? new Date(year, month - 1, 1).toISOString()
-            : new Date(year, 0, 1).toISOString();
-          
-          const endDate = month
-            ? new Date(year, month, 0).toISOString() // 해당 월의 마지막 날
-            : new Date(year, 11, 31).toISOString();
-          
-          matchesQuery = matchesQuery
-            .gte('date', startDate)
-            .lte('date', endDate);
-        }
-        
-        // 필터링된 이벤트 가져오기
-        const { data: completedMatches, error: matchesError } = await matchesQuery;
-        
-        if (matchesError) throw matchesError;
-        
-        const totalCompletedMatches = completedMatches?.length || 0;
-        
-        // 완료된 이벤트 id 배열 추출
-        const completedMatchIds = (completedMatches ?? []).map(m => m.id);
-        
-        // player_stats 데이터로 매핑 생성
-        const playerStatsMap = new Map();
-        playerStatsData?.forEach(stat => {
-          playerStatsMap.set(stat.id, stat);
+        const playerStatsMap = new Map<string, { pac?: number; sho?: number; pas?: number; dri?: number; def?: number; phy?: number }>();
+        (playerStatsData ?? []).forEach((s: { id: string; pac?: number; sho?: number; pas?: number; dri?: number; def?: number; phy?: number }) => {
+          playerStatsMap.set(s.id, s);
         });
-        
-        // 각 선수별 참석 정보 가져오기
-        const playerStats = await Promise.all(
-          playersData.map(async (player) => {
-            // 출석 기록 가져오기 (1경기만 - 중복 방지)
-            const { data: attendanceData, error: attendanceError } = await supabase
-              .from('match_attendance')
-              .select('*')
-              .eq('player_id', player.id)
-              .eq('status', 'attending')
-              .eq('match_number', 1) // 1경기만 조회하여 중복 방지
-              .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]); // 빈 배열 대신 [0] 사용하여 쿼리 오류 방지
-            
-            if (attendanceError) throw attendanceError;
-            
-            // 득점/어시스트/철벽지수 기록 가져오기 (모든 경기 수에서 합산)
-            // cleansheet 컬럼이 없을 수 있으므로 에러 핸들링 추가
-            let statsData: any[] = [];
-            try {
-              const { data, error: statsError } = await supabase
-                .from('match_attendance')
-                .select('goals, assists, cleansheet')
-                .eq('player_id', player.id)
-                .not('is_opponent_team', 'eq', true) // 상대팀 제외
-                .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]);
-              
-              if (statsError) {
-                // cleansheet 컬럼이 없는 경우를 대비해 goals, assists만 선택
-                if (statsError.message?.includes('cleansheet')) {
-                  console.warn(`[경고] cleansheet 컬럼이 없습니다. goals, assists만 조회합니다.`);
-                  const { data: fallbackData, error: fallbackError } = await supabase
-                    .from('match_attendance')
-                    .select('goals, assists')
-                    .eq('player_id', player.id)
-                    .not('is_opponent_team', 'eq', true)
-                    .in('match_id', completedMatchIds.length > 0 ? completedMatchIds : [0]);
-                  
-                  if (fallbackError) throw fallbackError;
-                  statsData = (fallbackData || []).map(item => ({ ...item, cleansheet: 0 }));
-                } else {
-                  throw statsError;
-                }
-              } else {
-                statsData = data || [];
-              }
-            } catch (err) {
-              console.error(`[오류] 선수 ${player.id}의 통계 조회 실패:`, err);
-              statsData = [];
-            }
-            
-            // MVP 횟수 가져오기 (연도별 필터 적용)
-            let mvpQuery = supabase
-              .from('mvp')
-              .select('mvp_type')
-              .eq('player_id', player.id);
-            if (year) {
-              mvpQuery = mvpQuery.eq('year', year);
-            }
-            const { data: mvpData, error: mvpError } = await mvpQuery;
-            
-            if (mvpError) throw mvpError;
-            
-            // MVP 타입별 횟수 계산 (선택 연도 기준)
-            const weeklyMvpCount = (mvpData ?? []).filter(mvp => mvp.mvp_type === 'weekly').length;
-            const monthlyMvpCount = (mvpData ?? []).filter(mvp => mvp.mvp_type === 'monthly').length;
-            const yearlyMvpCount = (mvpData ?? []).filter(mvp => mvp.mvp_type === 'yearly').length;
-            
-            // 골, 어시스트, 철벽지수 합계 계산 (모든 경기 수에서)
-            const totalGoals = statsData.reduce((sum, match) => sum + (match.goals || 0), 0);
-            const totalAssists = statsData.reduce((sum, match) => sum + (match.assists || 0), 0);
-            const totalCleansheet = statsData.reduce((sum, match) => sum + (match.cleansheet || 0), 0);
-            
-            // 평균 평점 계산 (1경기 데이터만 사용) - 비활성화
-            const matchesWithRating = attendanceData.filter(match => match.rating > 0);
-            const averageRating = matchesWithRating.length > 0
-              ? matchesWithRating.reduce((sum, match) => sum + match.rating, 0) / matchesWithRating.length
-              : 0;
-            
-            // 출석률 계산 (완료된 이벤트 대비 참석 이벤트 비율)
-            const attendance = totalCompletedMatches > 0
-              ? Math.round((attendanceData.length / totalCompletedMatches) * 100)
-              : 0;
-            
-            // 철벽지수 계산 (포지션에 관계없이 모든 선수에게 적용)
-            const cleansheet = totalCleansheet;
-            
-            // 파워랭킹 점수: 출석 1경기당 2pt + 득점 1pt + 어시스트 1pt + 철벽지수 1pt
-            const powerScore = attendanceData.length * 2 + totalGoals + totalAssists + cleansheet;
-            
-            // player_stats 데이터 가져오기
-            const playerStatData = playerStatsMap.get(player.id);
-            
-            // 평균 스탯 계산 (소수점 없음)
-            let averageStat = 0;
-            if (playerStatData) {
-              const { pac, sho, pas, dri, def, phy } = playerStatData;
-              const sum = (pac || 0) + (sho || 0) + (pas || 0) + (dri || 0) + (def || 0) + (phy || 0);
-              const count = [pac, sho, pas, dri, def, phy].filter(stat => stat !== undefined && stat !== null).length;
-              averageStat = count > 0 ? Math.round(sum / count) : 0;
-            }
-            
-            return {
-              id: player.id,
-              name: player.name,
-              position: player.position,
-              birthday: player.birthday,
-              favorite_team: player.fav_club,
-              boots_brand: player.boots_brand,
-              weekly_mvp_count: weeklyMvpCount,
-              monthly_mvp_count: monthlyMvpCount,
-              yearly_mvp_count: yearlyMvpCount,
-              games: attendanceData.length,
-              goals: totalGoals,
-              assists: totalAssists,
-              attendance,
-              rating: parseFloat(averageRating.toFixed(1)),
-              cleansheet,
-              powerScore: parseFloat(powerScore.toFixed(2)),
-              // 선수 능력치 데이터
-              avr_stat: averageStat,
-              pac: playerStatData?.pac,
-              sho: playerStatData?.sho,
-              pas: playerStatData?.pas,
-              dri: playerStatData?.dri,
-              def: playerStatData?.def,
-              phy: playerStatData?.phy
-            };
-          })
-        );
-        
-        setPlayers(playerStats);
+
+        const list = playersData ?? [];
+        // 전달 대비: (1) 연도 전체 → 같은 해 1월 랭킹 vs 연간 랭킹, (2) 월 선택(2~12) → 1월 랭킹 vs 현재 달 랭킹. 1월 선택 시에는 전달 없음.
+        const isFullYear = year !== undefined && month === undefined;
+        const isMonthWithPrev = year !== undefined && month !== undefined && month >= 2;
+
+        if (isFullYear) {
+          const [current, prev] = await Promise.all([
+            fetchPeriodPlayers(year, undefined, list, playerStatsMap),
+            fetchPeriodPlayers(year, 1, list, playerStatsMap) // 1월 마지막 경기까지 = 1월 랭킹
+          ]);
+          setPlayers(current);
+          setPrevPlayers(prev);
+        } else if (isMonthWithPrev) {
+          const [current, prev] = await Promise.all([
+            fetchPeriodPlayers(year, month, list, playerStatsMap),
+            fetchPeriodPlayers(year, 1, list, playerStatsMap) // 1월 마지막 경기까지 = 1월 데이터
+          ]);
+          setPlayers(current);
+          setPrevPlayers(prev);
+        } else {
+          const current = await fetchPeriodPlayers(year, month, list, playerStatsMap);
+          setPlayers(current);
+          setPrevPlayers([]);
+        }
       } catch (error) {
         console.error('Error fetching player data:', error);
+        setPrevPlayers([]);
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchPlayerData();
-  }, [year, month]); // 연도나 월이 변경되면 데이터 다시 불러오기
+    run();
+  }, [year, month]);
   
   // 카테고리별: 해당 데이터가 있는 선수만 표시. 출석률은 전체 회원 표시
   const hasGoals = (p: Player) => (Number(p.goals) || 0) > 0;
@@ -261,13 +242,41 @@ const usePlayerRankings = (year?: number, month?: number) => {
     return b.games - a.games;
   });
 
-  // 파워랭킹: 모든 선수 표시, powerScore 높은 순
-  const powerRanking = [...players].sort((a, b) => {
-    const scoreA = a.powerScore ?? 0;
-    const scoreB = b.powerScore ?? 0;
-    if (scoreB !== scoreA) return scoreB - scoreA;
+  // 파워랭킹: 포인트 있는 선수만, powerScore 높은 순
+  const powerRanking = [...players]
+    .filter((p) => (p.powerScore ?? 0) > 0)
+    .sort((a, b) => {
+      const scoreA = a.powerScore ?? 0;
+      const scoreB = b.powerScore ?? 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return b.games - a.games;
+    });
+
+  // 전달 기간 랭킹 (동일 정렬 규칙)
+  const prevGoalRanking = [...prevPlayers].filter(hasGoals).sort((a, b) => {
+    if (b.goals !== a.goals) return b.goals - a.goals;
+    return a.games - b.games;
+  });
+  const prevAssistRanking = [...prevPlayers].filter(hasAssists).sort((a, b) => {
+    if (b.assists !== a.assists) return b.assists - a.assists;
+    return a.games - b.games;
+  });
+  const prevAttendanceRanking = [...prevPlayers].sort((a, b) => {
+    if (b.attendance !== a.attendance) return b.attendance - a.attendance;
     return b.games - a.games;
   });
+  const prevCleansheetRanking = [...prevPlayers].filter(hasCleansheet).sort((a, b) => {
+    if (b.cleansheet !== a.cleansheet) return b.cleansheet - a.cleansheet;
+    return b.games - a.games;
+  });
+  const prevPowerRanking = [...prevPlayers]
+    .filter((p) => (p.powerScore ?? 0) > 0)
+    .sort((a, b) => {
+      const scoreA = a.powerScore ?? 0;
+      const scoreB = b.powerScore ?? 0;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return b.games - a.games;
+    });
 
   const getCurrentRanking = () => {
     switch (activeTab) {
@@ -285,7 +294,26 @@ const usePlayerRankings = (year?: number, month?: number) => {
         return powerRanking;
     }
   };
-  
+
+  const getPrevRanking = (): Player[] => {
+    switch (activeTab) {
+      case 'power':
+        return prevPowerRanking;
+      case 'goals':
+        return prevGoalRanking;
+      case 'assists':
+        return prevAssistRanking;
+      case 'attendance':
+        return prevAttendanceRanking;
+      case 'cleansheet':
+        return prevCleansheetRanking;
+      default:
+        return prevPowerRanking;
+    }
+  };
+
+  const hasPrevPeriod = prevPlayers.length > 0;
+
   return {
     players,
     loading,
@@ -297,6 +325,8 @@ const usePlayerRankings = (year?: number, month?: number) => {
     attendanceRanking,
     cleansheetRanking,
     getCurrentRanking,
+    getPrevRanking,
+    hasPrevPeriod,
   };
 };
 
