@@ -7,13 +7,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
-import { Award, Goal, Trophy, CalendarCheck, Shield } from "lucide-react";
+import { Award, Goal, Trophy, CalendarCheck, Shield, Zap } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card";
 import type { RankingTab, Player } from '@/features/stats/types/stats.types';
 
 /** 카테고리별: 해당 데이터가 있는 선수만 표시. 출석률은 전체 회원 */
 const getDisplayPlayersByTab = (activeTab: RankingTab, players: Player[]): Player[] => {
   switch (activeTab) {
+    case 'power':
+      return players; // 파워랭킹: 모든 회원
     case 'goals':
       return players.filter((p) => (Number(p.goals) || 0) > 0);
     case 'assists':
@@ -40,6 +42,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
 
   const getLabelByTab = () => {
     switch (activeTab) {
+      case 'power':
+        return '파워 랭킹';
       case 'goals':
         return '득점';
       case 'assists':
@@ -49,12 +53,14 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
       case 'cleansheet':
         return '철벽지수';
       default:
-        return '득점';
+        return '파워 랭킹';
     }
   };
   
   const getIconByTab = () => {
     switch (activeTab) {
+      case 'power':
+        return <Zap className="text-amber-500 h-5 w-5" />;
       case 'goals':
         return <Goal className="text-green-500 h-5 w-5" />;
       case 'assists':
@@ -64,12 +70,14 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
       case 'cleansheet':
         return <Shield className="text-purple-500 h-5 w-5" />;
       default:
-        return <Goal className="text-green-500 h-5 w-5" />;
+        return <Zap className="text-amber-500 h-5 w-5" />;
     }
   };
 
   const getValueByTab = (player: Player) => {
     switch (activeTab) {
+      case 'power':
+        return `${player.powerScore ?? 0} pt`;
       case 'goals':
         return player.goals;
       case 'assists':
@@ -79,7 +87,7 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
       case 'cleansheet':
         return `${player.cleansheet || 0}경기`;
       default:
-        return player.goals;
+        return `${player.powerScore ?? 0} pt`;
     }
   };
 
@@ -88,6 +96,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
     const currentPlayer = displayPlayers[playerIndex];
     const currentValue = (() => {
       switch (activeTab) {
+        case 'power':
+          return currentPlayer.powerScore ?? 0;
         case 'goals':
           return currentPlayer.goals;
         case 'assists':
@@ -97,7 +107,7 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
         case 'cleansheet':
           return currentPlayer.cleansheet || 0;
         default:
-          return currentPlayer.goals;
+          return currentPlayer.powerScore ?? 0;
       }
     })();
 
@@ -107,6 +117,8 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
       const comparePlayer = displayPlayers[i];
       const compareValue = (() => {
         switch (activeTab) {
+          case 'power':
+            return comparePlayer.powerScore ?? 0;
           case 'goals':
             return comparePlayer.goals;
           case 'assists':
@@ -116,7 +128,7 @@ const RankingTable = ({ activeTab, players }: RankingTableProps) => {
           case 'cleansheet':
             return comparePlayer.cleansheet || 0;
           default:
-            return comparePlayer.goals;
+            return comparePlayer.powerScore ?? 0;
         }
       })();
 

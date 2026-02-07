@@ -19,24 +19,23 @@ const PlayerStats = () => {
   const navigate = useNavigate();
   const { canManagePlayerStats } = useAuth();
   
-  // 현재 연도 계산
+  // 현재 연도·월 (해당 달 기본값용)
   const currentYear = new Date().getFullYear();
-  const defaultYear = 2026; // 기본 필터 연도
+  const currentMonth = new Date().getMonth() + 1; // 1~12
   
-  // 필터링 상태 - 기본값을 2026년으로 설정
-  const [selectedYear, setSelectedYear] = useState<number | undefined>(defaultYear);
-  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(undefined);
+  // 필터링 상태 - 기본값: 해당 달(현재 연도·현재 월)
+  const [selectedYear, setSelectedYear] = useState<number | undefined>(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState<number | undefined>(currentMonth);
   
-  // 연도 옵션 (2026년 포함, 최근 3년)
+  // 연도 옵션 (최근 3년)
   const yearOptions = [
     { value: "all", label: '전체 연도' },
-    { value: defaultYear.toString(), label: `${defaultYear}년` },
     { value: currentYear.toString(), label: `${currentYear}년` },
     { value: (currentYear - 1).toString(), label: `${currentYear - 1}년` },
     { value: (currentYear - 2).toString(), label: `${currentYear - 2}년` }
   ];
   
-  // 중복 제거 (2026년이 현재 연도와 같거나 가까운 경우)
+  // 연도 옵션 중복 제거
   const uniqueYearOptions = yearOptions.filter((option, index, self) => 
     index === self.findIndex((o) => o.value === option.value)
   );
@@ -62,6 +61,7 @@ const PlayerStats = () => {
   const {
     activeTab,
     setActiveTab,
+    powerRanking,
     goalRanking,
     assistRanking,
     attendanceRanking,
@@ -88,11 +88,11 @@ const PlayerStats = () => {
     <Layout>
       <div className="player-stats-container">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">시즌 랭킹</h1>
-          <p className="text-gray-600">선수들의 시즌 기록과 순위를 확인하세요.</p>
+          <h1 className="text-3xl font-bold mb-2">선수 통계</h1>
+          <p className="text-gray-600">연도·월을 선택하면 해당 기간의 파워랭킹과 득점·어시스트·출석률·철벽지수를 확인할 수 있습니다.</p>
           
-          {/* 필터 UI */}
-          <div className="flex flex-wrap gap-4 mt-4 mb-4 items-center">
+          {/* 기간 필터 (파워랭킹 등 모든 랭킹에 적용) */}
+          <div className="flex flex-wrap gap-4 mt-4 mb-4 items-center p-3 rounded-lg bg-muted/50">
             <div className="flex items-center gap-1">
               <CalendarIcon className="h-4 w-4 text-gray-500" />
               <span className="text-sm font-medium">기간:</span>
@@ -103,7 +103,7 @@ const PlayerStats = () => {
               onValueChange={handleYearChange}
             >
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="전체 연도" />
+                <SelectValue placeholder="연도 선택" />
               </SelectTrigger>
               <SelectContent>
                 {uniqueYearOptions.map((option) => (
@@ -122,7 +122,7 @@ const PlayerStats = () => {
               onValueChange={handleMonthChange}
             >
               <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="전체 월" />
+                <SelectValue placeholder="월 선택" />
               </SelectTrigger>
               <SelectContent>
                 {monthOptions.map((option) => (
@@ -136,7 +136,6 @@ const PlayerStats = () => {
               </SelectContent>
             </Select>
             
-            {/* 필터 리셋 버튼 */}
             {(selectedYear !== undefined || selectedMonth !== undefined) && (
               <Button 
                 variant="outline" 
@@ -151,35 +150,42 @@ const PlayerStats = () => {
                 필터 초기화
               </Button>
             )}
-          </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              파워랭킹: 출석 1경기당 2pt + 득점 1pt + 어시스트 1pt + 철벽지수 1pt
+            </p>
         </div>
         
         {loading ? (
           <div className="text-center py-8">데이터를 불러오는 중입니다...</div>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {/* 탭 버튼: 파워랭킹 · 득점 · 어시스트 · 출석률 · 철벽지수 */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+              <StatCard 
+                type="power" 
+                isActive={activeTab === 'power'} 
+                topPlayer={powerRanking[0]} 
+                onClick={() => setActiveTab('power')} 
+              />
               <StatCard 
                 type="goals" 
                 isActive={activeTab === 'goals'} 
                 topPlayer={goalRanking[0]} 
                 onClick={() => setActiveTab('goals')} 
               />
-              
               <StatCard 
                 type="assists" 
                 isActive={activeTab === 'assists'} 
                 topPlayer={assistRanking[0]} 
                 onClick={() => setActiveTab('assists')} 
               />
-              
               <StatCard 
                 type="attendance" 
                 isActive={activeTab === 'attendance'} 
                 topPlayer={attendanceRanking[0]} 
                 onClick={() => setActiveTab('attendance')} 
               />
-              
               <StatCard 
                 type="cleansheet" 
                 isActive={activeTab === 'cleansheet'} 

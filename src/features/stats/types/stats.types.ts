@@ -44,9 +44,11 @@ export interface Player {
   dri?: number; // 드리블 (Dribbling)
   def?: number; // 수비 (Defense)
   phy?: number; // 피지컬 (Physical)
+  /** 파워랭킹 점수: 출석 1경기당 2pt + 득점 1pt + 어시스트 1pt + 철벽지수 1pt */
+  powerScore?: number;
 }
 
-export type RankingTab = 'goals' | 'assists' | 'attendance' | 'cleansheet';
+export type RankingTab = 'power' | 'goals' | 'assists' | 'attendance' | 'cleansheet';
 
 export interface Mvp {
   id: number;

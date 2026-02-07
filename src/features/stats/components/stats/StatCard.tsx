@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/shared/components/ui/card";
-import { Goal, Trophy, CalendarCheck, Shield } from "lucide-react";
+import { Goal, Trophy, CalendarCheck, Shield, Zap } from "lucide-react";
 import type { RankingTab, Player } from '@/features/stats/types/stats.types';
 
 interface StatCardProps {
@@ -15,6 +15,8 @@ const StatCard = ({ type, isActive, topPlayer, onClick }: StatCardProps) => {
   const getCardStyles = () => {
     if (isActive) {
       switch (type) {
+        case 'power':
+          return 'border-amber-500 bg-amber-50';
         case 'goals':
           return 'border-green-500 bg-green-50';
         case 'assists':
@@ -30,6 +32,8 @@ const StatCard = ({ type, isActive, topPlayer, onClick }: StatCardProps) => {
 
   const getIcon = () => {
     switch (type) {
+      case 'power':
+        return <Zap className="mr-2 h-4 w-4 text-amber-600" />;
       case 'goals':
         return <Goal className="mr-2 h-4 w-4 text-green-600" />;
       case 'assists':
@@ -43,6 +47,8 @@ const StatCard = ({ type, isActive, topPlayer, onClick }: StatCardProps) => {
 
   const getTitle = () => {
     switch (type) {
+      case 'power':
+        return '파워 랭킹';
       case 'goals':
         return '득점 랭킹';
       case 'assists':
@@ -58,6 +64,8 @@ const StatCard = ({ type, isActive, topPlayer, onClick }: StatCardProps) => {
     if (!topPlayer) return 0;
     
     switch (type) {
+      case 'power':
+        return `${topPlayer.powerScore ?? 0} pt`;
       case 'goals':
         return `${topPlayer.goals} 골`;
       case 'assists':

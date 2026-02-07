@@ -16,6 +16,8 @@ interface Player {
   weekly_mvp_count: number;
   monthly_mvp_count: number;
   yearly_mvp_count: number;
+  /** 파워랭킹 점수: 출석 1경기당 2pt + 득점 1pt + 어시스트 1pt + 철벽지수 1pt */
+  powerScore?: number;
   // 선수 능력치 필드
   avr_stat?: number; // 평균 능력치
   pac?: number; // 속력 (Pace)
@@ -26,7 +28,7 @@ interface Player {
   phy?: number; // 피지컬 (Physical)
 }
 
-type RankingTab = 'goals' | 'assists' | 'attendance' | 'cleansheet';
+type RankingTab = 'power' | 'goals' | 'assists' | 'attendance' | 'cleansheet';
 
 // Supabase 클라이언트 직접 생성하는 부분 제거
 // const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -36,7 +38,7 @@ type RankingTab = 'goals' | 'assists' | 'attendance' | 'cleansheet';
 const usePlayerRankings = (year?: number, month?: number) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<RankingTab>('goals');
+  const [activeTab, setActiveTab] = useState<RankingTab>('power');
   
   useEffect(() => {
     const fetchPlayerData = async () => {
@@ -181,6 +183,9 @@ const usePlayerRankings = (year?: number, month?: number) => {
             // 철벽지수 계산 (포지션에 관계없이 모든 선수에게 적용)
             const cleansheet = totalCleansheet;
             
+            // 파워랭킹 점수: 출석 1경기당 2pt + 득점 1pt + 어시스트 1pt + 철벽지수 1pt
+            const powerScore = attendanceData.length * 2 + totalGoals + totalAssists + cleansheet;
+            
             // player_stats 데이터 가져오기
             const playerStatData = playerStatsMap.get(player.id);
             
@@ -209,6 +214,7 @@ const usePlayerRankings = (year?: number, month?: number) => {
               attendance,
               rating: parseFloat(averageRating.toFixed(1)),
               cleansheet,
+              powerScore: parseFloat(powerScore.toFixed(2)),
               // 선수 능력치 데이터
               avr_stat: averageStat,
               pac: playerStatData?.pac,
@@ -255,8 +261,18 @@ const usePlayerRankings = (year?: number, month?: number) => {
     return b.games - a.games;
   });
 
+  // 파워랭킹: 모든 선수 표시, powerScore 높은 순
+  const powerRanking = [...players].sort((a, b) => {
+    const scoreA = a.powerScore ?? 0;
+    const scoreB = b.powerScore ?? 0;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    return b.games - a.games;
+  });
+
   const getCurrentRanking = () => {
     switch (activeTab) {
+      case 'power':
+        return powerRanking;
       case 'goals':
         return goalRanking;
       case 'assists':
@@ -266,7 +282,7 @@ const usePlayerRankings = (year?: number, month?: number) => {
       case 'cleansheet':
         return cleansheetRanking;
       default:
-        return goalRanking;
+        return powerRanking;
     }
   };
   
@@ -275,6 +291,7 @@ const usePlayerRankings = (year?: number, month?: number) => {
     loading,
     activeTab,
     setActiveTab,
+    powerRanking,
     goalRanking,
     assistRanking,
     attendanceRanking,
