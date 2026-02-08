@@ -217,13 +217,15 @@ export const useTactics = (matchId: number, matchNumber: number = 1) => {
         }
 
         // 기존 데이터와 새 데이터 병합 (기존 골, 어시스트, 타임스탬프 보존)
+        const goals = player.goals ?? existingData?.goals ?? 0;
+        const assists = player.assists ?? existingData?.assists ?? 0;
         const updateData = {
           match_id: formData.match_id,
           match_number: formData.match_number,
           player_id: player.player_id,
           status: 'attending',
-          goals: player.goals || existingData?.goals || 0,
-          assists: player.assists || existingData?.assists || 0,
+          goals,
+          assists,
           rating: existingData?.rating || 0,
           tactics_position_x: player.tactics_position_x,
           tactics_position_y: player.tactics_position_y,
@@ -233,6 +235,21 @@ export const useTactics = (matchId: number, matchNumber: number = 1) => {
           goal_timestamp: existingData?.goal_timestamp,
           assist_timestamp: existingData?.assist_timestamp
         };
+
+        // [작전판 골/도움 로그] DB에 실제로 쓰는 골/도움 값
+        if (goals > 0 || assists > 0) {
+          console.log('[작전판 골/도움] saveTactics - match_attendance 업데이트', {
+            match_id: formData.match_id,
+            match_number: formData.match_number,
+            player_id: player.player_id,
+            formData_goals: player.goals,
+            formData_assists: player.assists,
+            existing_goals: existingData?.goals,
+            existing_assists: existingData?.assists,
+            최종_저장_goals: goals,
+            최종_저장_assists: assists
+          });
+        }
 
         // UPSERT 방식으로 처리
         const { data, error: upsertError } = await supabase

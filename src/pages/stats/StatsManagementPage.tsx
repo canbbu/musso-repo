@@ -93,39 +93,34 @@ const StatsManagement = () => {
         return;
       }
 
+      // [작전판 골/도움 로그] 선수 기록관리 - 작전판에서 넘어올 때 DB에서 로드한 값
+      const goalAssistFromTactics = (attendanceData || []).filter((r: any) => (r.goals > 0 || r.assists > 0));
+      if (goalAssistFromTactics.length > 0) {
+        console.log('[작전판 골/도움] 선수 기록관리 - 작전판→기록관리 로드', {
+          match_id: matchId,
+          match_number: matchNumber,
+          rows: goalAssistFromTactics.map((r: any) => ({
+            player_id: r.player_id,
+            goals: r.goals,
+            assists: r.assists
+          }))
+        });
+      }
+
       // 출석한 선수들의 데이터를 자동으로 설정
+      // 골/도움은 넣지 않음: usePlayerStats가 이미 해당 이벤트 전체 경기 합계를 불러와 표시함.
+      // 여기서 한 경기만 넣으면 합계가 덮어씌워져 "1득점, 1어시스트만" 보이는 버그가 발생함.
       if (attendanceData) {
-        let loadedCount = 0;
         for (const record of attendanceData) {
           if (record.status === 'attending' && !record.is_opponent_team) {
-            // 출석 상태 설정
             handleAttendanceChange(record.player_id, 'attending');
-            
-            // 득점, 어시스트 설정 (평점은 제외)
-            if (record.goals > 0) {
-              handleStatChange(record.player_id, 'goals', record.goals);
-              loadedCount++;
-            }
-            if (record.assists > 0) {
-              handleStatChange(record.player_id, 'assists', record.assists);
-              loadedCount++;
-            }
           }
         }
-        
         setTacticsDataLoaded(true);
-        
-        if (loadedCount > 0) {
-          toast({
-            title: "작전판 데이터 로드 완료",
-            description: `출석 정보가 자동으로 입력되었습니다. 해당 경기 득점/어시스트 합계가 표시됩니다. 평점만 입력해주세요.`,
-          });
-        } else {
-          toast({
-            title: "작전판 데이터 로드 완료",
-            description: "출석 정보가 자동으로 입력되었습니다. 해당 경기 득점/어시스트 합계가 표시됩니다. 평점을 입력해주세요.",
-          });
-        }
+        toast({
+          title: "작전판 데이터 로드 완료",
+          description: "출석 정보가 자동으로 입력되었습니다. 득점/어시스트는 이벤트 전체 경기 합계로 표시됩니다. 평점을 입력해주세요.",
+        });
       }
     } catch (error) {
       console.error('작전판 데이터 로드 에러:', error);

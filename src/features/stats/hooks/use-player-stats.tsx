@@ -97,7 +97,7 @@ export const usePlayerStats = () => {
       // 해당 경기의 모든 경기 수에서의 득점/어시스트/철벽지수 합계 불러오기
       const { data: matchStatsData, error: matchStatsError } = await supabase
         .from('match_attendance')
-        .select('player_id, goals, assists, cleansheet')
+        .select('player_id, match_number, goals, assists, cleansheet')
         .eq('match_id', selectedMatch)
         .not('is_opponent_team', 'eq', true); // 상대팀 제외
 
@@ -105,6 +105,20 @@ export const usePlayerStats = () => {
         console.error('경기 통계를 불러오는 중 오류 발생:', matchStatsError);
         setIsLoading(false);
         return;
+      }
+
+      // [작전판 골/도움 로그] 선수 기록관리 - DB에서 로드한 골/도움 (경기별)
+      const goalAssistRows = (matchStatsData || []).filter((r: any) => (r.goals > 0 || r.assists > 0));
+      if (goalAssistRows.length > 0) {
+        console.log('[작전판 골/도움] 선수 기록관리 - DB 로드', {
+          match_id: selectedMatch,
+          rows: goalAssistRows.map((r: any) => ({
+            player_id: r.player_id,
+            match_number: r.match_number,
+            goals: r.goals,
+            assists: r.assists
+          }))
+        });
       }
 
       // 선수별 해당 경기의 모든 경기 수 득점/어시스트/철벽지수 합계 계산
@@ -163,6 +177,15 @@ export const usePlayerStats = () => {
         }
         return statusDiff;
       });
+
+      // [작전판 골/도움 로그] 선수 기록관리 - 화면에 표시할 골/도움 (선수별 합계)
+      const displayGoalAssist = stats.filter(s => s.goals > 0 || s.assists > 0);
+      if (displayGoalAssist.length > 0) {
+        console.log('[작전판 골/도움] 선수 기록관리 - 화면 표시', {
+          match_id: selectedMatch,
+          선수별_골_도움: displayGoalAssist.map(s => ({ id: s.id, name: s.name, goals: s.goals, assists: s.assists }))
+        });
+      }
 
       setPlayerStats(stats);
       setIsLoading(false);

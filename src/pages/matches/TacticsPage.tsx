@@ -1100,6 +1100,23 @@ const Tactics = () => {
         return;
       }
 
+      // [작전판 골/도움 로그] DB에서 로드한 골/도움 raw 데이터
+      const goalAssistRows = (data || []).filter((r: any) => (r.goals > 0 || r.assists > 0));
+      if (goalAssistRows.length > 0) {
+        console.log('[작전판 골/도움] refreshGoalRecords - DB 로드', {
+          match_id: matchIdNum,
+          match_number: matchNumberNum,
+          rows: goalAssistRows.map((r: any) => ({
+            player_id: r.player_id,
+            opponent: r.is_opponent_team,
+            goals: r.goals,
+            assists: r.assists,
+            goal_timestamp: r.goal_timestamp,
+            assist_timestamp: r.assist_timestamp
+          }))
+        });
+      }
+
     // 선수 이름을 가져오기 위해 별도 쿼리
     const playerIds = (data || [])
       .filter(item => (item.goals > 0 || item.assists > 0))
@@ -1152,6 +1169,14 @@ const Tactics = () => {
         
         return record;
       });
+      // [작전판 골/도움 로그] 화면에 표시할 골/도움 기록 (goalRecords)
+      if (records.length > 0) {
+        console.log('[작전판 골/도움] refreshGoalRecords - 화면 표시용 records', {
+          match_id: matchIdNum,
+          match_number: matchNumberNum,
+          records: records.map(r => ({ id: r.id, name: r.name, goals: r.goals, assists: r.assists, team: r.team }))
+        });
+      }
     setGoalRecords(records);
     
     // goalGroups 초기화 (DB 데이터를 기반으로)
@@ -1690,6 +1715,18 @@ const Tactics = () => {
           tactics_team: record.tactics_team
         });
       });
+
+      // [작전판 골/도움 로그] 저장 시 DB에서 읽은 골/도움 vs 경기장 배치 선수
+      const goalAssistFromDb = (currentAttendanceData || []).filter((r: any) => (r.goals > 0 || r.assists > 0));
+      if (goalAssistFromDb.length > 0 || positionsToSave.some((p: any) => (p.goals > 0 || p.assists > 0))) {
+        console.log('[작전판 골/도움] handleSaveFormation - 저장 직전', {
+          match_id: matchIdNum,
+          match_number: matchNumberNum,
+          DB에서_가져온_골도움: goalAssistFromDb.map((r: any) => ({ player_id: r.player_id, goals: r.goals, assists: r.assists })),
+          경기장_배치_선수수: positionsToSave.length,
+          goalRecordsMap_키: Array.from(goalRecordsMap.keys())
+        });
+      }
       
       const formData = {
         match_id: matchIdNum,
@@ -1711,6 +1748,16 @@ const Tactics = () => {
           };
         })
       };
+
+      // [작전판 골/도움 로그] saveTactics에 넘기는 선수별 골/도움
+      const playersWithGoalAssist = formData.players.filter((p: any) => p.goals > 0 || p.assists > 0);
+      if (playersWithGoalAssist.length > 0) {
+        console.log('[작전판 골/도움] handleSaveFormation - saveTactics 전달 값', {
+          match_id: matchIdNum,
+          match_number: matchNumberNum,
+          players: playersWithGoalAssist.map((p: any) => ({ player_id: p.player_id, goals: p.goals, assists: p.assists }))
+        });
+      }
 
       const result = await saveTactics(formData);
       if (result.success) {
