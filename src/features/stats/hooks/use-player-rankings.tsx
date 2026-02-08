@@ -1,32 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/shared/lib/supabase/client';
-
-interface Player {
-  id: string;
-  name: string;
-  position: string;
-  games: number;
-  goals: number;
-  assists: number;
-  attendance: number;
-  rating: number;
-  cleansheet: number;
-  boots_brand: string;
-  favorite_team: string;
-  weekly_mvp_count: number;
-  monthly_mvp_count: number;
-  yearly_mvp_count: number;
-  /** 파워랭킹 점수: 출석 1경기당 2pt + 득점 1pt + 어시스트 1pt + 철벽지수 1pt */
-  powerScore?: number;
-  // 선수 능력치 필드
-  avr_stat?: number; // 평균 능력치
-  pac?: number; // 속력 (Pace)
-  sho?: number; // 슛 (Shooting)
-  pas?: number; // 패스 (Passing)
-  dri?: number; // 드리블 (Dribbling)
-  def?: number; // 수비 (Defense)
-  phy?: number; // 피지컬 (Physical)
-}
+import type { Player } from '@/features/stats/types/stats.types';
 
 type RankingTab = 'power' | 'goals' | 'assists' | 'attendance' | 'cleansheet';
 
@@ -35,25 +9,39 @@ type RankingTab = 'power' | 'goals' | 'assists' | 'attendance' | 'cleansheet';
 // const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 // const supabase = createClient(supabaseUrl, supabaseKey);
 
-// 한 기간(연도·월) 기준 선수 통계 조회
+/** 기간 필터: start/end는 ISO 날짜 문자열 (예: '2025-01-01', '2025-09-30') */
+export type DateRangeFilter = { start: string; end: string };
+
+// 한 기간(연도·월 또는 사용자 지정 기간) 기준 선수 통계 조회
 async function fetchPeriodPlayers(
   year: number | undefined,
   month: number | undefined,
-  playersData: { id: string; name: string; position: string; birthday?: string; fav_club?: string; boots_brand?: string }[],
-  playerStatsMap: Map<string, { pac?: number; sho?: number; pas?: number; dri?: number; def?: number; phy?: number }>
+  playersData: { id: string; name: string; username?: string; role?: string; position: string; birthday?: string; fav_club?: string; boots_brand?: string }[],
+  playerStatsMap: Map<string, { pac?: number; sho?: number; pas?: number; dri?: number; def?: number; phy?: number }>,
+  dateRangeOverride?: DateRangeFilter
 ): Promise<Player[]> {
   let matchesQuery = supabase
     .from('matches')
     .select('id, date')
     .eq('status', 'completed');
 
-  if (year) {
-    const startDate = month
-      ? new Date(year, month - 1, 1).toISOString()
-      : new Date(year, 0, 1).toISOString();
-    const endDate = month
-      ? new Date(year, month, 0).toISOString()
-      : new Date(year, 11, 31).toISOString();
+  let startDate: string;
+  let endDate: string;
+  if (dateRangeOverride) {
+    startDate = dateRangeOverride.start;
+    endDate = dateRangeOverride.end;
+    matchesQuery = matchesQuery.gte('date', startDate).lte('date', endDate);
+  } else if (year) {
+    // 로컬 날짜 문자열 사용 (toISOString()은 UTC 변환으로 한국에서 말일이 하루 빠짐 → 통계에 해당 월이 누락되는 문제 방지)
+    if (month) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0);
+      startDate = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-01`;
+      endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
+    } else {
+      startDate = `${year}-01-01`;
+      endDate = `${year}-12-31`;
+    }
     matchesQuery = matchesQuery.gte('date', startDate).lte('date', endDate);
   }
 
@@ -64,6 +52,7 @@ async function fetchPeriodPlayers(
 
   const playerStats = await Promise.all(
     playersData.map(async (player) => {
+      // 하루 참석 = 1경기 (match_number 1만 출석으로 인정)
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('match_attendance')
         .select('*')
@@ -131,6 +120,8 @@ async function fetchPeriodPlayers(
       return {
         id: player.id,
         name: player.name,
+        username: player.username ?? '',
+        role: player.role ?? '',
         position: player.position,
         birthday: player.birthday,
         favorite_team: player.fav_club,
@@ -155,10 +146,11 @@ async function fetchPeriodPlayers(
       };
     })
   );
+
   return playerStats;
 }
 
-const usePlayerRankings = (year?: number, month?: number) => {
+const usePlayerRankings = (year?: number, month?: number, dateRange?: DateRangeFilter | null) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [prevPlayers, setPrevPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -171,7 +163,7 @@ const usePlayerRankings = (year?: number, month?: number) => {
 
         const { data: playersData, error: playersError } = await supabase
           .from('players')
-          .select('id, name, position, birthday, fav_club, boots_brand')
+          .select('id, name, username, role, position, birthday, fav_club, boots_brand')
           .eq('is_deleted', false)
           .neq('role', 'futsal-guest');
         if (playersError) throw playersError;
@@ -186,28 +178,36 @@ const usePlayerRankings = (year?: number, month?: number) => {
         });
 
         const list = playersData ?? [];
-        // 전달 대비: (1) 연도 전체 → 같은 해 1월 랭킹 vs 연간 랭킹, (2) 월 선택(2~12) → 1월 랭킹 vs 현재 달 랭킹. 1월 선택 시에는 전달 없음.
-        const isFullYear = year !== undefined && month === undefined;
-        const isMonthWithPrev = year !== undefined && month !== undefined && month >= 2;
 
-        if (isFullYear) {
-          const [current, prev] = await Promise.all([
-            fetchPeriodPlayers(year, undefined, list, playerStatsMap),
-            fetchPeriodPlayers(year, 1, list, playerStatsMap) // 1월 마지막 경기까지 = 1월 랭킹
-          ]);
-          setPlayers(current);
-          setPrevPlayers(prev);
-        } else if (isMonthWithPrev) {
-          const [current, prev] = await Promise.all([
-            fetchPeriodPlayers(year, month, list, playerStatsMap),
-            fetchPeriodPlayers(year, 1, list, playerStatsMap) // 1월 마지막 경기까지 = 1월 데이터
-          ]);
-          setPlayers(current);
-          setPrevPlayers(prev);
-        } else {
-          const current = await fetchPeriodPlayers(year, month, list, playerStatsMap);
+        // 사용자 지정 기간 필터가 있으면 해당 기간만 조회 (전달 대비 없음)
+        if (dateRange?.start && dateRange?.end) {
+          const current = await fetchPeriodPlayers(year, month, list, playerStatsMap, dateRange);
           setPlayers(current);
           setPrevPlayers([]);
+        } else {
+          // 전달 대비: (1) 연도 전체 → 같은 해 1월 랭킹 vs 연간 랭킹, (2) 월 선택(2~12) → 1월 랭킹 vs 현재 달 랭킹. 1월 선택 시에는 전달 없음.
+          const isFullYear = year !== undefined && month === undefined;
+          const isMonthWithPrev = year !== undefined && month !== undefined && month >= 2;
+
+          if (isFullYear) {
+            const [current, prev] = await Promise.all([
+              fetchPeriodPlayers(year, undefined, list, playerStatsMap),
+              fetchPeriodPlayers(year, 1, list, playerStatsMap) // 1월 마지막 경기까지 = 1월 랭킹
+            ]);
+            setPlayers(current);
+            setPrevPlayers(prev);
+          } else if (isMonthWithPrev) {
+            const [current, prev] = await Promise.all([
+              fetchPeriodPlayers(year, month, list, playerStatsMap),
+              fetchPeriodPlayers(year, 1, list, playerStatsMap) // 1월 마지막 경기까지 = 1월 데이터
+            ]);
+            setPlayers(current);
+            setPrevPlayers(prev);
+          } else {
+            const current = await fetchPeriodPlayers(year, month, list, playerStatsMap);
+            setPlayers(current);
+            setPrevPlayers([]);
+          }
         }
       } catch (error) {
         console.error('Error fetching player data:', error);
@@ -217,7 +217,7 @@ const usePlayerRankings = (year?: number, month?: number) => {
       }
     };
     run();
-  }, [year, month]);
+  }, [year, month, dateRange?.start, dateRange?.end]);
   
   // 카테고리별: 해당 데이터가 있는 선수만 표시. 출석률은 전체 회원 표시
   const hasGoals = (p: Player) => (Number(p.goals) || 0) > 0;

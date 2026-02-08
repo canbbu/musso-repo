@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { Button } from '@/shared/components/ui/button';
-import { Star, User, CalendarIcon, Filter } from "lucide-react";
+import { CalendarIcon, Filter, CalendarRange } from "lucide-react";
 import StatCard from '@/features/stats/components/stats/StatCard';
 import RankingTable from '@/features/stats/components/stats/RankingTable';
-import { usePlayerRankings } from '@/features/stats/hooks/use-player-rankings';
+import { usePlayerRankings, type DateRangeFilter } from '@/features/stats/hooks/use-player-rankings';
 import Layout from '@/shared/components/layout/Layout';
 import {
   Select,
@@ -14,6 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/shared/components/ui/dialog';
+import { Label } from '@/shared/components/ui/label';
 
 const PlayerStats = () => {
   const navigate = useNavigate();
@@ -26,6 +28,14 @@ const PlayerStats = () => {
   // 필터링 상태 - 기본값: 해당 달(현재 연도·현재 월)
   const [selectedYear, setSelectedYear] = useState<number | undefined>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<number | undefined>(currentMonth);
+  // 사용자 지정 기간 필터 (필요 시에만 사용)
+  const [customDateRange, setCustomDateRange] = useState<DateRangeFilter | null>(null);
+  // 기간 필터 설정 다이얼로그
+  const [showDateRangeDialog, setShowDateRangeDialog] = useState(false);
+  const [rangeStartYear, setRangeStartYear] = useState(currentYear);
+  const [rangeStartMonth, setRangeStartMonth] = useState(1);
+  const [rangeEndYear, setRangeEndYear] = useState(currentYear);
+  const [rangeEndMonth, setRangeEndMonth] = useState(currentMonth);
   
   // 연도 옵션 (최근 3년)
   const yearOptions = [
@@ -57,7 +67,7 @@ const PlayerStats = () => {
     { value: "12", label: '12월' }
   ];
   
-  // 필터링된 데이터 가져오기
+  // 필터링된 데이터 가져오기 (기간 필터가 있으면 해당 기간 우선 적용)
   const {
     activeTab,
     setActiveTab,
@@ -70,7 +80,7 @@ const PlayerStats = () => {
     getPrevRanking,
     hasPrevPeriod,
     loading
-  } = usePlayerRankings(selectedYear, selectedMonth);
+  } = usePlayerRankings(selectedYear, selectedMonth, customDateRange);
 
   // 연도 변경 핸들러
   const handleYearChange = (value: string) => {
@@ -85,6 +95,35 @@ const PlayerStats = () => {
     }
     setSelectedMonth(value === "all" ? undefined : parseInt(value));
   };
+
+  // 기간 필터 적용 (다이얼로그에서 적용 클릭 시)
+  const handleApplyDateRange = () => {
+    const startDate = new Date(rangeStartYear, rangeStartMonth - 1, 1);
+    const endDate = new Date(rangeEndYear, rangeEndMonth, 0); // 해당 월 마지막 날
+    if (startDate > endDate) {
+      alert('시작일이 종료일보다 늦을 수 없습니다.');
+      return;
+    }
+    const start = `${rangeStartYear}-${String(rangeStartMonth).padStart(2, '0')}-01`;
+    // 종료일은 로컬 날짜로 포맷 (toISOString()은 UTC라 한국 시간에서 하루 빠짐 → 12월이 12/30으로 나오는 문제 방지)
+    const end = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+    setCustomDateRange({ start, end });
+    setShowDateRangeDialog(false);
+  };
+
+  // 기간 필터 해제
+  const handleClearDateRange = () => {
+    setCustomDateRange(null);
+  };
+
+  // 기간 필터 적용 시 표시할 라벨 (예: 2025년 1월 ~ 2025년 9월)
+  const dateRangeLabel = customDateRange
+    ? (() => {
+        const s = customDateRange.start.split('-');
+        const e = customDateRange.end.split('-');
+        return `${s[0]}년 ${parseInt(s[1], 10)}월 ~ ${e[0]}년 ${parseInt(e[1], 10)}월`;
+      })()
+    : null;
 
   return (
     <Layout>
@@ -138,7 +177,7 @@ const PlayerStats = () => {
               </SelectContent>
             </Select>
             
-            {(selectedYear !== undefined || selectedMonth !== undefined) && (
+            {(selectedYear !== undefined || selectedMonth !== undefined) && !customDateRange && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -151,6 +190,30 @@ const PlayerStats = () => {
                 <Filter className="h-3.5 w-3.5" />
                 필터 초기화
               </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDateRangeDialog(true)}
+              className="flex items-center gap-1"
+            >
+              <CalendarRange className="h-3.5 w-3.5" />
+              기간 필터 적용
+            </Button>
+            {customDateRange && (
+              <>
+                <span className="text-sm text-muted-foreground">
+                  적용 중: <strong>{dateRangeLabel}</strong>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearDateRange}
+                  className="flex items-center gap-1 text-muted-foreground"
+                >
+                  기간 필터 해제
+                </Button>
+              </>
             )}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
@@ -203,6 +266,92 @@ const PlayerStats = () => {
             />
           </>
         )}
+
+        {/* 기간 필터 설정 다이얼로그 */}
+        <Dialog open={showDateRangeDialog} onOpenChange={setShowDateRangeDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>기간 필터 설정</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              통계를 조회할 기간의 시작·종료 연도/월을 선택하세요. (예: 2025년 1월 ~ 2025년 9월)
+            </p>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>시작</Label>
+                  <div className="flex gap-2">
+                    <Select
+                      value={rangeStartYear.toString()}
+                      onValueChange={(v) => setRangeStartYear(parseInt(v, 10))}
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {uniqueYearOptions.filter((o) => o.value !== 'all').map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={rangeStartMonth.toString()}
+                      onValueChange={(v) => setRangeStartMonth(parseInt(v, 10))}
+                    >
+                      <SelectTrigger className="w-[80px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {monthOptions.filter((m) => m.value !== 'all').map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>종료</Label>
+                  <div className="flex gap-2">
+                    <Select
+                      value={rangeEndYear.toString()}
+                      onValueChange={(v) => setRangeEndYear(parseInt(v, 10))}
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {uniqueYearOptions.filter((o) => o.value !== 'all').map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={rangeEndMonth.toString()}
+                      onValueChange={(v) => setRangeEndMonth(parseInt(v, 10))}
+                    >
+                      <SelectTrigger className="w-[80px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {monthOptions.filter((m) => m.value !== 'all').map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDateRangeDialog(false)}>
+                취소
+              </Button>
+              <Button onClick={handleApplyDateRange}>
+                적용
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
