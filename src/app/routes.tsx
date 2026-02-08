@@ -48,16 +48,17 @@ export function AppRoutes() {
           <Route element={<RequireAuth />}>
             <Route path="attendance-status" element={<AttendanceStatusPage />} />
             <Route path="season-rankings" element={<SeasonRankingsPage />} />
+            {/* 일반회원도 접근: 내 기록, 명예의 전당, 작전판(조회) */}
+            <Route path="my-stats" element={<MyStatsPage />} />
+            <Route path="hall-of-fame" element={<HallOfFame />} />
+            <Route path="tactics" element={<TacticsListPage />} />
+            <Route path="tactics/:matchId/:matchNumber" element={<TacticsPage />} />
             <Route element={<RequireAdmin />}>
               <Route path="register" element={<RegisterPage />} />
               <Route path="data-test" element={<DataTestPage />} />
               <Route path="matches" element={<MatchManagementPage />} />
               <Route path="match-history" element={<MatchHistoryPage />} />
               <Route path="finance" element={<FinancePage />} />
-              <Route path="my-stats" element={<MyStatsPage />} />
-              <Route path="hall-of-fame" element={<HallOfFame />} />
-              <Route path="tactics" element={<TacticsListPage />} />
-              <Route path="tactics/:matchId/:matchNumber" element={<TacticsPage />} />
               <Route path="stats-management" element={<StatsManagementPage />} />
               <Route path="announcement-management" element={<AnnouncementManagementPage />} />
               <Route path="entire-player-stats" element={<EntirePlayerStatsPage />} />

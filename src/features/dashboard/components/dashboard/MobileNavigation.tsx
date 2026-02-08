@@ -24,21 +24,21 @@ export default function MobileNavigation() {
     canManageFutsal,
     isSystemManager,
     canManageAnnouncements,
+    canManagePlayerStats,
   } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // PC AppSidebar와 동일: 축구 메뉴
+  // PC AppSidebar와 동일: 일반회원도 대시보드, 선수통계, 내 기록, 명예의전당, 작전판 표시 / 관리자만 이벤트·회원등록·선수전체통계
   const getSoccerNavItems = () => {
-    const isAdmin = canManage();
     const baseItems = [
       { title: '대시보드', path: '/dashboard', icon: Home, show: true },
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true },
-      { title: '이벤트 관리', path: '/matches', icon: Calendar, show: isAdmin },
-      { title: '내 기록', path: '/my-stats', icon: User, show: isAdmin },
-      { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: isAdmin },
-      { title: '작전판', path: '/tactics', icon: Clipboard, show: isAdmin },
-      { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements() },
-      { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, show: isAdmin },
+      { title: '이벤트 관리', path: '/matches', icon: Calendar, show: canManageMatches?.() ?? false },
+      { title: '내 기록', path: '/my-stats', icon: User, show: true },
+      { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: true },
+      { title: '작전판', path: '/tactics', icon: Clipboard, show: true },
+      { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements?.() ?? false },
+      { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, show: canManagePlayerStats?.() ?? false },
     ];
     return baseItems.filter((item) => item.show);
   };

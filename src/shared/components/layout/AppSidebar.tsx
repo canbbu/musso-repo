@@ -67,23 +67,19 @@ const AppSidebar = () => {
     }
   };
 
-  // Define navigation items - 로그인하지 않아도 모든 메뉴 표시
+  // Define navigation items - 일반회원: 대시보드, 선수통계, 내 기록, 명예의전당, 작전판, 출석현황, 프로필변경, 로그아웃
+  // 관리자 추가: 이벤트 관리, 회원 등록, 선수 전체 통계 (PC/모바일 동일)
   const getNavItems = () => {
-    // 로그인하지 않아도 모든 메뉴를 보여주되, requiresAuth로 구분
     const baseItems = [
-      // 로그인 없이 접근 가능한 메뉴
       { title: '대시보드', path: '/dashboard', icon: Home, show: true, requiresAuth: false },
       { title: '선수 통계', path: '/stats', icon: Trophy, show: true, requiresAuth: false },
-      
-      // 로그인 필요 메뉴들 (로그인하지 않아도 표시)
-      { title: '이벤트 관리', path: '/matches', icon: Calendar, show: true, requiresAuth: true },
+      { title: '이벤트 관리', path: '/matches', icon: Calendar, show: canManageMatches?.() ?? false, requiresAuth: true },
       { title: '내 기록', path: '/my-stats', icon: User, show: true, requiresAuth: true },
       { title: '명예의 전당', path: '/hall-of-fame', icon: Crown, show: true, requiresAuth: true, color: 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' },
       { title: '작전판', path: '/tactics', icon: Clipboard, show: true, requiresAuth: true, color: 'text-green-600 hover:text-green-700 hover:bg-green-50' },
-      { title: '회원 등록', path: '/register', icon: UserPlus, show: true, requiresAuth: true },
-      { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, show: true, requiresAuth: true },
+      { title: '회원 등록', path: '/register', icon: UserPlus, show: canManageAnnouncements?.() ?? false, requiresAuth: true },
+      { title: '선수 전체 통계', path: '/entire-player-stats', icon: Database, show: canManagePlayerStats?.() ?? false, requiresAuth: true },
     ];
-    
     return baseItems.filter(item => item.show);
   };
 
